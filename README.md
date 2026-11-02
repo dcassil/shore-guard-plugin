@@ -1,7 +1,7 @@
 # Shore Guard
 
 Shore Guard provides a standalone repository-health CLI and a Claude Code plugin.
-This artifact was built from monorepo commit `e5efcd4a24300697b7526f51433850918a944a63` (version `0.1.0`).
+This artifact was built from monorepo commit `59da82736ad19ba90b5c5537bd3590f656e51117` (version `0.1.1`).
 
 ## Install
 
@@ -10,10 +10,24 @@ Requires Node.js 20 or newer. Add this repository as a marketplace and install t
 ```sh
 claude plugin marketplace add danielcassil/shore-guard
 claude plugin install shore-guard@shore-guard
+```
+
+Inside Claude Code, the `shore-guard` command is then available in the agent's shell
+with no further steps because the plugin's `bin/` directory is on PATH:
+
+```sh
 shore-guard login
 shore-guard init
 shore-guard verify --json
 ```
+
+For terminals and CI, install from GitHub or run the CLI directly:
+
+```sh
+npm install -g github:dcassil/shore-guard-plugin   # or: npx github:dcassil/shore-guard-plugin status --json
+```
+
+Once the package is published to the npm registry, `npm install -g shore-guard` works too.
 
 The completion contract permits an agent to claim completion only when
 `shore-guard verify --json` passes for the exact candidate commit. All other exit
@@ -21,7 +35,7 @@ codes must be handled according to the bundled completion-contract skill.
 
 ## Distribution model
 
-The executable at `bin/shore-guard.mjs` is bundled with its JavaScript dependencies
+The executable at `bin/shore-guard` is bundled with its JavaScript dependencies
 and runs without pnpm, tsx, node_modules, or a source checkout. Version 1 is CLI-only:
 there is no MCP server because the integration contract is deliberately the CLI exit
 codes and JSON envelope. MCP can be revisited for channels other than Claude Code.

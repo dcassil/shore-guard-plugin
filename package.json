@@ -1,0 +1,22 @@
+{
+  "name": "shore-guard",
+  "version": "0.1.1",
+  "description": "CLI-only Shore Guard workflows for coding agents",
+  "type": "module",
+  "bin": {
+    "shore-guard": "bin/shore-guard"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcassil/shore-guard-plugin.git"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ]
+}

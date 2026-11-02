@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "e5efcd4a24300697b7526f51433850918a944a63", version: "0.1.0" };
+var define_SHORE_GUARD_BUILD_default = { sha: "59da82736ad19ba90b5c5537bd3590f656e51117", version: "0.1.1" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -20759,6 +20759,13 @@ var scanRunResponseSchema = external_exports.object({
   }).strict())
 }).strict();
 
+// ../api-client/src/scan-lookup.ts
+var exactScanResponseSchema = external_exports.object({
+  scanRunId: external_exports.uuid(),
+  status: external_exports.literal("completed"),
+  commitSha: external_exports.string().regex(/^[0-9a-f]{40}$/)
+}).strict();
+
 // ../api-client/src/scans.ts
 var triggerScanResponseSchema = external_exports.object({
   scanRunId: external_exports.uuid(),
@@ -20898,10 +20905,23 @@ function createApiClient(options) {
       retryHintMs: (error62) => isRetryableFailure(error62) ? error62.retryAfterMs : void 0
     });
   }
+  async function lookupExactScan(repoConnectionId, commitSha) {
+    try {
+      return await request("GET", withQuery(`/repos/${encodeURIComponent(repoConnectionId)}/scan-for-commit`, {
+        commitSha: commitSha.toLowerCase()
+      }), exactScanResponseSchema);
+    } catch (error62) {
+      if (error62 instanceof UnavailableError && error62.status === 404 && error62.code === "scan_not_found_for_commit") {
+        return { status: "not-found" };
+      }
+      throw error62;
+    }
+  }
   return {
     listRepos: (params = {}) => request("GET", withQuery("/repos", params), listReposResponseSchema),
     triggerScan: (input2) => request("POST", "/scans", triggerScanResponseSchema, input2),
     getScanRun: (id) => request("GET", `/scan-runs/${encodeURIComponent(id)}`, scanRunResponseSchema),
+    lookupExactScan,
     compare: (id, params = {}) => request("GET", withQuery(`/repos/${encodeURIComponent(id)}/compare`, params), compareResponseSchema),
     getAccount: () => request("GET", "/account", accountSchema),
     getUsage: () => request("GET", "/account/usage", usageSchema)
@@ -21203,48 +21223,6 @@ async function runStatus(options) {
 }
 function fail2(exitCode2, message3) {
   return { command: "status", outcome: "error", exitCode: exitCode2, message: message3 };
-}
-
-// src/commands/check.ts
-async function runCheck(options) {
-  const result3 = await runHealthGate(options.ports ?? defaultPorts(options));
-  return { command: "check", outcome: result3.verdict === "pass" ? "pass" : "error", exitCode: exitCode(result3), message: humanMessage(result3), data: result3 };
-}
-function defaultPorts(options) {
-  const api = {
-    lookupExactScan: () => Promise.resolve({ status: "unmappable", explanation: "The pinned Shore API lists scans without commit SHAs and provides no exact SHA lookup endpoint." }),
-    triggerScan: (input2) => options.api.triggerScan(input2),
-    getScanRun: (id) => options.api.getScanRun(id),
-    compare: (id, input2) => options.api.compare(id, input2)
-  };
-  return {
-    git: {
-      preflight: () => preflightGit(options.cwd),
-      resolveBaseSha: () => resolveBaseSha({ cwd: options.cwd, remote: "origin", protectedBranch: options.config.protectedBranches?.[0] ?? "main" }),
-      resolveHeadSha: () => resolveHeadSha({ cwd: options.cwd })
-    },
-    api,
-    config: options.config,
-    clock: SYSTEM_CLOCK
-  };
-}
-var SYSTEM_CLOCK = {
-  now: () => Date.now(),
-  random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve6) => {
-    setTimeout(resolve6, milliseconds);
-  })
-};
-function exitCode(result3) {
-  if (result3.failureKind === "unsafe") return EXIT_CODES.unsafeGitState;
-  if (result3.failureKind === "auth") return EXIT_CODES.auth;
-  if (result3.failureKind === "quota") return EXIT_CODES.quota;
-  if (result3.verdict === "unavailable") return EXIT_CODES.remoteUnavailable;
-  return result3.verdict === "pass" ? EXIT_CODES.pass : EXIT_CODES.violation;
-}
-function humanMessage(result3) {
-  const heading = result3.verdict === "pass" ? "Health gate passed." : result3.verdict === "fail" ? "Health gate failed." : "Health gate unavailable \u2014 this is NOT a pass.";
-  return [heading, ...result3.reasons.flatMap((reason) => [`- ${reason.message}`, `  Remediation: ${reason.remediation}`])].join("\n");
 }
 
 // ../enforcement/src/eslint/baseline.ts
@@ -22435,17 +22413,12 @@ async function runVerify(options) {
     command: "verify",
     outcome: result3.exitCode === 0 ? "pass" : "error",
     exitCode: result3.exitCode,
-    message: humanMessage2(result3),
+    message: humanMessage(result3),
     ...result3.receipt === void 0 ? {} : { data: result3.receipt }
   };
 }
 function defaultDependencies(options) {
-  const api = {
-    lookupExactScan: () => Promise.resolve({ status: "unmappable", explanation: "The pinned Shore API lists scans without commit SHAs and provides no exact SHA lookup endpoint." }),
-    triggerScan: (input2) => options.api.triggerScan(input2),
-    getScanRun: (id) => options.api.getScanRun(id),
-    compare: (id, input2) => options.api.compare(id, input2)
-  };
+  const api = createHealthApiPort(options.api, options.config.repoConnectionId);
   const registry2 = new GateRegistry();
   for (const gate of registeredGates().gates) registry2.register(gate);
   return {
@@ -22455,17 +22428,28 @@ function defaultDependencies(options) {
       baseSha: await resolveBaseSha({ cwd: options.cwd, remote: "origin", protectedBranch: options.config.protectedBranches?.[0] ?? "main" }),
       headSha: await resolveHeadSha({ cwd: options.cwd })
     }),
-    ports: { health: { api, clock: SYSTEM_CLOCK2 }, enforcement: { repoPath: options.cwd } }
+    ports: { health: { api, clock: SYSTEM_CLOCK }, enforcement: { repoPath: options.cwd } }
   };
 }
-var SYSTEM_CLOCK2 = {
+function createHealthApiPort(client, repoConnectionId) {
+  return {
+    lookupExactScan: repoConnectionId === void 0 ? () => Promise.resolve({ status: "unmappable", explanation: 'No repoConnectionId is configured. Run "shore-guard init" to connect this repository.' }) : async (id, sha) => {
+      const lookup = await client.lookupExactScan(id, sha.toLowerCase());
+      return lookup.status === "not-found" ? { status: "not-found" } : { status: "found", scanId: lookup.scanRunId };
+    },
+    triggerScan: (input2) => client.triggerScan(input2),
+    getScanRun: (id) => client.getScanRun(id),
+    compare: (id, input2) => client.compare(id, input2)
+  };
+}
+var SYSTEM_CLOCK = {
   now: () => Date.now(),
   random: () => Math.random(),
   sleep: (milliseconds) => new Promise((resolve6) => {
     setTimeout(resolve6, milliseconds);
   })
 };
-function humanMessage2(result3) {
+function humanMessage(result3) {
   if (result3.receipt === void 0) {
     return `Verification ${result3.verdict}.
 - ${result3.preflightReason ?? "No receipt was produced."}`;
@@ -22477,6 +22461,43 @@ function humanMessage2(result3) {
   ]);
   const writeFailure = result3.receiptWriteError === void 0 ? [] : [`Receipt write failed: ${result3.receiptWriteError}`];
   return [heading, ...gates, ...writeFailure].join("\n");
+}
+
+// src/commands/check.ts
+async function runCheck(options) {
+  const result3 = await runHealthGate(options.ports ?? defaultPorts(options));
+  return { command: "check", outcome: result3.verdict === "pass" ? "pass" : "error", exitCode: exitCode(result3), message: humanMessage2(result3), data: result3 };
+}
+function defaultPorts(options) {
+  const api = createHealthApiPort(options.api, options.config.repoConnectionId);
+  return {
+    git: {
+      preflight: () => preflightGit(options.cwd),
+      resolveBaseSha: () => resolveBaseSha({ cwd: options.cwd, remote: "origin", protectedBranch: options.config.protectedBranches?.[0] ?? "main" }),
+      resolveHeadSha: () => resolveHeadSha({ cwd: options.cwd })
+    },
+    api,
+    config: options.config,
+    clock: SYSTEM_CLOCK2
+  };
+}
+var SYSTEM_CLOCK2 = {
+  now: () => Date.now(),
+  random: () => Math.random(),
+  sleep: (milliseconds) => new Promise((resolve6) => {
+    setTimeout(resolve6, milliseconds);
+  })
+};
+function exitCode(result3) {
+  if (result3.failureKind === "unsafe") return EXIT_CODES.unsafeGitState;
+  if (result3.failureKind === "auth") return EXIT_CODES.auth;
+  if (result3.failureKind === "quota") return EXIT_CODES.quota;
+  if (result3.verdict === "unavailable") return EXIT_CODES.remoteUnavailable;
+  return result3.verdict === "pass" ? EXIT_CODES.pass : EXIT_CODES.violation;
+}
+function humanMessage2(result3) {
+  const heading = result3.verdict === "pass" ? "Health gate passed." : result3.verdict === "fail" ? "Health gate failed." : "Health gate unavailable \u2014 this is NOT a pass.";
+  return [heading, ...result3.reasons.flatMap((reason) => [`- ${reason.message}`, `  Remediation: ${reason.remediation}`])].join("\n");
 }
 
 // src/commands/adopt.ts
