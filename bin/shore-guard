@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "59da82736ad19ba90b5c5537bd3590f656e51117", version: "0.1.1" };
+var define_SHORE_GUARD_BUILD_default = { sha: "e1546e0aff7126a33d0cb0575ead75ee3877bf26", version: "0.1.2" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -20582,15 +20582,132 @@ var scriptsProbe = { id: "scripts", async run({ root, fs: fs12 }) {
 
 // ../core/src/probes/tsconfig.ts
 import { join as join10 } from "node:path";
-var tsconfigProbe = { id: "tsconfig", async run({ root, fs: fs12 }) {
-  const p = join10(root, "tsconfig.json");
-  if (!await fs12.exists(p)) return [finding("tsconfig", "tsconfig.missing", "info", "TypeScript configuration was not detected.", "Add tsconfig.json if this is a TypeScript project.")];
-  try {
-    JSON.parse(await fs12.readText(p));
-    return [finding("tsconfig", "tsconfig.present", "info", "TypeScript configuration detected.", "No action required.", ["tsconfig.json"])];
-  } catch {
-    return [finding("tsconfig", "tsconfig.invalid", "warning", "tsconfig.json is not strict JSON.", "Validate or repair tsconfig.json.", ["tsconfig.json"])];
+function parseJsonc(text3) {
+  let clean = "";
+  let string4 = false;
+  let escaped = false;
+  for (let i = 0; i < text3.length; i += 1) {
+    const c = text3[i] ?? "";
+    const next = text3[i + 1] ?? "";
+    if (string4) {
+      clean += c;
+      if (escaped) escaped = false;
+      else if (c === "\\") escaped = true;
+      else if (c === '"') string4 = false;
+      continue;
+    }
+    if (c === '"') {
+      string4 = true;
+      clean += c;
+      continue;
+    }
+    if (c === "/" && next === "/") {
+      while (i < text3.length && text3[i] !== "\n") i += 1;
+      clean += "\n";
+      continue;
+    }
+    if (c === "/" && next === "*") {
+      i += 2;
+      while (i < text3.length - 1 && !(text3[i] === "*" && text3[i + 1] === "/")) i += 1;
+      if (i >= text3.length - 1) throw new SyntaxError("Unterminated comment");
+      clean += " ";
+      continue;
+    }
+    clean += c;
   }
+  let result3 = "";
+  string4 = false;
+  escaped = false;
+  for (let i = 0; i < clean.length; i += 1) {
+    const c = clean[i] ?? "";
+    if (string4) {
+      result3 += c;
+      if (escaped) escaped = false;
+      else if (c === "\\") escaped = true;
+      else if (c === '"') string4 = false;
+      continue;
+    }
+    if (c === '"') {
+      string4 = true;
+      result3 += c;
+      continue;
+    }
+    if (c === ",") {
+      let j = i + 1;
+      while (/\s/.test(clean[j] ?? "")) j += 1;
+      if (clean[j] === "}" || clean[j] === "]") continue;
+    }
+    result3 += c;
+  }
+  return JSON.parse(result3);
+}
+function pnpmPatterns(text3) {
+  const patterns = [];
+  let packages = false;
+  for (const line of text3.split(/\r?\n/)) {
+    if (/^\s*packages\s*:/.test(line)) {
+      packages = true;
+      continue;
+    }
+    if (packages) {
+      const item = /^\s*-\s+(.+?)\s*$/.exec(line);
+      if (item) {
+        patterns.push((item[1] ?? "").replace(/^(['"])(.*)\1$/, "$2"));
+        continue;
+      }
+      if (/^\S/.test(line)) packages = false;
+    }
+  }
+  return patterns;
+}
+function packagePatterns(text3) {
+  try {
+    const parsed = JSON.parse(text3);
+    if (typeof parsed !== "object" || parsed === null || !("workspaces" in parsed)) return [];
+    const workspaces = parsed.workspaces;
+    if (Array.isArray(workspaces)) return workspaces.filter((value) => typeof value === "string");
+    if (typeof workspaces === "object" && workspaces !== null && "packages" in workspaces && Array.isArray(workspaces.packages)) return workspaces.packages.filter((value) => typeof value === "string");
+  } catch {
+    return [];
+  }
+  return [];
+}
+async function workspaceConfigs(root, fs12) {
+  const patterns = [];
+  const pnpm = join10(root, "pnpm-workspace.yaml");
+  const pkg = join10(root, "package.json");
+  if (await fs12.exists(pnpm)) patterns.push(...pnpmPatterns(await fs12.readText(pnpm)));
+  if (await fs12.exists(pkg)) patterns.push(...packagePatterns(await fs12.readText(pkg)));
+  const found = [];
+  for (const pattern of patterns) {
+    const star = pattern.indexOf("*");
+    if (star < 0) {
+      const relative4 = `${pattern.replace(/\/$/, "")}/tsconfig.json`;
+      if (await fs12.exists(join10(root, relative4))) found.push(relative4);
+      continue;
+    }
+    const prefix = pattern.slice(0, star).replace(/\/$/, "");
+    for (const child of await fs12.list(join10(root, prefix))) {
+      const relative4 = [prefix, child, "tsconfig.json"].filter(Boolean).join("/");
+      if (await fs12.exists(join10(root, relative4))) found.push(relative4);
+    }
+  }
+  return [...new Set(found)];
+}
+var tsconfigProbe = { id: "tsconfig", async run({ root, fs: fs12 }) {
+  const rootConfigs = (await fs12.list(root)).filter((name) => /^tsconfig(\..+)?\.json$/.test(name));
+  const configs = rootConfigs.length > 0 ? [...rootConfigs] : [...await workspaceConfigs(root, fs12)];
+  if (configs.length === 0) return [finding("tsconfig", "tsconfig.missing", "info", "TypeScript configuration was not detected.", "Add tsconfig.json if this is a TypeScript project.")];
+  const evidence = rootConfigs.length > 0 ? configs : configs.slice(0, 10);
+  const findings = [finding("tsconfig", "tsconfig.present", "info", "TypeScript configuration detected.", "No action required.", evidence)];
+  for (const config2 of configs) {
+    try {
+      parseJsonc(await fs12.readText(join10(root, config2)));
+    } catch {
+      findings.push(finding("tsconfig", "tsconfig.invalid", "warning", `${config2} is not strict JSON.`, "Validate or repair tsconfig.json.", [config2]));
+    }
+  }
+  return findings;
 } };
 
 // ../core/src/probes/aggregate.ts
@@ -20988,7 +21105,8 @@ async function runDoctor(root, deps = {}) {
   else if (config2.status === "invalid") add(diag("config", "error", `Config is invalid: ${config2.reason}`, "Repair .shore/guard.json or rerun init after moving it aside.", [".shore/guard.json"]), EXIT_CODES.config);
   else add(diag("config", "info", "Shore Guard config is valid.", "No action required.", [".shore/guard.json"]));
   const auth = deps.auth ? await deps.auth.check() : { status: "missing", reason: "Authentication provider is not installed yet.", remediation: "Install the auth/API client integration and run shore-guard login." };
-  if (auth.status !== "valid") add(diag("auth", "error", auth.reason, auth.remediation), EXIT_CODES.auth);
+  if (auth.status === "unavailable") add(diag("auth", "warning", auth.reason, auth.remediation), EXIT_CODES.remoteUnavailable);
+  else if (auth.status !== "valid") add(diag("auth", "error", auth.reason, auth.remediation), EXIT_CODES.auth);
   else add(diag("auth", "info", "Authentication is valid.", "No action required."));
   const git = deps.runGit ?? runGit;
   const status = await git(root, ["status", "--porcelain"]);
@@ -21020,211 +21138,6 @@ function diag(probe, severity, problem, remediation, evidence = []) {
   return { id: `doctor.${probe}`, probe, severity, problem, remediation, evidence };
 }
 
-// src/commands/init.ts
-import { randomUUID as randomUUID2 } from "node:crypto";
-import * as fs3 from "node:fs/promises";
-import { join as join12 } from "node:path";
-
-// src/migrate/shoreguard-json.ts
-import * as fs2 from "node:fs/promises";
-import { join as join11 } from "node:path";
-var known = /* @__PURE__ */ new Set(["repo", "ref", "thresholds", "timeoutMinutes", "pollSeconds", "apiUrl"]);
-function record2(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-async function exists(path2) {
-  return fs2.access(path2).then(() => true, () => false);
-}
-function translateLegacyConfig(legacy) {
-  const config2 = { schemaVersion: 1 };
-  const settings = [];
-  if (typeof legacy.ref === "string") {
-    config2.developBranch = legacy.ref;
-    settings.push({ setting: "ref", disposition: "translated", target: "developBranch" });
-  }
-  if (record2(legacy.thresholds)) {
-    config2.thresholds = legacy.thresholds;
-    settings.push({ setting: "thresholds", disposition: "translated", target: "thresholds" });
-  }
-  const polling = {};
-  if (typeof legacy.timeoutMinutes === "number") {
-    polling.timeoutMs = legacy.timeoutMinutes * 6e4;
-    settings.push({ setting: "timeoutMinutes", disposition: "translated", target: "polling.timeoutMs" });
-  }
-  if (typeof legacy.pollSeconds === "number") {
-    polling.initialDelayMs = legacy.pollSeconds * 1e3;
-    polling.maxDelayMs = legacy.pollSeconds * 1e3;
-    settings.push({ setting: "pollSeconds", disposition: "translated", target: "polling.initialDelayMs,polling.maxDelayMs" });
-  }
-  if (Object.keys(polling).length > 0) config2.polling = polling;
-  if ("repo" in legacy) settings.push({ setting: "repo", disposition: "dropped", reason: "Repository identity is resolved during init." });
-  if ("apiUrl" in legacy) settings.push({ setting: "apiUrl", disposition: "dropped", reason: "Service location is owned by the new CLI." });
-  for (const key of Object.keys(legacy).filter((key2) => !known.has(key2))) settings.push({ setting: key, disposition: "unknown", reason: "No safe translation is known." });
-  return { config: config2, settings };
-}
-async function migrateLegacyConfig(root) {
-  const source = join11(root, ".shoreguard.json");
-  const destination = join11(root, ".shore", "guard.json");
-  if (!await exists(source)) return { status: "not-found" };
-  if (await exists(destination)) return { status: "conflict", source, destination };
-  let parsed;
-  try {
-    parsed = JSON.parse(await fs2.readFile(source, "utf8"));
-  } catch (error62) {
-    return { status: "invalid", source, reason: `invalid JSON: ${error62 instanceof Error ? error62.message : String(error62)}` };
-  }
-  if (!record2(parsed)) return { status: "invalid", source, reason: "expected a JSON object" };
-  const translated = translateLegacyConfig(parsed);
-  await fs2.mkdir(join11(root, ".shore"), { recursive: true });
-  await fs2.writeFile(destination, `${JSON.stringify(translated.config, null, 2)}
-`);
-  return { status: "migrated", source, destination, settings: translated.settings };
-}
-
-// src/commands/init.ts
-var MANAGED_PATHS = [".gitignore", ".shore/guard.json"];
-var IGNORE_LINES = [".shore/state.json", ".shore/cache/", ".shore/receipts/"];
-var STEPS = ["write-config", "update-gitignore"];
-async function runInit(root, dependencies = {}) {
-  const clock = dependencies.clock ?? systemClock;
-  const migration = await migrateLegacyConfig(root);
-  if (migration.status === "conflict") return result2(EXIT_CODES.userDecisionRequired, "error", "Both .shoreguard.json and .shore/guard.json exist; no file was overwritten. Choose which configuration to keep, then rerun init.");
-  if (migration.status === "invalid") return result2(EXIT_CODES.config, "error", `Legacy .shoreguard.json is invalid: ${migration.reason}`);
-  const migrationNote = migration.status === "migrated" ? ` Migrated .shoreguard.json (${migration.settings.map((item) => `${item.setting}:${item.disposition}`).join(", ")}).` : "";
-  const existingConfig = await loadGuardConfig(root);
-  if (existingConfig.status === "invalid") return result2(EXIT_CODES.config, "error", `Existing .shore/guard.json is invalid: ${existingConfig.reason}. Repair it or move it aside before rerunning init.`);
-  const findings = await aggregateProbes({ root, fs: nodeProbeFileSystem });
-  const prior = await loadState(root);
-  if (prior.status === "corrupt" || prior.status === "unsupported-version") return result2(EXIT_CODES.config, "error", formatStateFailure(prior));
-  if (prior.status === "ok") {
-    const current = await fingerprintManagedFiles(root, prior.state.managedPaths, nodeFileSystem);
-    if (current.status !== "ok") return result2(EXIT_CODES.config, "error", `${current.path}: ${current.reason}`);
-    const drift = detectDrift(prior.state.fingerprint, current.fingerprint);
-    if (drift.status === "drifted") return result2(EXIT_CODES.userDecisionRequired, "error", `Managed files have drifted; no files were overwritten: ${drift.files.map((f) => `${f.path} (${f.change})`).join(", ")}. Review the edits and choose whether to adopt or restore them.`);
-    if (prior.state.run.completedAt) return result2(EXIT_CODES.pass, "pass", summary("Shore Guard is already initialized; no changes made.", findings));
-  }
-  const startedAt = prior.status === "ok" ? prior.state.run.startedAt : clock.now().toISOString();
-  let run2 = prior.status === "ok" ? prior.state.run : { id: randomUUID2(), startedAt, completedAt: null, plan: [...STEPS], applied: [], skipped: [], errors: [] };
-  const connection = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
-  let count = 0;
-  for (const step of STEPS) {
-    if (run2.applied.includes(step)) continue;
-    if (step === "write-config") await writeConfig(root);
-    else await updateGitignore(root);
-    run2 = { ...run2, applied: [...run2.applied, step] };
-    const fingerprint2 = await requiredFingerprint(root);
-    await requireSaved(root, { schemaVersion: 1, updatedAt: clock.now().toISOString(), managedPaths: [...MANAGED_PATHS], fingerprint: fingerprint2, run: run2 });
-    count += 1;
-    if (dependencies.stopAfterSteps !== void 0 && count >= dependencies.stopAfterSteps) return result2(EXIT_CODES.config, "error", "Initialization interrupted after a completed step; rerun init to resume.");
-  }
-  run2 = { ...run2, completedAt: clock.now().toISOString() };
-  const fingerprint = await requiredFingerprint(root);
-  await requireSaved(root, { schemaVersion: 1, updatedAt: clock.now().toISOString(), managedPaths: [...MANAGED_PATHS], fingerprint, run: run2 });
-  const connectionNote = connection.status === "connected" ? ` Repository: ${connection.repository}.` : connection.status === "auth-required" ? ` Repository connection deferred: ${connection.guidance}` : ` Repository connection unavailable: ${connection.reason}`;
-  return result2(EXIT_CODES.pass, "pass", summary(`Initialized Shore Guard.${migrationNote}${connectionNote}`, findings));
-}
-async function writeConfig(root) {
-  const existing = await loadGuardConfig(root);
-  if (existing.status === "ok") return;
-  if (existing.status === "invalid") throw new Error(`existing config is invalid: ${existing.reason}`);
-  await fs3.mkdir(join12(root, ".shore"), { recursive: true });
-  await fs3.writeFile(join12(root, ".shore", "guard.json"), JSON.stringify({ schemaVersion: 1 }, null, 2) + "\n");
-}
-async function updateGitignore(root) {
-  const path2 = join12(root, ".gitignore");
-  let text3 = "";
-  try {
-    text3 = await fs3.readFile(path2, "utf8");
-  } catch (error62) {
-    if (!isMissing(error62)) throw error62;
-  }
-  const lines = new Set(text3.split(/\r?\n/));
-  const additions = IGNORE_LINES.filter((line) => !lines.has(line));
-  if (!additions.length) return;
-  const prefix = text3 && !text3.endsWith("\n") ? "\n" : "";
-  await fs3.writeFile(path2, text3 + prefix + additions.join("\n") + "\n");
-}
-async function requiredFingerprint(root) {
-  const value = await fingerprintManagedFiles(root, MANAGED_PATHS, nodeFileSystem);
-  if (value.status !== "ok") throw new Error(`${value.path}: ${value.reason}`);
-  return value.fingerprint;
-}
-async function requireSaved(root, state) {
-  const saved = await saveState(root, state);
-  if (saved.status === "error") throw new Error(`could not save init state: ${saved.reason}`);
-}
-function summary(prefix, findings) {
-  return `${prefix}
-${findings.map((f) => `[${f.severity}] ${f.problem} Remediation: ${f.remediation}`).join("\n")}`;
-}
-function result2(exitCode2, outcome, message3) {
-  return { command: "init", outcome, exitCode: exitCode2, message: message3 };
-}
-function formatStateFailure(value) {
-  return value.status === "corrupt" ? `${value.reason} ${value.remediation}` : `Unsupported state schema ${String(value.version)}. ${value.remediation}`;
-}
-function isMissing(error62) {
-  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
-}
-
-// src/commands/login.ts
-async function runLogin(options) {
-  if (options.key === void 0 || options.key.trim().length === 0) {
-    return fail(EXIT_CODES.auth, "No API key provided. Pass --api-key, set SHORE_API_KEY, or run login in an interactive terminal.");
-  }
-  const key = options.key.trim();
-  try {
-    await options.clientForKey(key).getAccount();
-  } catch (error62) {
-    if (error62 instanceof AuthError) return fail(EXIT_CODES.auth, `${error62.message} The key was not stored.`);
-    if (error62 instanceof UnavailableError) return fail(EXIT_CODES.remoteUnavailable, `${error62.message} The key was not stored; try again later.`);
-    throw error62;
-  }
-  await options.store.set(key);
-  return {
-    command: "login",
-    outcome: "pass",
-    exitCode: EXIT_CODES.pass,
-    message: `Authentication verified and API key stored.${options.fallbackNotice === void 0 ? "" : `
-${options.fallbackNotice}`}`
-  };
-}
-function fail(exitCode2, message3) {
-  return { command: "login", outcome: "error", exitCode: exitCode2, message: message3 };
-}
-
-// src/commands/status.ts
-async function runStatus(options) {
-  if (options.resolved === void 0) return fail2(EXIT_CODES.auth, 'Not authenticated. Run "shore-guard login" or set SHORE_API_KEY.');
-  try {
-    const [account, usage] = await Promise.all([options.client.getAccount(), options.client.getUsage()]);
-    const repository = options.config?.repoConnectionId === void 0 ? { configured: false } : { configured: true, repoConnectionId: options.config.repoConnectionId };
-    const data = {
-      authenticated: true,
-      keySource: options.resolved.source,
-      identity: { accountId: account.accountId, plan: account.plan },
-      repository,
-      usage
-    };
-    const lines = [
-      `Authenticated (${data.keySource})`,
-      `Account: ${data.identity.accountId} (${data.identity.plan})`,
-      repository.configured ? `Repository: ${repository.repoConnectionId}` : "Repository: not configured",
-      `API calls: ${String(usage.apiCalls.remaining)}/${String(usage.apiCalls.limit)} remaining`,
-      ...options.warning === void 0 ? [] : [options.warning]
-    ];
-    return { command: "status", outcome: "pass", exitCode: EXIT_CODES.pass, message: lines.join("\n"), data };
-  } catch (error62) {
-    if (error62 instanceof AuthError) return fail2(EXIT_CODES.auth, error62.message);
-    if (error62 instanceof QuotaError) return fail2(EXIT_CODES.quota, error62.message);
-    if (error62 instanceof UnavailableError) return fail2(EXIT_CODES.remoteUnavailable, error62.message);
-    throw error62;
-  }
-}
-function fail2(exitCode2, message3) {
-  return { command: "status", outcome: "error", exitCode: exitCode2, message: message3 };
-}
-
 // ../enforcement/src/eslint/baseline.ts
 import { execFile as execFile3 } from "node:child_process";
 import { promisify as promisify2 } from "node:util";
@@ -21237,7 +21150,7 @@ var require2 = createRequire(import.meta.url);
 var runFile = promisify2(execFile3);
 
 // ../enforcement/src/eslint/shrink-check.ts
-import * as fs4 from "node:fs/promises";
+import * as fs2 from "node:fs/promises";
 function suppressionBaseline(value, file2) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`expected an object in ${file2}`);
   const baseline = {};
@@ -21292,7 +21205,7 @@ function compareSuppressionBaselines(committed, current) {
 async function checkSuppressionBaselineFiles(committedPath, currentPath) {
   let committedSource;
   try {
-    committedSource = await fs4.readFile(committedPath, "utf8");
+    committedSource = await fs2.readFile(committedPath, "utf8");
   } catch (error62) {
     if (typeof error62 === "object" && error62 !== null && "code" in error62 && error62.code === "ENOENT") {
       return { ok: false, status: "missing-baseline", file: committedPath, message: `Missing committed ESLint suppressions baseline: ${committedPath}. An empty baseline must be committed as {}.` };
@@ -21301,7 +21214,7 @@ async function checkSuppressionBaselineFiles(committedPath, currentPath) {
   }
   try {
     const committed = parseSuppressionBaseline(committedSource, committedPath);
-    const current = parseSuppressionBaseline(await fs4.readFile(currentPath, "utf8"), currentPath);
+    const current = parseSuppressionBaseline(await fs2.readFile(currentPath, "utf8"), currentPath);
     return compareSuppressionBaselines(committed, current);
   } catch (error62) {
     const message3 = error62 instanceof Error ? error62.message : String(error62);
@@ -21311,7 +21224,7 @@ async function checkSuppressionBaselineFiles(committedPath, currentPath) {
 }
 
 // ../enforcement/src/depcruise/baseline.ts
-import * as fs5 from "node:fs/promises";
+import * as fs3 from "node:fs/promises";
 import { spawn as spawn2 } from "node:child_process";
 import { isAbsolute, relative as relative2, resolve as resolve2, sep as sep2 } from "node:path";
 var DEPCRUISE_BASELINE_NAME = ".dependency-cruiser-known-violations.json";
@@ -21405,7 +21318,7 @@ async function aliasPatterns(repoPath, fileName = "tsconfig.json", seen = /* @__
   seen.add(full);
   let parsed;
   try {
-    parsed = JSON.parse(stripJsonComments(await fs5.readFile(full, "utf8")));
+    parsed = JSON.parse(stripJsonComments(await fs3.readFile(full, "utf8")));
   } catch (error62) {
     if (error62 instanceof Error && "code" in error62 && error62.code === "ENOENT") {
       throw new DepcruiseConfigurationError(`dependency-cruiser TypeScript resolution requires ${fileName}`);
@@ -21451,7 +21364,7 @@ async function runDepcruiseEnforcement(options) {
 }
 
 // ../enforcement/src/depcruise/shrink-check.ts
-import * as fs6 from "node:fs/promises";
+import * as fs4 from "node:fs/promises";
 function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -21481,21 +21394,21 @@ function compareKnownViolations(baseline, current) {
 async function checkKnownViolationsFiles(baselinePath, currentPath) {
   let baselineText;
   try {
-    baselineText = await fs6.readFile(baselinePath, "utf8");
+    baselineText = await fs4.readFile(baselinePath, "utf8");
   } catch (error62) {
     if (error62 instanceof Error && "code" in error62 && error62.code === "ENOENT") return { status: "missing-baseline", entries: [] };
     throw error62;
   }
   try {
-    return compareKnownViolations(JSON.parse(baselineText), JSON.parse(await fs6.readFile(currentPath, "utf8")));
+    return compareKnownViolations(JSON.parse(baselineText), JSON.parse(await fs4.readFile(currentPath, "utf8")));
   } catch (error62) {
     return { status: "malformed", entries: [], message: error62 instanceof Error ? error62.message : String(error62) };
   }
 }
 
 // ../enforcement/src/gates/chain.ts
-import * as fs8 from "node:fs/promises";
-import { join as join14 } from "node:path";
+import * as fs6 from "node:fs/promises";
+import { join as join12 } from "node:path";
 
 // ../enforcement/src/gates/process.ts
 import { spawn as spawn3 } from "node:child_process";
@@ -21534,8 +21447,8 @@ async function runCommand(binary, args, cwd, input2) {
 }
 
 // ../enforcement/src/gates/policy.ts
-import * as fs7 from "node:fs/promises";
-import { join as join13 } from "node:path";
+import * as fs5 from "node:fs/promises";
+import { join as join11 } from "node:path";
 
 // ../policy/src/hash.ts
 import { createHash as createHash2 } from "node:crypto";
@@ -22034,24 +21947,24 @@ function toPolicyRule(rule2) {
 }
 
 // ../enforcement/src/gates/policy.ts
-function record3(value) {
+function record2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 async function loadActivePack(repoPath) {
-  const candidates = [join13(repoPath, ".shore/policy.json"), join13(repoPath, ".shore/guard.json")];
+  const candidates = [join11(repoPath, ".shore/policy.json"), join11(repoPath, ".shore/guard.json")];
   for (const file2 of candidates) {
     let value;
     try {
-      value = JSON.parse(await fs7.readFile(file2, "utf8"));
+      value = JSON.parse(await fs5.readFile(file2, "utf8"));
     } catch (error62) {
       if (error62 instanceof Error && "code" in error62 && error62.code === "ENOENT") continue;
       throw new Error(`Cannot read active policy pack from ${file2}: ${error62 instanceof Error ? error62.message : String(error62)}`);
     }
-    const candidate = record3(value) && ("policyPack" in value || "pack" in value) ? value.policyPack ?? value.pack : value;
+    const candidate = record2(value) && ("policyPack" in value || "pack" in value) ? value.policyPack ?? value.pack : value;
     try {
       return validate2(candidate).pack;
     } catch (error62) {
-      if (file2.endsWith("guard.json") && record3(value) && !("policyPack" in value) && !("pack" in value)) continue;
+      if (file2.endsWith("guard.json") && record2(value) && !("policyPack" in value) && !("pack" in value)) continue;
       throw new Error(`Invalid active policy pack in ${file2}: ${error62 instanceof Error ? error62.message : String(error62)}`);
     }
   }
@@ -22064,9 +21977,9 @@ ${matches.map((rule2) => `${rule2.ruleId}: ${rule2.diagnostic} Remediation: ${ru
 }
 
 // ../enforcement/src/gates/chain.ts
-async function exists2(path2) {
+async function exists(path2) {
   try {
-    await fs8.access(path2);
+    await fs6.access(path2);
     return true;
   } catch {
     return false;
@@ -22087,8 +22000,8 @@ async function runPolicyChain(options) {
     }
   }
   if (options.runTsc === true) {
-    if (!await exists2(join14(options.repoPath, "tsconfig.json"))) return { ok: false, tool: "tsc", exitCode: 2, message: "tsc is required by policy, but tsconfig.json is missing. Add a TypeScript configuration or disable the policy requirement explicitly." };
-    const binary = options.tscBinary ?? join14(options.repoPath, "node_modules/.bin/tsc");
+    if (!await exists(join12(options.repoPath, "tsconfig.json"))) return { ok: false, tool: "tsc", exitCode: 2, message: "tsc is required by policy, but tsconfig.json is missing. Add a TypeScript configuration or disable the policy requirement explicitly." };
+    const binary = options.tscBinary ?? join12(options.repoPath, "node_modules/.bin/tsc");
     let result3;
     try {
       result3 = await runCommand(binary, ["--noEmit", "-p", "tsconfig.json"], options.repoPath);
@@ -22102,17 +22015,17 @@ async function runPolicyChain(options) {
 }
 
 // ../enforcement/src/gates/commit-gate.ts
-import * as fs11 from "node:fs/promises";
-import { basename, join as join17 } from "node:path";
+import * as fs9 from "node:fs/promises";
+import { basename, join as join15 } from "node:path";
 import { pathToFileURL } from "node:url";
 
 // ../enforcement/src/gates/eslint-runner.ts
-import * as fs9 from "node:fs/promises";
+import * as fs7 from "node:fs/promises";
 import * as os from "node:os";
-import { join as join15, resolve as resolve4 } from "node:path";
+import { join as join13, resolve as resolve4 } from "node:path";
 async function executable(path2) {
   try {
-    await fs9.access(path2, fs9.constants.X_OK);
+    await fs7.access(path2, fs7.constants.X_OK);
     return true;
   } catch {
     return false;
@@ -22121,8 +22034,8 @@ async function executable(path2) {
 async function runWithSuppressions(options, suppressions) {
   const config2 = options.configPath ?? "eslint.config.shore.mjs";
   const args = ["--max-warnings=0", "--config", config2, "--suppressions-location", suppressions, ...options.files];
-  const daemon = options.eslintDBinary ?? join15(options.repoPath, "node_modules/.bin/eslint_d");
-  const plain = options.eslintBinary ?? join15(options.repoPath, "node_modules/.bin/eslint");
+  const daemon = options.eslintDBinary ?? join13(options.repoPath, "node_modules/.bin/eslint_d");
+  const plain = options.eslintBinary ?? join13(options.repoPath, "node_modules/.bin/eslint");
   if (await executable(daemon)) {
     try {
       const result4 = await runCommand(daemon, args, options.repoPath);
@@ -22141,18 +22054,18 @@ async function runEslint(options) {
   const suppressions = options.suppressionsPath ?? "eslint-suppressions.json";
   if (options.enforceTouched !== true) return runWithSuppressions(options, suppressions);
   const sourcePath = resolve4(options.repoPath, suppressions);
-  const temporaryDirectory = await fs9.mkdtemp(join15(os.tmpdir(), "shore-edit-suppressions-"));
-  const temporaryPath = join15(temporaryDirectory, "eslint-suppressions.json");
+  const temporaryDirectory = await fs7.mkdtemp(join13(os.tmpdir(), "shore-edit-suppressions-"));
+  const temporaryPath = join13(temporaryDirectory, "eslint-suppressions.json");
   try {
-    const value = JSON.parse(await fs9.readFile(sourcePath, "utf8"));
+    const value = JSON.parse(await fs7.readFile(sourcePath, "utf8"));
     if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`Malformed ESLint suppressions file ${sourcePath}: expected an object.`);
     const excluded = new Set(options.files.flatMap((file2) => [file2, `./${file2}`]));
     const filtered = Object.fromEntries(Object.entries(value).filter(([file2]) => !excluded.has(file2)));
-    await fs9.writeFile(temporaryPath, `${JSON.stringify(filtered, null, 2)}
+    await fs7.writeFile(temporaryPath, `${JSON.stringify(filtered, null, 2)}
 `);
     return await runWithSuppressions(options, temporaryPath);
   } finally {
-    await fs9.rm(temporaryDirectory, { recursive: true, force: true });
+    await fs7.rm(temporaryDirectory, { recursive: true, force: true });
   }
 }
 function formatEslintFailure(result3) {
@@ -22165,7 +22078,7 @@ async function assertGateBaselines(repoPath, requireDepcruise) {
   const required2 = ["eslint-suppressions.json", ...requireDepcruise ? [".dependency-cruiser-known-violations.json"] : []];
   for (const file2 of required2) {
     try {
-      await fs9.access(resolve4(repoPath, file2));
+      await fs7.access(resolve4(repoPath, file2));
     } catch {
       throw new Error(`Missing committed baseline ${file2}. Run Shore Guard install before using the gate.`);
     }
@@ -22173,7 +22086,7 @@ async function assertGateBaselines(repoPath, requireDepcruise) {
 }
 
 // ../enforcement/src/gates/paths.ts
-import * as fs10 from "node:fs/promises";
+import * as fs8 from "node:fs/promises";
 import { isAbsolute as isAbsolute2, relative as relative3, resolve as resolve5, sep as sep3 } from "node:path";
 var SOURCE_EXTENSION = /\.(?:[cm]?[jt]sx?)$/u;
 function confinedRelativePath(repoPath, candidate) {
@@ -22195,7 +22108,7 @@ async function existingSourcePaths(repoPath, paths) {
       continue;
     }
     try {
-      const stat2 = await fs10.stat(resolve5(repoPath, relativePath));
+      const stat2 = await fs8.stat(resolve5(repoPath, relativePath));
       if (!stat2.isFile()) skipped2.push(`${relativePath}: no longer a regular file (deleted or renamed)`);
       else files.push(relativePath);
     } catch (error62) {
@@ -22207,12 +22120,12 @@ async function existingSourcePaths(repoPath, paths) {
 }
 
 // ../enforcement/src/gates/growth-check.ts
-import { join as join16 } from "node:path";
+import { join as join14 } from "node:path";
 async function checkBaselineGrowth(options) {
   const messages = [];
   let ok = true;
   let shrunk = false;
-  const eslint = await checkSuppressionBaselineFiles(join16(options.repoPath, "eslint-suppressions.json"), options.currentSuppressionsPath);
+  const eslint = await checkSuppressionBaselineFiles(join14(options.repoPath, "eslint-suppressions.json"), options.currentSuppressionsPath);
   if (!eslint.ok) {
     ok = false;
     messages.push(eslint.status === "grown" ? `ESLint suppression growth: ${eslint.growth.map((item) => `${item.file}/${item.ruleId} ${String(item.baselineCount)}\u2192${String(item.currentCount)}`).join(", ")}. Fix the violations or run an approved re-baseline.` : eslint.message);
@@ -22221,7 +22134,7 @@ async function checkBaselineGrowth(options) {
     messages.push("ESLint baseline can shrink; regenerate the ledger.");
   }
   if (options.currentKnownViolationsPath !== void 0) {
-    const graph = await checkKnownViolationsFiles(join16(options.repoPath, ".dependency-cruiser-known-violations.json"), options.currentKnownViolationsPath);
+    const graph = await checkKnownViolationsFiles(join14(options.repoPath, ".dependency-cruiser-known-violations.json"), options.currentKnownViolationsPath);
     if (graph.status === "growth") {
       ok = false;
       messages.push(`Dependency boundary growth: ${String(graph.entries.filter((entry2) => entry2.kind === "added").length)} new violation(s). Fix them or run an approved re-baseline.`);
@@ -22264,7 +22177,7 @@ async function runCommitGate(options) {
     if (lint.exitCode !== 0) return { exitCode: lint.exitCode, message: formatEslintFailure(lint), files: selected.files };
     let hasTsconfig = true;
     try {
-      await fs11.access(join17(options.repoPath, "tsconfig.json"));
+      await fs9.access(join15(options.repoPath, "tsconfig.json"));
     } catch {
       hasTsconfig = false;
     }
@@ -22287,7 +22200,7 @@ if (process.argv[1] !== void 0 && import.meta.url === pathToFileURL(process.argv
 import { basename as basename2 } from "node:path";
 import { pathToFileURL as pathToFileURL2 } from "node:url";
 var EDIT_GATE_INPUT_ERROR = 64;
-function record4(value) {
+function record3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parsePostToolUseInput(source) {
@@ -22298,8 +22211,8 @@ function parsePostToolUseInput(source) {
   } catch (error62) {
     throw new Error(`Malformed PostToolUse JSON: ${error62 instanceof Error ? error62.message : String(error62)}`);
   }
-  if (!record4(value)) throw new Error("Malformed PostToolUse payload: expected an object.");
-  const input2 = record4(value.tool_input) ? value.tool_input : value;
+  if (!record3(value)) throw new Error("Malformed PostToolUse payload: expected an object.");
+  const input2 = record3(value.tool_input) ? value.tool_input : value;
   const candidates = [input2.file_path, input2.path, input2.paths, input2.file_paths];
   const paths = candidates.flatMap((candidate) => typeof candidate === "string" ? [candidate] : Array.isArray(candidate) ? candidate.filter((item) => typeof item === "string") : []);
   if (paths.length === 0) throw new Error("PostToolUse payload has no changed path (tool_input.file_path or paths).");
@@ -22404,6 +22317,243 @@ function fromExit(kind, exitCode2, message3, files) {
 }
 function skipped(code, message3, remediation) {
   return { outcome: "skipped", reasons: [{ code, message: message3, remediation }], evidence: {} };
+}
+
+// src/commands/doctor-dependencies.ts
+function createDoctorDependencies(input2) {
+  return {
+    auth: {
+      check: async () => {
+        if (input2.resolved === void 0) {
+          return { status: "missing", reason: "Not authenticated.", remediation: 'Run "shore-guard login" or set SHORE_API_KEY.' };
+        }
+        try {
+          await input2.client.getAccount();
+          return { status: "valid" };
+        } catch (error62) {
+          if (error62 instanceof AuthError) return { status: "invalid", reason: error62.message, remediation: 'Run "shore-guard login" with a valid API key.' };
+          if (error62 instanceof UnavailableError) return { status: "unavailable", reason: error62.message, remediation: "Check network/API availability and rerun doctor." };
+          if (error62 instanceof QuotaError) return { status: "valid" };
+          throw error62;
+        }
+      }
+    },
+    gate: {
+      check: () => {
+        const registry2 = new GateRegistry();
+        for (const gate of registeredGates().gates) registry2.register(gate);
+        const availableIds = new Set(registry2.list().map((gate) => gate.id));
+        if (availableIds.size === 0) return Promise.resolve({ status: "unavailable", remediation: "No verification gates are registered in this build." });
+        const missingIds = (input2.config?.installedGates ?? []).filter((id) => !availableIds.has(id));
+        return Promise.resolve(missingIds.length === 0 ? { status: "available" } : { status: "unavailable", remediation: `Gates ${missingIds.join(", ")} are configured in .shore/guard.json but not available; rerun shore-guard init or remove them.` });
+      }
+    }
+  };
+}
+
+// src/commands/init.ts
+import { randomUUID as randomUUID2 } from "node:crypto";
+import * as fs11 from "node:fs/promises";
+import { join as join17 } from "node:path";
+
+// src/migrate/shoreguard-json.ts
+import * as fs10 from "node:fs/promises";
+import { join as join16 } from "node:path";
+var known = /* @__PURE__ */ new Set(["repo", "ref", "thresholds", "timeoutMinutes", "pollSeconds", "apiUrl"]);
+function record4(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+async function exists2(path2) {
+  return fs10.access(path2).then(() => true, () => false);
+}
+function translateLegacyConfig(legacy) {
+  const config2 = { schemaVersion: 1 };
+  const settings = [];
+  if (typeof legacy.ref === "string") {
+    config2.developBranch = legacy.ref;
+    settings.push({ setting: "ref", disposition: "translated", target: "developBranch" });
+  }
+  if (record4(legacy.thresholds)) {
+    config2.thresholds = legacy.thresholds;
+    settings.push({ setting: "thresholds", disposition: "translated", target: "thresholds" });
+  }
+  const polling = {};
+  if (typeof legacy.timeoutMinutes === "number") {
+    polling.timeoutMs = legacy.timeoutMinutes * 6e4;
+    settings.push({ setting: "timeoutMinutes", disposition: "translated", target: "polling.timeoutMs" });
+  }
+  if (typeof legacy.pollSeconds === "number") {
+    polling.initialDelayMs = legacy.pollSeconds * 1e3;
+    polling.maxDelayMs = legacy.pollSeconds * 1e3;
+    settings.push({ setting: "pollSeconds", disposition: "translated", target: "polling.initialDelayMs,polling.maxDelayMs" });
+  }
+  if (Object.keys(polling).length > 0) config2.polling = polling;
+  if ("repo" in legacy) settings.push({ setting: "repo", disposition: "dropped", reason: "Repository identity is resolved during init." });
+  if ("apiUrl" in legacy) settings.push({ setting: "apiUrl", disposition: "dropped", reason: "Service location is owned by the new CLI." });
+  for (const key of Object.keys(legacy).filter((key2) => !known.has(key2))) settings.push({ setting: key, disposition: "unknown", reason: "No safe translation is known." });
+  return { config: config2, settings };
+}
+async function migrateLegacyConfig(root) {
+  const source = join16(root, ".shoreguard.json");
+  const destination = join16(root, ".shore", "guard.json");
+  if (!await exists2(source)) return { status: "not-found" };
+  if (await exists2(destination)) return { status: "conflict", source, destination };
+  let parsed;
+  try {
+    parsed = JSON.parse(await fs10.readFile(source, "utf8"));
+  } catch (error62) {
+    return { status: "invalid", source, reason: `invalid JSON: ${error62 instanceof Error ? error62.message : String(error62)}` };
+  }
+  if (!record4(parsed)) return { status: "invalid", source, reason: "expected a JSON object" };
+  const translated = translateLegacyConfig(parsed);
+  await fs10.mkdir(join16(root, ".shore"), { recursive: true });
+  await fs10.writeFile(destination, `${JSON.stringify(translated.config, null, 2)}
+`);
+  return { status: "migrated", source, destination, settings: translated.settings };
+}
+
+// src/commands/init.ts
+var MANAGED_PATHS = [".gitignore", ".shore/guard.json"];
+var IGNORE_LINES = [".shore/state.json", ".shore/cache/", ".shore/receipts/"];
+var STEPS = ["write-config", "update-gitignore"];
+async function runInit(root, dependencies = {}) {
+  const clock = dependencies.clock ?? systemClock;
+  const migration = await migrateLegacyConfig(root);
+  if (migration.status === "conflict") return result2(EXIT_CODES.userDecisionRequired, "error", "Both .shoreguard.json and .shore/guard.json exist; no file was overwritten. Choose which configuration to keep, then rerun init.");
+  if (migration.status === "invalid") return result2(EXIT_CODES.config, "error", `Legacy .shoreguard.json is invalid: ${migration.reason}`);
+  const migrationNote = migration.status === "migrated" ? ` Migrated .shoreguard.json (${migration.settings.map((item) => `${item.setting}:${item.disposition}`).join(", ")}).` : "";
+  const existingConfig = await loadGuardConfig(root);
+  if (existingConfig.status === "invalid") return result2(EXIT_CODES.config, "error", `Existing .shore/guard.json is invalid: ${existingConfig.reason}. Repair it or move it aside before rerunning init.`);
+  const findings = await aggregateProbes({ root, fs: nodeProbeFileSystem });
+  const prior = await loadState(root);
+  if (prior.status === "corrupt" || prior.status === "unsupported-version") return result2(EXIT_CODES.config, "error", formatStateFailure(prior));
+  if (prior.status === "ok") {
+    const current = await fingerprintManagedFiles(root, prior.state.managedPaths, nodeFileSystem);
+    if (current.status !== "ok") return result2(EXIT_CODES.config, "error", `${current.path}: ${current.reason}`);
+    const drift = detectDrift(prior.state.fingerprint, current.fingerprint);
+    if (drift.status === "drifted") return result2(EXIT_CODES.userDecisionRequired, "error", `Managed files have drifted; no files were overwritten: ${drift.files.map((f) => `${f.path} (${f.change})`).join(", ")}. Review the edits and choose whether to adopt or restore them.`);
+    if (prior.state.run.completedAt) return result2(EXIT_CODES.pass, "pass", summary("Shore Guard is already initialized; no changes made.", findings));
+  }
+  const startedAt = prior.status === "ok" ? prior.state.run.startedAt : clock.now().toISOString();
+  let run2 = prior.status === "ok" ? prior.state.run : { id: randomUUID2(), startedAt, completedAt: null, plan: [...STEPS], applied: [], skipped: [], errors: [] };
+  const connection = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
+  let count = 0;
+  for (const step of STEPS) {
+    if (run2.applied.includes(step)) continue;
+    if (step === "write-config") await writeConfig(root);
+    else await updateGitignore(root);
+    run2 = { ...run2, applied: [...run2.applied, step] };
+    const fingerprint2 = await requiredFingerprint(root);
+    await requireSaved(root, { schemaVersion: 1, updatedAt: clock.now().toISOString(), managedPaths: [...MANAGED_PATHS], fingerprint: fingerprint2, run: run2 });
+    count += 1;
+    if (dependencies.stopAfterSteps !== void 0 && count >= dependencies.stopAfterSteps) return result2(EXIT_CODES.config, "error", "Initialization interrupted after a completed step; rerun init to resume.");
+  }
+  run2 = { ...run2, completedAt: clock.now().toISOString() };
+  const fingerprint = await requiredFingerprint(root);
+  await requireSaved(root, { schemaVersion: 1, updatedAt: clock.now().toISOString(), managedPaths: [...MANAGED_PATHS], fingerprint, run: run2 });
+  const connectionNote = connection.status === "connected" ? ` Repository: ${connection.repository}.` : connection.status === "auth-required" ? ` Repository connection deferred: ${connection.guidance}` : ` Repository connection unavailable: ${connection.reason}`;
+  return result2(EXIT_CODES.pass, "pass", summary(`Initialized Shore Guard.${migrationNote}${connectionNote}`, findings));
+}
+async function writeConfig(root) {
+  const existing = await loadGuardConfig(root);
+  if (existing.status === "ok") return;
+  if (existing.status === "invalid") throw new Error(`existing config is invalid: ${existing.reason}`);
+  await fs11.mkdir(join17(root, ".shore"), { recursive: true });
+  await fs11.writeFile(join17(root, ".shore", "guard.json"), JSON.stringify({ schemaVersion: 1 }, null, 2) + "\n");
+}
+async function updateGitignore(root) {
+  const path2 = join17(root, ".gitignore");
+  let text3 = "";
+  try {
+    text3 = await fs11.readFile(path2, "utf8");
+  } catch (error62) {
+    if (!isMissing(error62)) throw error62;
+  }
+  const lines = new Set(text3.split(/\r?\n/));
+  const additions = IGNORE_LINES.filter((line) => !lines.has(line));
+  if (!additions.length) return;
+  const prefix = text3 && !text3.endsWith("\n") ? "\n" : "";
+  await fs11.writeFile(path2, text3 + prefix + additions.join("\n") + "\n");
+}
+async function requiredFingerprint(root) {
+  const value = await fingerprintManagedFiles(root, MANAGED_PATHS, nodeFileSystem);
+  if (value.status !== "ok") throw new Error(`${value.path}: ${value.reason}`);
+  return value.fingerprint;
+}
+async function requireSaved(root, state) {
+  const saved = await saveState(root, state);
+  if (saved.status === "error") throw new Error(`could not save init state: ${saved.reason}`);
+}
+function summary(prefix, findings) {
+  return `${prefix}
+${findings.map((f) => `[${f.severity}] ${f.problem} Remediation: ${f.remediation}`).join("\n")}`;
+}
+function result2(exitCode2, outcome, message3) {
+  return { command: "init", outcome, exitCode: exitCode2, message: message3 };
+}
+function formatStateFailure(value) {
+  return value.status === "corrupt" ? `${value.reason} ${value.remediation}` : `Unsupported state schema ${String(value.version)}. ${value.remediation}`;
+}
+function isMissing(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+
+// src/commands/login.ts
+async function runLogin(options) {
+  if (options.key === void 0 || options.key.trim().length === 0) {
+    return fail(EXIT_CODES.auth, "No API key provided. Pass --api-key, set SHORE_API_KEY, or run login in an interactive terminal.");
+  }
+  const key = options.key.trim();
+  try {
+    await options.clientForKey(key).getAccount();
+  } catch (error62) {
+    if (error62 instanceof AuthError) return fail(EXIT_CODES.auth, `${error62.message} The key was not stored.`);
+    if (error62 instanceof UnavailableError) return fail(EXIT_CODES.remoteUnavailable, `${error62.message} The key was not stored; try again later.`);
+    throw error62;
+  }
+  await options.store.set(key);
+  return {
+    command: "login",
+    outcome: "pass",
+    exitCode: EXIT_CODES.pass,
+    message: `Authentication verified and API key stored.${options.fallbackNotice === void 0 ? "" : `
+${options.fallbackNotice}`}`
+  };
+}
+function fail(exitCode2, message3) {
+  return { command: "login", outcome: "error", exitCode: exitCode2, message: message3 };
+}
+
+// src/commands/status.ts
+async function runStatus(options) {
+  if (options.resolved === void 0) return fail2(EXIT_CODES.auth, 'Not authenticated. Run "shore-guard login" or set SHORE_API_KEY.');
+  try {
+    const [account, usage] = await Promise.all([options.client.getAccount(), options.client.getUsage()]);
+    const repository = options.config?.repoConnectionId === void 0 ? { configured: false } : { configured: true, repoConnectionId: options.config.repoConnectionId };
+    const data = {
+      authenticated: true,
+      keySource: options.resolved.source,
+      identity: { accountId: account.accountId, plan: account.plan },
+      repository,
+      usage
+    };
+    const lines = [
+      `Authenticated (${data.keySource})`,
+      `Account: ${data.identity.accountId} (${data.identity.plan})`,
+      repository.configured ? `Repository: ${repository.repoConnectionId}` : "Repository: not configured",
+      `API calls: ${String(usage.apiCalls.remaining)}/${String(usage.apiCalls.limit)} remaining`,
+      ...options.warning === void 0 ? [] : [options.warning]
+    ];
+    return { command: "status", outcome: "pass", exitCode: EXIT_CODES.pass, message: lines.join("\n"), data };
+  } catch (error62) {
+    if (error62 instanceof AuthError) return fail2(EXIT_CODES.auth, error62.message);
+    if (error62 instanceof QuotaError) return fail2(EXIT_CODES.quota, error62.message);
+    if (error62 instanceof UnavailableError) return fail2(EXIT_CODES.remoteUnavailable, error62.message);
+    throw error62;
+  }
+}
+function fail2(exitCode2, message3) {
+  return { command: "status", outcome: "error", exitCode: exitCode2, message: message3 };
 }
 
 // src/commands/verify.ts
@@ -22670,7 +22820,7 @@ async function route(argv, cwd, dependencies = {}) {
   if (command === "--version" || command === "-V") return { json: json2, result: pass("version", CLI_VERSION) };
   if (!(command in COMMANDS)) return { json: json2, result: fail3(command, `Unknown command "${command}". Run "shore-guard --help" for usage.`) };
   const configResult = await loadGuardConfig(cwd);
-  if (configResult.status === "invalid") return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
+  if (configResult.status === "invalid" && command !== "doctor") return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
   const env = dependencies.env ?? process.env;
   const baseUrl = dependencies.baseUrl ?? API_BASE_URL;
   if (command === "login") {
@@ -22706,7 +22856,13 @@ async function route(argv, cwd, dependencies = {}) {
     ...readValueFlag(argv, "--rationale") === void 0 ? {} : { rationale: readValueFlag(argv, "--rationale") },
     ...dependencies.isTTY ?? process.stdin.isTTY ? { prompt: dependencies.promptForAdoption ?? promptForAdoption } : {}
   }) };
-  if (command === "doctor") return { json: json2, result: await runDoctor(cwd) };
+  if (command === "doctor") {
+    const direct = apiKeyFlag ?? env.SHORE_API_KEY;
+    const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+    const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store });
+    const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
+    return { json: json2, result: await runDoctor(cwd, createDoctorDependencies({ resolved, client, config: configResult.status === "ok" ? configResult.config : void 0 })) };
+  }
   if (command === "check") {
     if (configResult.status !== "ok") return { json: json2, result: fail3(command, 'Shore Guard is not initialized. Run "shore-guard init" first.') };
     const direct = apiKeyFlag ?? env.SHORE_API_KEY;
