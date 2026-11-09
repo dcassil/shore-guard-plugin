@@ -1,7 +1,7 @@
 # Shore Guard
 
 Shore Guard provides a standalone repository-health CLI and a Claude Code plugin.
-This artifact was built from monorepo commit `e1546e0aff7126a33d0cb0575ead75ee3877bf26` (version `0.1.2`).
+This artifact was built from monorepo commit `57aa02c0c725543c154726f7b3bde06371cc25dd` (version `0.1.3`).
 
 ## Install
 

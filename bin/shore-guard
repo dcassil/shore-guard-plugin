@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "e1546e0aff7126a33d0cb0575ead75ee3877bf26", version: "0.1.2" };
+var define_SHORE_GUARD_BUILD_default = { sha: "57aa02c0c725543c154726f7b3bde06371cc25dd", version: "0.1.3" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -22351,6 +22351,47 @@ function createDoctorDependencies(input2) {
   };
 }
 
+// src/commands/init-connection.ts
+function createRepositoryConnection(input2) {
+  return {
+    resolve: async (root) => {
+      if (input2.resolved === void 0) return { status: "auth-required", guidance: 'Run "shore-guard login", then rerun "shore-guard init" to connect this repository.' };
+      const remote = input2.remote ?? "origin";
+      const remoteResult = await (input2.git ?? runGit)(root, ["remote", "get-url", remote]);
+      const url2 = remoteResult.stdout.trim();
+      if (remoteResult.code !== 0 || url2.length === 0) return { status: "unavailable", reason: `No "${remote}" remote is configured; add one and rerun init.` };
+      const repository = parseGitHubRepository(url2);
+      if (repository === void 0) return { status: "unavailable", reason: `${url2} is not a GitHub repository.` };
+      try {
+        let offset = 0;
+        for (; ; ) {
+          const page = await input2.client.listRepos({ limit: 100, offset });
+          const match = page.repos.find((repo) => repo.fullName.toLowerCase() === repository.toLowerCase());
+          if (match !== void 0) return { status: "connected", repository: match.fullName, repoConnectionId: match.repoConnectionId };
+          if (page.repos.length === 0 || offset + page.repos.length >= page.pagination.total) break;
+          offset += page.repos.length;
+        }
+        return { status: "unavailable", reason: `${repository} is not connected to this Shore Sight account. Connect it in the dashboard, then rerun init.` };
+      } catch (error62) {
+        if (error62 instanceof AuthError || error62 instanceof UnavailableError || error62 instanceof QuotaError) return { status: "unavailable", reason: error62.message };
+        throw error62;
+      }
+    }
+  };
+}
+function parseGitHubRepository(url2) {
+  const scpMatch = /^git@github\.com:([^/]+\/[^/]+?)(?:\.git)?\/?$/i.exec(url2);
+  if (scpMatch?.[1] !== void 0) return scpMatch[1];
+  try {
+    const parsed = new URL(url2);
+    if (parsed.hostname.toLowerCase() !== "github.com") return void 0;
+    const path2 = parsed.pathname.replace(/^\/+|\/+$/g, "").replace(/\.git$/i, "");
+    return /^[^/]+\/[^/]+$/.test(path2) ? path2 : void 0;
+  } catch {
+    return void 0;
+  }
+}
+
 // src/commands/init.ts
 import { randomUUID as randomUUID2 } from "node:crypto";
 import * as fs11 from "node:fs/promises";
@@ -22424,6 +22465,7 @@ async function runInit(root, dependencies = {}) {
   const migrationNote = migration.status === "migrated" ? ` Migrated .shoreguard.json (${migration.settings.map((item) => `${item.setting}:${item.disposition}`).join(", ")}).` : "";
   const existingConfig = await loadGuardConfig(root);
   if (existingConfig.status === "invalid") return result2(EXIT_CODES.config, "error", `Existing .shore/guard.json is invalid: ${existingConfig.reason}. Repair it or move it aside before rerunning init.`);
+  const connection = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
   const findings = await aggregateProbes({ root, fs: nodeProbeFileSystem });
   const prior = await loadState(root);
   if (prior.status === "corrupt" || prior.status === "unsupported-version") return result2(EXIT_CODES.config, "error", formatStateFailure(prior));
@@ -22432,15 +22474,22 @@ async function runInit(root, dependencies = {}) {
     if (current.status !== "ok") return result2(EXIT_CODES.config, "error", `${current.path}: ${current.reason}`);
     const drift = detectDrift(prior.state.fingerprint, current.fingerprint);
     if (drift.status === "drifted") return result2(EXIT_CODES.userDecisionRequired, "error", `Managed files have drifted; no files were overwritten: ${drift.files.map((f) => `${f.path} (${f.change})`).join(", ")}. Review the edits and choose whether to adopt or restore them.`);
-    if (prior.state.run.completedAt) return result2(EXIT_CODES.pass, "pass", summary("Shore Guard is already initialized; no changes made.", findings));
+    if (prior.state.run.completedAt) {
+      if (existingConfig.status === "ok" && existingConfig.config.repoConnectionId === void 0 && connection.status === "connected") {
+        await writeConfig(root, connection.repoConnectionId);
+        const fingerprint2 = await requiredFingerprint(root);
+        await requireSaved(root, { ...prior.state, updatedAt: clock.now().toISOString(), fingerprint: fingerprint2 });
+        return result2(EXIT_CODES.pass, "pass", summary(`Connected repository ${connection.repository}.`, findings));
+      }
+      return result2(EXIT_CODES.pass, "pass", summary("Shore Guard is already initialized; no changes made.", findings));
+    }
   }
   const startedAt = prior.status === "ok" ? prior.state.run.startedAt : clock.now().toISOString();
   let run2 = prior.status === "ok" ? prior.state.run : { id: randomUUID2(), startedAt, completedAt: null, plan: [...STEPS], applied: [], skipped: [], errors: [] };
-  const connection = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
   let count = 0;
   for (const step of STEPS) {
     if (run2.applied.includes(step)) continue;
-    if (step === "write-config") await writeConfig(root);
+    if (step === "write-config") await writeConfig(root, connection.status === "connected" ? connection.repoConnectionId : void 0);
     else await updateGitignore(root);
     run2 = { ...run2, applied: [...run2.applied, step] };
     const fingerprint2 = await requiredFingerprint(root);
@@ -22451,15 +22500,16 @@ async function runInit(root, dependencies = {}) {
   run2 = { ...run2, completedAt: clock.now().toISOString() };
   const fingerprint = await requiredFingerprint(root);
   await requireSaved(root, { schemaVersion: 1, updatedAt: clock.now().toISOString(), managedPaths: [...MANAGED_PATHS], fingerprint, run: run2 });
-  const connectionNote = connection.status === "connected" ? ` Repository: ${connection.repository}.` : connection.status === "auth-required" ? ` Repository connection deferred: ${connection.guidance}` : ` Repository connection unavailable: ${connection.reason}`;
+  const connectionNote = connection.status === "connected" ? ` Repository: ${connection.repository} (${connection.repoConnectionId}).` : connection.status === "auth-required" ? ` Repository connection deferred: ${connection.guidance}` : ` Repository connection unavailable: ${connection.reason}`;
   return result2(EXIT_CODES.pass, "pass", summary(`Initialized Shore Guard.${migrationNote}${connectionNote}`, findings));
 }
-async function writeConfig(root) {
+async function writeConfig(root, repoConnectionId) {
   const existing = await loadGuardConfig(root);
-  if (existing.status === "ok") return;
+  if (existing.status === "ok" && existing.config.repoConnectionId !== void 0) return;
   if (existing.status === "invalid") throw new Error(`existing config is invalid: ${existing.reason}`);
+  const config2 = existing.status === "ok" ? { ...existing.config, ...repoConnectionId === void 0 ? {} : { repoConnectionId } } : { schemaVersion: 1, ...repoConnectionId === void 0 ? {} : { repoConnectionId } };
   await fs11.mkdir(join17(root, ".shore"), { recursive: true });
-  await fs11.writeFile(join17(root, ".shore", "guard.json"), JSON.stringify({ schemaVersion: 1 }, null, 2) + "\n");
+  await fs11.writeFile(join17(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
 }
 async function updateGitignore(root) {
   const path2 = join17(root, ".gitignore");
@@ -22846,7 +22896,13 @@ async function route(argv, cwd, dependencies = {}) {
       warning: [direct === void 0 ? selection.notice : void 0, ...warnings].filter((value) => value !== void 0).join("\n") || void 0
     }) };
   }
-  if (command === "init") return { json: json2, result: await runInit(cwd) };
+  if (command === "init") {
+    const direct = apiKeyFlag ?? env.SHORE_API_KEY;
+    const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+    const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store });
+    const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
+    return { json: json2, result: await runInit(cwd, { connection: createRepositoryConnection({ resolved, client }) }) };
+  }
   if (command === "adopt") return { json: json2, result: await runAdopt({
     root: cwd,
     proposalPath: readValueFlag(argv, "--proposal"),
