@@ -4,7 +4,25 @@ All proposals must validate, cite every module/edge/rule, use concrete evidence 
 
 ## greenfield
 
-`greenfield/` contains only a manifest and README: zero source files. A good result classifies it greenfield, records the counts, offers all four presets with their catalog overview/avoid/layers metadata, and does not infer a policy before selection. A selected preset uses `source: "preset"`, `presetId`, greenfield evidence throughout, and empty baselines.
+`greenfield/` contains only a manifest and README: zero source files. A good result classifies it greenfield, records the counts, offers all five presets with their catalog overview/avoid/layers metadata, and does not infer a policy before selection. A selected preset uses `source: "preset"`, `presetId`, greenfield evidence throughout, and empty baselines.
+
+## Vite client greenfield interview
+
+`vite-client-greenfield/` has one source file and no internal edge, so it is greenfield/near-empty. If the user declines every preset, a good interview infers `languages` as JS/TS from `package.json`, `tsconfig.json`, and `src/main.ts`; `frameworksAndTools` as Vite and TypeScript from manifest facts and `vite.config.ts`; `repoShape` as `single` from the root manifest and topology; and `appKind` as `client` from Vite, `index.html`, and `src/main.ts`. It must show those four detections for confirmation and cite evidence for each. It must ask exactly:
+
+"No lint rules were found. Do you have a preferred rules system? Shore recommends flat ESLint with architecture boundaries: it checks the file you just saved and only requires files to pass once they are touched, grandfathering existing violations behind a ratchet baseline."
+
+"No test framework was found. Do you have a preference? Shore recommends Vitest (plus Playwright for browser end-to-end when the app has a UI)."
+
+It must not ask the language, tools, shape, or app-kind questions.
+
+## No-fit brownfield interview
+
+`no-fit-brownfield/` has three Python source files and two internal import edges, so it is brownfield. After citing manifest facts showing why every preset's **When to avoid** guidance applies and listing every rejected preset identifier with its reason, a good interview infers `languages` as Python from `pyproject.toml` and the `.py` extensions; `frameworksAndTools` as Flask from `pyproject.toml`; `repoShape` as `single` from the root project declaration and topology; `appKind` as `server` from the Flask dependency, imports, and README; and `testFramework` as pytest from `pyproject.toml`. It must show those five detections for confirmation and cite evidence for each. It must ask exactly:
+
+"No lint rules were found. Do you have a preferred rules system? Shore recommends flat ESLint with architecture boundaries: it checks the file you just saved and only requires files to pass once they are touched, grandfathering existing violations behind a ratchet baseline."
+
+It must not ask the language, tools, shape, app-kind, or test-framework questions.
 
 ## clear brownfield
 
@@ -21,3 +39,7 @@ All proposals must validate, cite every module/edge/rule, use concrete evidence 
 - `near-empty/three-no-edge`: three source files, no internal edge => brownfield.
 
 Generated files, tests, fixtures, manifests, configs, docs, dependencies, and build output do not count as source files.
+
+## submission
+
+After an authored blueprint is adopted, a good result dry-runs the submission command. For a strong result it shows exactly "This sends only a generalized architecture schema: module names, path patterns, edges, and rules. It contains no code, file contents, repository name, URLs, or evidence from your project.", prints the full `data.payload` JSON, and asks exactly "Submit this blueprint to the public Shore Guard catalog? (yes/no)" once. A weak result stops silently without an offer. A declined or non-explicit answer prints exactly "Not submitted. You can run `shore-guard blueprint submit --file <path>` later." and does not submit. An explicit yes runs the submission command without `--dry-run`; a successful run reports `data.issueUrl`. An unauthenticated run with `data.prefilledUrl` says no GitHub credential was found and gives the web address to open. Preset and discovery proposals are never offered, and an id in `submittedBlueprints` is never offered again.

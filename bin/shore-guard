@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "3e08250690b5f1521ef3c5b6fed3f28ddd517d80", version: "0.2.0" };
+var define_SHORE_GUARD_BUILD_default = { sha: "d350b3ff810d405f66cebb17141ba299cc503fd8", version: "0.3.0" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -1179,8 +1179,8 @@ function prefixIssues(path2, issues) {
     return iss;
   });
 }
-function unwrapMessage(message4) {
-  return typeof message4 === "string" ? message4 : message4?.message;
+function unwrapMessage(message5) {
+  return typeof message5 === "string" ? message5 : message5?.message;
 }
 function attachSchema(issues, start, inst) {
   var _a3;
@@ -1198,7 +1198,7 @@ function finalizeIssue(iss, ctx, config2) {
       iss.schema = iss.inst;
   }
   const schemaError = iss.schema !== iss.inst ? iss.schema?._zod.def?.error : void 0;
-  const message4 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const message5 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
   const full = {};
   for (const k of Object.keys(iss)) {
     if (k === "inst" || k === "schema" || k === "continue" || k === "input" || k === "__proto__")
@@ -1206,7 +1206,7 @@ function finalizeIssue(iss, ctx, config2) {
     full[k] = iss[k];
   }
   full.path ?? (full.path = []);
-  full.message = message4;
+  full.message = message5;
   if (ctx?.reportInput) {
     full.input = iss.input;
   }
@@ -2825,9 +2825,9 @@ var asciiTabOrNewline = /[\t\n\r]/g;
 function stripTabAndNewline(value) {
   return value.replace(asciiTabOrNewline, "");
 }
-function urlHostnameOk(url2, hostname3) {
-  hostname3.lastIndex = 0;
-  return hostname3.test(url2.hostname);
+function urlHostnameOk(url2, hostname4) {
+  hostname4.lastIndex = 0;
+  return hostname4.test(url2.hostname);
 }
 function urlProtocolOk(url2, protocol) {
   protocol.lastIndex = 0;
@@ -5038,7 +5038,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve6) {
+function isRecursive(inst, stack, resolve8) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -5048,7 +5048,7 @@ function isRecursive(inst, stack, resolve6) {
   let result3 = NONE;
   const check2 = (child) => {
     if (result3 !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve6);
+      const answer = isRecursive(child, stack, resolve8);
       if (answer > result3)
         result3 = answer;
     }
@@ -5059,7 +5059,7 @@ function isRecursive(inst, stack, resolve6) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve6) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve8) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -5123,7 +5123,7 @@ function isRecursive(inst, stack, resolve6) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve6 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve8 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -12917,8 +12917,8 @@ var globalRegistry = globalThis.__zod_globalRegistry;
 var INVALID = /* @__PURE__ */ Symbol.for("zod.compile.invalid");
 var FALLBACK_FLAG = /* @__PURE__ */ Symbol.for("zod.compile.fallback");
 var ZodCompileAsyncError = class extends Error {
-  constructor(message4 = "z.compile does not support async refinements, transforms, or checks") {
-    super(message4);
+  constructor(message5 = "z.compile does not support async refinements, transforms, or checks") {
+    super(message5);
     this.name = "ZodCompileAsyncError";
   }
 };
@@ -15610,12 +15610,12 @@ function initializeContext(params) {
     external: params?.external ?? void 0
   };
 }
-function handleUnrepresentable(schema, ctx, json2, params, message4) {
-  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message4 }) : ctx.unrepresentable;
+function handleUnrepresentable(schema, ctx, json2, params, message5) {
+  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message5 }) : ctx.unrepresentable;
   if (result3 === "any")
     return false;
   if (result3 === void 0 || result3 === "throw")
-    throw new Error(message4);
+    throw new Error(message5);
   Object.assign(json2, result3);
   return true;
 }
@@ -19736,9 +19736,9 @@ function errorMessage(error62) {
 // ../core/src/git/exec.ts
 import { execFile } from "node:child_process";
 function createGitRunner(execute = execFile) {
-  return (cwd, args) => new Promise((resolve6) => {
+  return (cwd, args) => new Promise((resolve8) => {
     execute("git", args, { cwd, encoding: "utf8", windowsHide: true }, (error62, stdout, stderr) => {
-      resolve6({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
+      resolve8({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
     });
   });
 }
@@ -19756,8 +19756,8 @@ var runGit = createGitRunner();
 var GitResolutionError = class extends Error {
   kind;
   remediation;
-  constructor(kind, message4, remediation) {
-    super(message4);
+  constructor(kind, message5, remediation) {
+    super(message5);
     this.name = "GitResolutionError";
     this.kind = kind;
     this.remediation = remediation;
@@ -19848,7 +19848,7 @@ function evaluateThresholds(comparison, thresholds) {
     const count = SEVERITIES.slice(0, boundary + 1).reduce((sum, item) => sum + (comparison.issues.newBySeverity[item] ?? 0), 0);
     if (count > 0) reasons.push({ code: "new-issues-threshold", message: `${String(count)} new ${severity}-or-higher issue(s) violate failOnNewIssues.`, remediation: `Resolve the new ${severity}-or-higher issues before merging.` });
   }
-  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message4) => ({ code: "remote-comparison-failed", message: message4, remediation: "Review and resolve the reported regression." })));
+  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message5) => ({ code: "remote-comparison-failed", message: message5, remediation: "Review and resolve the reported regression." })));
   return reasons;
 }
 
@@ -19916,8 +19916,8 @@ function result(verdict, reasons, scanIds, extras = {}) {
 var GateRegistrationError = class extends Error {
   code;
   gateId;
-  constructor(code, message4, gateId) {
-    super(message4);
+  constructor(code, message5, gateId) {
+    super(message5);
     this.name = "GateRegistrationError";
     this.code = code;
     this.gateId = gateId;
@@ -20331,7 +20331,7 @@ async function selectCredentialStore(options = {}) {
   };
 }
 function spawnWithInput(command, args, input2) {
-  return new Promise((resolve6, reject) => {
+  return new Promise((resolve8, reject) => {
     const child = spawn(command, args, { stdio: ["pipe", "ignore", "pipe"] });
     let stderr = "";
     child.stderr.on("data", (chunk) => {
@@ -20340,7 +20340,7 @@ function spawnWithInput(command, args, input2) {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {
-        resolve6();
+        resolve8();
       } else {
         reject(new Error(`${command} exited ${String(code)}: ${stderr.trim()}`));
       }
@@ -20444,12 +20444,18 @@ var runRecordSchema = external_exports.object({
   skipped: external_exports.array(external_exports.string()),
   errors: external_exports.array(external_exports.object({ step: external_exports.string(), message: external_exports.string() }).strict())
 }).strict();
+var submittedBlueprintSchema = external_exports.object({
+  id: external_exports.string().min(1),
+  issueUrl: external_exports.url(),
+  at: external_exports.iso.datetime()
+}).strict();
 var shoreStateSchema = external_exports.object({
   schemaVersion: external_exports.literal(STATE_SCHEMA_VERSION),
   updatedAt: external_exports.iso.datetime(),
   managedPaths: external_exports.array(external_exports.string()),
   fingerprint: repositoryFingerprintSchema,
-  run: runRecordSchema
+  run: runRecordSchema,
+  submittedBlueprints: external_exports.array(submittedBlueprintSchema).optional()
 }).strict();
 
 // ../core/src/state/store.ts
@@ -20682,14 +20688,14 @@ async function workspaceConfigs(root, fs13) {
   for (const pattern of patterns) {
     const star = pattern.indexOf("*");
     if (star < 0) {
-      const relative4 = `${pattern.replace(/\/$/, "")}/tsconfig.json`;
-      if (await fs13.exists(join10(root, relative4))) found.push(relative4);
+      const relative5 = `${pattern.replace(/\/$/, "")}/tsconfig.json`;
+      if (await fs13.exists(join10(root, relative5))) found.push(relative5);
       continue;
     }
     const prefix = pattern.slice(0, star).replace(/\/$/, "");
     for (const child of await fs13.list(join10(root, prefix))) {
-      const relative4 = [prefix, child, "tsconfig.json"].filter(Boolean).join("/");
-      if (await fs13.exists(join10(root, relative4))) found.push(relative4);
+      const relative5 = [prefix, child, "tsconfig.json"].filter(Boolean).join("/");
+      if (await fs13.exists(join10(root, relative5))) found.push(relative5);
     }
   }
   return [...new Set(found)];
@@ -20746,8 +20752,8 @@ var nodeProbeFileSystem = {
 
 // src/router.ts
 import { realpathSync } from "node:fs";
-import { readFile as readFile14 } from "node:fs/promises";
-import { homedir as homedir2 } from "node:os";
+import { readFile as readFile15 } from "node:fs/promises";
+import { homedir as homedir2, hostname as hostname3 } from "node:os";
 import { dirname as dirname5 } from "node:path";
 
 // ../api-client/src/compare.ts
@@ -20783,12 +20789,35 @@ var compareResponseSchema = external_exports.object({
   failures: external_exports.array(external_exports.string())
 }).strict();
 
+// ../api-client/src/device-login.ts
+var deviceLoginStartResponseSchema = external_exports.object({
+  deviceCode: external_exports.string().min(32),
+  // Server formats the code as XXXX-XXXX for display; accept the bare form too.
+  userCode: external_exports.string().regex(/^[A-HJ-NP-Z2-9]{4}-?[A-HJ-NP-Z2-9]{4}$/),
+  verificationUrl: external_exports.url(),
+  expiresAt: external_exports.iso.datetime({ offset: true }),
+  intervalSeconds: external_exports.number().int().positive()
+}).strict();
+var deviceLoginApprovedSchema = external_exports.object({
+  status: external_exports.literal("approved"),
+  apiKey: external_exports.string().min(1),
+  accountId: external_exports.uuid(),
+  accountName: external_exports.string()
+}).strict();
+var deviceLoginPollResponseSchema = external_exports.discriminatedUnion("status", [
+  external_exports.object({ status: external_exports.literal("pending") }).strict(),
+  deviceLoginApprovedSchema,
+  external_exports.object({ status: external_exports.literal("denied") }).strict(),
+  external_exports.object({ status: external_exports.literal("expired") }).strict(),
+  external_exports.object({ status: external_exports.literal("consumed") }).strict()
+]);
+
 // ../api-client/src/errors.ts
 var ShoreApiError = class extends Error {
   status;
   code;
-  constructor(message4, options = {}) {
-    super(message4, options.cause === void 0 ? void 0 : { cause: options.cause });
+  constructor(message5, options = {}) {
+    super(message5, options.cause === void 0 ? void 0 : { cause: options.cause });
     this.name = new.target.name;
     if (options.status !== void 0) this.status = options.status;
     if (options.code !== void 0) this.code = options.code;
@@ -20805,20 +20834,25 @@ var ShoreApiError = class extends Error {
 };
 var AuthError = class extends ShoreApiError {
   kind = "auth";
-  constructor(message4 = "Authentication failed.", options = {}) {
-    super(message4, options);
+  constructor(message5 = "Authentication failed.", options = {}) {
+    super(message5, options);
   }
 };
 var UnavailableError = class extends ShoreApiError {
   kind = "unavailable";
-  constructor(message4 = "Shore API is unavailable.", options = {}) {
-    super(message4, options);
+  constructor(message5 = "Shore API is unavailable.", options = {}) {
+    super(message5, options);
+  }
+};
+var DeviceLoginUnavailableError = class extends UnavailableError {
+  constructor(options = {}) {
+    super("Browser login is not available.", options);
   }
 };
 var QuotaError = class extends ShoreApiError {
   kind = "quota";
-  constructor(message4 = "Shore API allowance is exhausted.", options = {}) {
-    super(message4, options);
+  constructor(message5 = "Shore API allowance is exhausted.", options = {}) {
+    super(message5, options);
   }
 };
 
@@ -20904,7 +20938,7 @@ var DEFAULT_RETRY_POLICY = {
 };
 var DEFAULT_RETRY_RUNTIME = {
   now: Date.now,
-  sleep: (milliseconds) => new Promise((resolve6) => setTimeout(resolve6, milliseconds)),
+  sleep: (milliseconds) => new Promise((resolve8) => setTimeout(resolve8, milliseconds)),
   random: Math.random
 };
 function parseRetryAfter(value, nowMs, ceilingMs) {
@@ -20975,16 +21009,14 @@ var usageSchema = external_exports.object({
 // ../api-client/src/client.ts
 function createApiClient(options) {
   const baseUrl = options.baseUrl.replace(/\/$/, "");
-  async function request(method, path2, schema, body) {
+  async function request2(method, path2, schema, body, requestOptions = {}) {
     const policy = options.retryPolicy ?? DEFAULT_RETRY_POLICY;
     const runtime = options.retryRuntime ?? DEFAULT_RETRY_RUNTIME;
-    const canRetryResponse = method === "GET";
+    const canRetryResponse = method === "GET" && requestOptions.devicePoll !== true;
     return withRetry(async () => {
-      const apiKey = await options.getApiKey();
-      if (apiKey === void 0 || apiKey.length === 0) {
-        throw new AuthError('No API key configured. Run "shore-guard login" or set SHORE_API_KEY.', {
-          code: "missing_api_key"
-        });
+      const apiKey = requestOptions.unauthenticated === true ? void 0 : await options.getApiKey();
+      if (requestOptions.unauthenticated !== true && (apiKey === void 0 || apiKey.length === 0)) {
+        throw new AuthError('No API key configured. Run "shore-guard login" or set SHORE_API_KEY.', { code: "missing_api_key" });
       }
       const controller = new AbortController();
       const timer = setTimeout(() => {
@@ -20995,7 +21027,7 @@ function createApiClient(options) {
         response = await (options.fetch ?? globalThis.fetch)(`${baseUrl}${path2}`, {
           method,
           headers: {
-            Authorization: `Bearer ${apiKey}`,
+            ...apiKey === void 0 ? {} : { Authorization: `Bearer ${apiKey}` },
             Accept: "application/json",
             ...body === void 0 ? {} : { "Content-Type": "application/json" }
           },
@@ -21003,17 +21035,23 @@ function createApiClient(options) {
           signal: controller.signal
         });
       } catch (cause) {
-        const message4 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
-        throw retryable(message4, void 0, new UnavailableError(message4, {
+        const message5 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
+        throw retryable(message5, void 0, new UnavailableError(message5, {
           code: controller.signal.aborted ? "timeout" : "network_error",
           cause
         }));
       } finally {
         clearTimeout(timer);
       }
+      if (requestOptions.devicePoll === true && response.status === 429) {
+        return { status: "too_fast", retryAfterSeconds: retryAfterSeconds(response.headers.get("retry-after")) };
+      }
       const value = await parseJson(response);
       if (response.ok) return parseSuccessEnvelope(value, schema);
       const envelope = parseErrorEnvelope(value);
+      if (requestOptions.unauthenticated === true && response.status === 404) {
+        throw new DeviceLoginUnavailableError({ status: response.status, code: envelope?.error });
+      }
       const classified = classifyResponseError(response.status, envelope);
       if (canRetryResponse && isRetryableStatus(response.status, envelope)) {
         const headerHint = parseRetryAfter(response.headers.get("retry-after"), runtime.now(), policy.maxDelayMs);
@@ -21030,7 +21068,7 @@ function createApiClient(options) {
   }
   async function lookupExactScan(repoConnectionId, commitSha) {
     try {
-      return await request("GET", withQuery(`/repos/${encodeURIComponent(repoConnectionId)}/scan-for-commit`, {
+      return await request2("GET", withQuery(`/repos/${encodeURIComponent(repoConnectionId)}/scan-for-commit`, {
         commitSha: commitSha.toLowerCase()
       }), exactScanResponseSchema);
     } catch (error62) {
@@ -21041,14 +21079,27 @@ function createApiClient(options) {
     }
   }
   return {
-    listRepos: (params = {}) => request("GET", withQuery("/repos", params), listReposResponseSchema),
-    triggerScan: (input2) => request("POST", "/scans", triggerScanResponseSchema, input2),
-    getScanRun: (id) => request("GET", `/scan-runs/${encodeURIComponent(id)}`, scanRunResponseSchema),
+    startDeviceLogin: (input2) => request2("POST", "/auth/device", deviceLoginStartResponseSchema, input2, { unauthenticated: true }),
+    pollDeviceLogin: (deviceCode) => request2(
+      "GET",
+      `/auth/device/${encodeURIComponent(deviceCode)}`,
+      deviceLoginPollResponseSchema,
+      void 0,
+      { unauthenticated: true, devicePoll: true }
+    ),
+    listRepos: (params = {}) => request2("GET", withQuery("/repos", params), listReposResponseSchema),
+    triggerScan: (input2) => request2("POST", "/scans", triggerScanResponseSchema, input2),
+    getScanRun: (id) => request2("GET", `/scan-runs/${encodeURIComponent(id)}`, scanRunResponseSchema),
     lookupExactScan,
-    compare: (id, params = {}) => request("GET", withQuery(`/repos/${encodeURIComponent(id)}/compare`, params), compareResponseSchema),
-    getAccount: () => request("GET", "/account", accountSchema),
-    getUsage: () => request("GET", "/account/usage", usageSchema)
+    compare: (id, params = {}) => request2("GET", withQuery(`/repos/${encodeURIComponent(id)}/compare`, params), compareResponseSchema),
+    getAccount: () => request2("GET", "/account", accountSchema),
+    getUsage: () => request2("GET", "/account/usage", usageSchema)
   };
+}
+function retryAfterSeconds(value) {
+  if (value === null) return 1;
+  const seconds = Number(value);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : 1;
 }
 function classifyResponseError(status, envelope) {
   const code = envelope?.error;
@@ -21080,8 +21131,8 @@ function serverRetryHintMs(envelope) {
   const seconds = issues.retryAfterSeconds ?? issues.retryAfter;
   return typeof seconds === "number" && Number.isFinite(seconds) && seconds >= 0 ? seconds * 1e3 : void 0;
 }
-function retryable(message4, retryAfterMs, cause) {
-  return Object.assign(new Error(message4, { cause }), {
+function retryable(message5, retryAfterMs, cause) {
+  return Object.assign(new Error(message5, { cause }), {
     retryable: true,
     ...retryAfterMs === void 0 ? {} : { retryAfterMs }
   });
@@ -21223,9 +21274,9 @@ async function checkSuppressionBaselineFiles(committedPath, currentPath) {
     const current = parseSuppressionBaseline(await fs2.readFile(currentPath, "utf8"), currentPath);
     return compareSuppressionBaselines(committed, current);
   } catch (error62) {
-    const message4 = error62 instanceof Error ? error62.message : String(error62);
-    const file2 = message4.includes(currentPath) ? currentPath : committedPath;
-    return { ok: false, status: "parse-error", file: file2, message: message4 };
+    const message5 = error62 instanceof Error ? error62.message : String(error62);
+    const file2 = message5.includes(currentPath) ? currentPath : committedPath;
+    return { ok: false, status: "parse-error", file: file2, message: message5 };
   }
 }
 
@@ -21235,8 +21286,8 @@ import { spawn as spawn2 } from "node:child_process";
 import { isAbsolute, relative as relative2, resolve as resolve2, sep as sep2 } from "node:path";
 var DEPCRUISE_BASELINE_NAME = ".dependency-cruiser-known-violations.json";
 var DepcruiseConfigurationError = class extends Error {
-  constructor(message4) {
-    super(message4);
+  constructor(message5) {
+    super(message5);
     this.name = "DepcruiseConfigurationError";
   }
 };
@@ -21419,7 +21470,7 @@ import { join as join12 } from "node:path";
 // ../enforcement/src/gates/process.ts
 import { spawn as spawn3 } from "node:child_process";
 async function runCommand(binary, args, cwd, input2) {
-  return new Promise((resolve6, reject) => {
+  return new Promise((resolve8, reject) => {
     const child = spawn3(binary, args, { cwd, stdio: [input2 === void 0 ? "ignore" : "pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
@@ -21440,7 +21491,7 @@ async function runCommand(binary, args, cwd, input2) {
     });
     child.once("error", reject);
     child.once("close", (code) => {
-      resolve6({ exitCode: code ?? 1, stdout, stderr });
+      resolve8({ exitCode: code ?? 1, stdout, stderr });
     });
     if (input2 !== void 0) {
       if (standardInput === null) {
@@ -21816,6 +21867,201 @@ var supabaseNodeRagPreset = {
     }
   ]
 };
+var viteClientSideWebappPreset = {
+  version: 1,
+  metadata: {
+    id: "shore.preset.vite-client-side-webapp",
+    name: "Vite Client-Side Webapp",
+    description: catalogDescription(
+      "A framework-free, server-free Vite single-page app with a pure domain core, feature slices behind public entries, and all browser platform APIs isolated in adapters.",
+      "Avoid for apps with a backend or server rendering, for React or Next.js codebases, or for trivial static pages where layer separation adds no value.",
+      "Entry bootstrap, app composition, feature slices, presentational UI, pure domain, platform adapters, shared leaf utilities, and global styles."
+    ),
+    revision: "1.0.0"
+  },
+  modules: {
+    pathMappings: {
+      entry: ["src/main.ts"],
+      app: ["src/app/**/*.ts"],
+      features: ["src/features/*/index.ts"],
+      "feature-internals": ["src/features/*/!(index).ts", "src/features/*/!(index)/**/*.ts"],
+      ui: ["src/ui/**/*.ts"],
+      domain: ["src/domain/**/*.ts"],
+      platform: ["src/platform/**/*.ts"],
+      shared: ["src/shared/**/*.ts"],
+      styles: ["src/styles/**/*.css"],
+      "node-builtins": [
+        "node:*",
+        "fs",
+        "path",
+        "os",
+        "child_process",
+        "crypto",
+        "http",
+        "https",
+        "net",
+        "stream",
+        "url",
+        "util",
+        "worker_threads"
+      ],
+      "build-tooling": ["vite", "vite/*", "vitest", "vitest/*"]
+    },
+    allowedEdges: [
+      { from: "entry", to: "app" },
+      { from: "entry", to: "styles" },
+      { from: "entry", to: "shared" },
+      { from: "entry", to: "platform" },
+      { from: "app", to: "features" },
+      { from: "app", to: "ui" },
+      { from: "app", to: "platform" },
+      { from: "app", to: "shared" },
+      { from: "features", to: "ui" },
+      { from: "features", to: "domain" },
+      { from: "features", to: "platform" },
+      { from: "features", to: "shared" },
+      { from: "ui", to: "shared" },
+      { from: "ui", to: "domain" },
+      { from: "platform", to: "domain" },
+      { from: "platform", to: "shared" },
+      { from: "domain", to: "shared" }
+    ],
+    forbiddenEdges: [
+      { from: "app", to: "feature-internals" },
+      { from: "entry", to: "feature-internals" },
+      { from: "entry", to: "features" },
+      { from: "features", to: "app" },
+      { from: "features", to: "entry" },
+      { from: "ui", to: "app" },
+      { from: "ui", to: "features" },
+      { from: "ui", to: "feature-internals" },
+      { from: "ui", to: "platform" },
+      { from: "domain", to: "app" },
+      { from: "domain", to: "features" },
+      { from: "domain", to: "feature-internals" },
+      { from: "domain", to: "ui" },
+      { from: "domain", to: "platform" },
+      { from: "platform", to: "app" },
+      { from: "platform", to: "features" },
+      { from: "platform", to: "feature-internals" },
+      { from: "platform", to: "ui" },
+      { from: "shared", to: "app" },
+      { from: "shared", to: "features" },
+      { from: "shared", to: "feature-internals" },
+      { from: "shared", to: "ui" },
+      { from: "shared", to: "domain" },
+      { from: "shared", to: "platform" },
+      { from: "entry", to: "node-builtins" },
+      { from: "app", to: "node-builtins" },
+      { from: "features", to: "node-builtins" },
+      { from: "feature-internals", to: "node-builtins" },
+      { from: "ui", to: "node-builtins" },
+      { from: "domain", to: "node-builtins" },
+      { from: "platform", to: "node-builtins" },
+      { from: "shared", to: "node-builtins" },
+      { from: "entry", to: "build-tooling" },
+      { from: "app", to: "build-tooling" },
+      { from: "features", to: "build-tooling" },
+      { from: "feature-internals", to: "build-tooling" },
+      { from: "ui", to: "build-tooling" },
+      { from: "domain", to: "build-tooling" },
+      { from: "platform", to: "build-tooling" },
+      { from: "shared", to: "build-tooling" }
+    ]
+  },
+  rules: [
+    {
+      ruleId: "architecture.app-feature-deep-imports",
+      kind: "import-boundary",
+      scope: { paths: ["src/main.ts", "src/app/**/*.ts"], modules: ["entry", "app", "feature-internals"] },
+      severity: "error",
+      diagnostic: "Entry or app code crosses the feature public-entry boundary with a deep feature import.",
+      remediation: "Export the dependency from the feature index and import that public entry instead.",
+      adoptionStage: "enforce"
+    },
+    {
+      ruleId: "architecture.feature-cross-deep-imports",
+      kind: "import-boundary",
+      scope: { paths: ["src/features/**/*.ts"], modules: ["features", "feature-internals"] },
+      severity: "error",
+      diagnostic: "A feature reaches into the internals of another feature instead of its public entry.",
+      remediation: "Import the other feature through its index, or move the shared piece to domain, ui, or shared.",
+      adoptionStage: "warn"
+    },
+    {
+      ruleId: "architecture.domain-imports-browser-layers",
+      kind: "import-boundary",
+      scope: { paths: ["src/domain/**/*.ts"], modules: ["domain", "platform", "ui", "features", "feature-internals", "app"] },
+      severity: "error",
+      diagnostic: "Pure domain code crosses into a browser-facing layer, so it can no longer run or be tested outside the browser.",
+      remediation: "Keep domain free of platform, ui, feature, and app imports; pass browser results in as plain domain values.",
+      adoptionStage: "enforce"
+    },
+    {
+      ruleId: "architecture.ui-imports-platform-or-features",
+      kind: "import-boundary",
+      scope: { paths: ["src/ui/**/*.ts"], modules: ["ui", "platform", "features", "feature-internals", "app"] },
+      severity: "error",
+      diagnostic: "Presentational UI crosses the adapter boundary by importing platform, feature, or app code.",
+      remediation: "Receive data and callbacks as parameters; let the feature or app layer own platform access.",
+      adoptionStage: "enforce"
+    },
+    {
+      ruleId: "architecture.platform-imports-upward",
+      kind: "import-boundary",
+      scope: { paths: ["src/platform/**/*.ts"], modules: ["platform", "app", "features", "feature-internals", "ui"] },
+      severity: "error",
+      diagnostic: "A platform adapter imports app, feature, or ui code, inverting the dependency direction.",
+      remediation: "Expose a framework-neutral interface from the adapter and let higher layers call it.",
+      adoptionStage: "enforce"
+    },
+    {
+      ruleId: "architecture.shared-imports-internal",
+      kind: "import-boundary",
+      scope: { paths: ["src/shared/**/*.ts"], modules: ["shared", "app", "features", "feature-internals", "ui", "domain", "platform"] },
+      severity: "error",
+      diagnostic: "A shared leaf utility imports another internal layer, so it is no longer a leaf.",
+      remediation: "Move the code into the layer it depends on, or remove the dependency.",
+      adoptionStage: "enforce"
+    },
+    {
+      ruleId: "architecture.runtime-imports-node-builtins",
+      kind: "import-boundary",
+      scope: { paths: ["src/**/*.ts"], modules: ["entry", "app", "features", "feature-internals", "ui", "domain", "platform", "shared", "node-builtins"] },
+      severity: "error",
+      diagnostic: "Browser runtime code imports a Node.js builtin that does not exist in the client bundle.",
+      remediation: "Use a Web API equivalent or a platform adapter; Node builtins belong only in config and tooling.",
+      adoptionStage: "enforce"
+    },
+    {
+      ruleId: "architecture.runtime-imports-build-tooling",
+      kind: "import-boundary",
+      scope: { paths: ["src/**/*.ts"], modules: ["entry", "app", "features", "feature-internals", "ui", "domain", "platform", "shared", "build-tooling"] },
+      severity: "error",
+      diagnostic: "Runtime code imports the bundler or test runner package.",
+      remediation: "Keep Vite and Vitest imports in vite.config.ts and test files outside src.",
+      adoptionStage: "enforce"
+    },
+    {
+      ruleId: "architecture.feature-cycles",
+      kind: "no-cycles",
+      scope: { paths: ["src/features/**/*.ts", "src/domain/**/*.ts", "src/platform/**/*.ts"] },
+      severity: "error",
+      diagnostic: "An import cycle exists between feature, domain, or platform modules.",
+      remediation: "Break the cycle by extracting the shared piece into domain or shared, or by inverting one dependency through an interface.",
+      adoptionStage: "warn"
+    },
+    {
+      ruleId: "architecture.orphan-modules",
+      kind: "no-orphans",
+      scope: { paths: ["src/**/*.ts"] },
+      severity: "warning",
+      diagnostic: "A source module is not reachable from src/main.ts.",
+      remediation: "Wire the module into a feature or app, or delete it.",
+      adoptionStage: "observe"
+    }
+  ]
+};
 
 // ../policy/src/proposal.ts
 var PROPOSAL_VERSION = 1;
@@ -21831,6 +22077,7 @@ var evidenceSchema2 = external_exports.discriminatedUnion("kind", [
   external_exports.strictObject({ kind: external_exports.literal("manifest-fact"), path, key: text2, value: text2, detail: text2 }),
   external_exports.strictObject({ kind: external_exports.literal("docs-intent"), path, section: text2, detail: text2 }),
   external_exports.strictObject({ kind: external_exports.literal("existing-policy"), path, detail: text2 }),
+  external_exports.strictObject({ kind: external_exports.literal("interview"), field: text2, value: text2, detail: text2 }),
   external_exports.strictObject({ kind: external_exports.literal("greenfield"), detail: text2 })
 ]);
 var support = external_exports.strictObject({ evidence: external_exports.array(evidenceSchema2).min(1, "must cite at least one evidence reference"), tradeoffs: text2 });
@@ -21838,8 +22085,9 @@ var edge = external_exports.strictObject({ from: text2, to: text2, evidence: sup
 var rule = policyRuleSchema.extend({ evidence: support.shape.evidence, tradeoffs: text2 });
 var proposalSchema = external_exports.strictObject({
   proposalVersion: external_exports.literal(PROPOSAL_VERSION),
-  source: external_exports.enum(["discovery", "preset"]),
+  source: external_exports.enum(["discovery", "preset", "authored"]),
   presetId: text2.optional(),
+  blueprintId: text2.optional(),
   metadata: policyPackSchema.shape.metadata,
   modules: external_exports.strictObject({
     pathMappings: policyPackSchema.shape.modules.shape.pathMappings,
@@ -21857,6 +22105,11 @@ var proposalSchema = external_exports.strictObject({
     context.addIssue({ code: "custom", path: ["modules", "moduleEvidence", name], message: `does not name a path mapping` });
   }
   if (proposal.source === "preset" && proposal.presetId === void 0) context.addIssue({ code: "custom", path: ["presetId"], message: "is required for a preset proposal" });
+  if (proposal.source === "authored") {
+    if (proposal.blueprintId === void 0) context.addIssue({ code: "custom", path: ["blueprintId"], message: "is required for an authored proposal" });
+    else if (!/^shore\.authored\.[a-z0-9]+(?:-[a-z0-9]+)*$/.test(proposal.blueprintId)) context.addIssue({ code: "custom", path: ["blueprintId"], message: "must match shore.authored.<slug> using lowercase letters, numbers, and single hyphens" });
+    if (proposal.presetId !== void 0) context.addIssue({ code: "custom", path: ["presetId"], message: "must not be set for an authored proposal" });
+  }
   const f1 = policyPackSchema.safeParse({
     version: 1,
     metadata: proposal.metadata,
@@ -21898,7 +22151,7 @@ function validateProposal(input2, options = {}) {
   return parsed.data;
 }
 function citedPaths(evidence) {
-  if (evidence.kind === "greenfield") return [];
+  if (evidence.kind === "greenfield" || evidence.kind === "interview") return [];
   if (evidence.kind === "import-edge") return [evidence.from, evidence.to];
   return [evidence.path];
 }
@@ -21938,7 +22191,8 @@ function serializeProposal(input2, approval2) {
     contentHash: hash2(pack),
     approval: approval2
   };
-  return validateLock(lock, pack);
+  const validated = validateLock(lock, pack);
+  return proposal.source === "authored" ? { ...validated, blueprint: pack, blueprintId: proposal.blueprintId } : validated;
 }
 function toPolicyRule(rule2) {
   return {
@@ -21950,6 +22204,86 @@ function toPolicyRule(rule2) {
     remediation: rule2.remediation,
     adoptionStage: rule2.adoptionStage
   };
+}
+
+// ../policy/src/blueprint-scrub.ts
+var PRIVATE_KEYS = /* @__PURE__ */ new Set(["evidence", "moduleEvidence", "tradeoffs"]);
+var BlueprintScrubError = class extends Error {
+  fields;
+  constructor(fields) {
+    super(`Blueprint still contains repository identifiers in: ${fields.join(", ")}`);
+    this.name = "BlueprintScrubError";
+    this.fields = fields;
+  }
+};
+function scrubBlueprint(pack, options) {
+  const scrubbed = removePrivateKeys(pack);
+  const identifiers = options.repoIdentifiers.map((value) => value.trim().toLowerCase()).filter((value) => value !== "");
+  const fields = [];
+  findIdentifiers(scrubbed, "$", identifiers, fields);
+  if (fields.length > 0) throw new BlueprintScrubError(fields);
+  return scrubbed;
+}
+function removePrivateKeys(value) {
+  if (Array.isArray(value)) return value.map(removePrivateKeys);
+  if (!isRecord3(value)) return value;
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !PRIVATE_KEYS.has(key)).map(([key, child]) => [key, removePrivateKeys(child)]));
+}
+function findIdentifiers(value, path2, identifiers, fields) {
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase();
+    if (identifiers.some((identifier2) => normalized.includes(identifier2))) fields.push(path2);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((child, index) => {
+      findIdentifiers(child, `${path2}.${String(index)}`, identifiers, fields);
+    });
+    return;
+  }
+  if (isRecord3(value)) {
+    Object.entries(value).forEach(([key, child]) => {
+      findIdentifiers(child, `${path2}.${key}`, identifiers, fields);
+    });
+  }
+}
+function isRecord3(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// ../policy/src/blueprint-strength.ts
+function assessBlueprint(input2) {
+  let pack;
+  const reasons = [];
+  try {
+    const validation = validate2(input2);
+    pack = validation.pack;
+    if (validation.hasUnknownEnforcingKinds) reasons.push("Blueprint has unknown enforcing rule kinds.");
+  } catch (error62) {
+    if (error62 instanceof PolicyValidationError) return assessment([error62.message]);
+    throw error62;
+  }
+  if (Object.keys(pack.modules.pathMappings).length < 4) reasons.push("Blueprint must define at least 4 modules.");
+  if (pack.modules.allowedEdges.length < 3) reasons.push("Blueprint must define at least 3 allowed edges.");
+  const enforcingRules = pack.rules.filter((rule2) => rule2.adoptionStage === "warn" || rule2.adoptionStage === "enforce").length;
+  if (pack.modules.forbiddenEdges.length + enforcingRules < 3) reasons.push("Blueprint must define at least 3 forbidden edges or rules at warn/enforce.");
+  const missing = missingDescriptionSections(pack.metadata.description);
+  if (missing.length > 0) reasons.push(`Catalog description must contain non-empty Overview, When to avoid, and Layers sections (missing: ${missing.join(", ")}).`);
+  return assessment(reasons);
+}
+function assessment(reasons) {
+  return { strong: reasons.length === 0, reasons };
+}
+function missingDescriptionSections(description) {
+  const headings = ["Overview", "When to avoid", "Layers"];
+  const sections = /* @__PURE__ */ new Map();
+  const pattern = /(?:^|\n)(Overview|When to avoid|Layers):[\t ]*([^\n]*)/giu;
+  for (const match of description.matchAll(pattern)) {
+    const heading = match[1];
+    const content = match[2];
+    if (heading !== void 0 && content !== void 0) sections.set(heading.toLowerCase(), content.trim());
+  }
+  return headings.filter((heading) => (sections.get(heading.toLowerCase()) ?? "") === "");
 }
 
 // ../enforcement/src/gates/policy.ts
@@ -22304,25 +22638,25 @@ var commitGateRegistration = {
 function registeredGates() {
   return { gates: [editGateRegistration, commitGateRegistration] };
 }
-function fromExit(kind, exitCode3, message4, files) {
+function fromExit(kind, exitCode3, message5, files) {
   const evidence = { files };
   if (exitCode3 === 0) return { outcome: "pass", reasons: [], evidence };
   if (exitCode3 === 70) {
     return {
       outcome: "unavailable",
-      reasons: [{ code: `${kind}-gate-unavailable`, message: message4, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
+      reasons: [{ code: `${kind}-gate-unavailable`, message: message5, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
       evidence,
       failureKind: "unavailable"
     };
   }
   return {
     outcome: "fail",
-    reasons: [{ code: `${kind}-gate-failed`, message: message4, remediation: "Fix the reported violations and re-run the gate." }],
+    reasons: [{ code: `${kind}-gate-failed`, message: message5, remediation: "Fix the reported violations and re-run the gate." }],
     evidence
   };
 }
-function skipped(code, message4, remediation) {
-  return { outcome: "skipped", reasons: [{ code, message: message4, remediation }], evidence: {} };
+function skipped(code, message5, remediation) {
+  return { outcome: "skipped", reasons: [{ code, message: message5, remediation }], evidence: {} };
 }
 
 // src/commands/doctor-dependencies.ts
@@ -22369,21 +22703,46 @@ function createRepositoryConnection(input2) {
       const repository = parseGitHubRepository(url2);
       if (repository === void 0) return { status: "unavailable", reason: `${url2} is not a GitHub repository.` };
       try {
-        let offset = 0;
-        for (; ; ) {
-          const page = await input2.client.listRepos({ limit: 100, offset });
-          const match = page.repos.find((repo) => repo.fullName.toLowerCase() === repository.toLowerCase());
-          if (match !== void 0) return { status: "connected", repository: match.fullName, repoConnectionId: match.repoConnectionId };
-          if (page.repos.length === 0 || offset + page.repos.length >= page.pagination.total) break;
-          offset += page.repos.length;
-        }
+        const match = await findRepository(input2.client, (repo) => repo.fullName.toLowerCase() === repository.toLowerCase());
+        if (match !== void 0) return { status: "connected", repository: match.fullName, repoConnectionId: match.repoConnectionId };
         return { status: "unavailable", reason: `${repository} is not connected to this Shore Sight account. Connect it in the dashboard, then rerun init.` };
       } catch (error62) {
         if (error62 instanceof AuthError || error62 instanceof UnavailableError || error62 instanceof QuotaError) return { status: "unavailable", reason: error62.message };
         throw error62;
       }
-    }
+    },
+    verify: (root, configuredId) => verifyRepositoryConnection({ ...input2, root }, configuredId)
   };
+}
+async function verifyRepositoryConnection(input2, configuredId) {
+  if (input2.resolved === void 0) return { status: "auth-required" };
+  try {
+    const configured = await findRepository(input2.client, (repo) => repo.repoConnectionId === configuredId);
+    if (configured !== void 0) return { status: "valid", repository: configured.fullName };
+    const repository = await repositoryFromRemote(input2, input2.root);
+    if (repository === void 0) return { status: "stale" };
+    const replacement = await findRepository(input2.client, (repo) => repo.fullName.toLowerCase() === repository.toLowerCase());
+    return replacement === void 0 ? { status: "stale" } : { status: "stale", replacement: { repository: replacement.fullName, repoConnectionId: replacement.repoConnectionId } };
+  } catch (error62) {
+    if (error62 instanceof AuthError) return { status: "auth-required" };
+    if (error62 instanceof UnavailableError || error62 instanceof QuotaError) return { status: "unavailable", reason: error62.message };
+    throw error62;
+  }
+}
+async function findRepository(client, matches) {
+  let offset = 0;
+  for (; ; ) {
+    const page = await client.listRepos({ limit: 100, offset });
+    const match = page.repos.find(matches);
+    if (match !== void 0) return match;
+    if (page.repos.length === 0 || offset + page.repos.length >= page.pagination.total) return void 0;
+    offset += page.repos.length;
+  }
+}
+async function repositoryFromRemote(input2, root) {
+  const remoteResult = await (input2.git ?? runGit)(root, ["remote", "get-url", input2.remote ?? "origin"]);
+  if (remoteResult.code !== 0) return void 0;
+  return parseGitHubRepository(remoteResult.stdout.trim());
 }
 function parseGitHubRepository(url2) {
   const scpMatch = /^git@github\.com:([^/]+\/[^/]+?)(?:\.git)?\/?$/i.exec(url2);
@@ -22471,7 +22830,15 @@ async function buildInitPlan(root, deps) {
   let repoConnectionId = config2.status === "ok" ? config2.config.repoConnectionId : void 0;
   let connection;
   if (repoConnectionId !== void 0) {
-    connection = { id: "connection", status: "done", title: "Connect repository", detail: `Repository connection ${repoConnectionId}`, manual: "shore-guard init" };
+    const verified = await deps.connection.verify(root, repoConnectionId);
+    if (verified.status === "valid") connection = { id: "connection", status: "done", title: "Connect repository", detail: `origin ${verified.repository} \u2192 ${repoConnectionId}`, manual: "shore-guard init" };
+    else if (verified.status === "stale" && verified.replacement !== void 0) connection = { id: "connection", status: "pending", title: "Connect repository", detail: `Configured connection ${repoConnectionId} is stale; init will re-link to ${verified.replacement.repository} (${verified.replacement.repoConnectionId})`, manual: "shore-guard init" };
+    else if (verified.status === "stale") {
+      const repository = await configuredOrigin(root, deps.git);
+      const reason = repository === void 0 ? "The origin remote is missing or is not a GitHub repository. Configure it, then rerun init." : `${repository} is not connected to this Shore Sight account. Connect it in the dashboard, then rerun init.`;
+      connection = { id: "connection", status: "blocked", title: "Connect repository", detail: reason, manual: "shore-guard init", reason };
+    } else if (verified.status === "auth-required") connection = { id: "connection", status: "pending", title: "Connect repository", detail: "requires login", manual: "shore-guard init" };
+    else connection = { id: "connection", status: "blocked", title: "Connect repository", detail: verified.reason, manual: "shore-guard init", reason: verified.reason };
   } else if (login.status !== "done") {
     connection = { id: "connection", status: "pending", title: "Connect repository", detail: "requires login", manual: "shore-guard init" };
   } else {
@@ -22489,8 +22856,29 @@ async function buildInitPlan(root, deps) {
   const missingIgnoreLines = await findMissingIgnoreLines(root);
   const updateGitignore2 = missingIgnoreLines.length === 0 ? { id: "update-gitignore", status: "done", title: "Update .gitignore", detail: "All Shore Guard runtime paths are ignored", manual: "shore-guard init" } : { id: "update-gitignore", status: "pending", title: "Update .gitignore", detail: `Add ${missingIgnoreLines.join(", ")}`, manual: "shore-guard init", changes: [".gitignore"] };
   const commit = await buildCommitPlanStep(root, deps.git);
-  const steps = [cli, login, connection, writeConfig2, updateGitignore2, commit];
+  const discovery = await buildDiscoveryPlanStep(root, commit);
+  const steps = [cli, login, connection, writeConfig2, updateGitignore2, commit, discovery];
   return { steps, nextStep: steps.find((step) => step.status !== "done")?.id ?? null };
+}
+async function configuredOrigin(root, git = runGit) {
+  const result3 = await git(root, ["remote", "get-url", "origin"]);
+  if (result3.code !== 0) return void 0;
+  const match = /(?:github\.com[/:])([^/]+\/[^/]+?)(?:\.git)?\/?$/i.exec(result3.stdout.trim());
+  return match?.[1];
+}
+async function buildDiscoveryPlanStep(root, commit) {
+  const manual = "Run the discovery skill, review the proposal, then: shore-guard adopt --proposal <file> --approve";
+  const lockPath = join17(root, ".shore", "policy.lock.json");
+  try {
+    const lock = JSON.parse(await fs11.readFile(lockPath, "utf8"));
+    const contentHash = typeof lock === "object" && lock !== null && "contentHash" in lock && typeof lock.contentHash === "string" ? lock.contentHash : "policy lock present";
+    return { id: "discovery", status: "done", title: "Discover architecture policy", detail: `Architecture policy adopted (${contentHash})`, manual };
+  } catch (error62) {
+    if (!isMissing(error62) && !(error62 instanceof SyntaxError)) throw error62;
+    if (error62 instanceof SyntaxError) return { id: "discovery", status: "done", title: "Discover architecture policy", detail: "Architecture policy adopted (policy lock present)", manual };
+  }
+  if (commit.status !== "done") return { id: "discovery", status: "blocked", title: "Discover architecture policy", detail: "Architecture policy requires committed configuration", manual, reason: "Commit the configuration first" };
+  return { id: "discovery", status: "pending", title: "Discover architecture policy", detail: "No architecture policy yet \u2014 run discovery and adopt a proposal", manual, changes: [".shore/policy.json", ".shore/policy.lock.json", "AGENTS.md"] };
 }
 async function buildCommitPlanStep(root, git = runGit) {
   const manual = 'git add .shore/guard.json .gitignore && git commit -m "chore: add Shore Guard configuration"';
@@ -22521,7 +22909,7 @@ var MANAGED_PATHS = [".gitignore", ".shore/guard.json"];
 var STEPS = ["write-config", "update-gitignore"];
 async function runInit(root, dependencies = {}) {
   if (dependencies.plan === true) {
-    const planDependencies = dependencies.planDependencies ?? { cliVersion: "unknown", auth: () => Promise.resolve({ status: "missing", detail: "Not authenticated." }), connection: dependencies.connection ?? { resolve: () => Promise.resolve({ status: "auth-required", guidance: "Run shore-guard login." }) } };
+    const planDependencies = dependencies.planDependencies ?? { cliVersion: "unknown", auth: () => Promise.resolve({ status: "missing", detail: "Not authenticated." }), connection: dependencies.connection ?? { resolve: () => Promise.resolve({ status: "auth-required", guidance: "Run shore-guard login." }), verify: () => Promise.resolve({ status: "auth-required" }) } };
     const plan = await buildInitPlan(root, planDependencies);
     return { command: "init", outcome: "pass", exitCode: EXIT_CODES.pass, message: formatPlan(plan), data: { plan } };
   }
@@ -22532,7 +22920,6 @@ async function runInit(root, dependencies = {}) {
   const migrationNote = migration.status === "migrated" ? ` Migrated .shoreguard.json (${migration.settings.map((item) => `${item.setting}:${item.disposition}`).join(", ")}).` : "";
   const existingConfig = await loadGuardConfig(root);
   if (existingConfig.status === "invalid") return result2(EXIT_CODES.config, "error", `Existing .shore/guard.json is invalid: ${existingConfig.reason}. Repair it or move it aside before rerunning init.`);
-  const connection = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
   const findings = await aggregateProbes({ root, fs: nodeProbeFileSystem });
   const prior = await loadState(root);
   if (prior.status === "corrupt" || prior.status === "unsupported-version") return result2(EXIT_CODES.config, "error", formatStateFailure(prior));
@@ -22542,15 +22929,33 @@ async function runInit(root, dependencies = {}) {
     const drift = detectDrift(prior.state.fingerprint, current.fingerprint);
     if (drift.status === "drifted") return result2(EXIT_CODES.userDecisionRequired, "error", `Managed files have drifted; no files were overwritten: ${drift.files.map((f) => `${f.path} (${f.change})`).join(", ")}. Review the edits and choose whether to adopt or restore them.`);
     if (prior.state.run.completedAt) {
-      if (existingConfig.status === "ok" && existingConfig.config.repoConnectionId === void 0 && connection.status === "connected") {
-        await writeConfig(root, connection.repoConnectionId);
+      if (existingConfig.status === "ok" && existingConfig.config.repoConnectionId !== void 0 && dependencies.connection !== void 0) {
+        const verification = await dependencies.connection.verify(root, existingConfig.config.repoConnectionId);
+        if (verification.status === "stale" && verification.replacement !== void 0) {
+          await replaceRepositoryConnection(root, verification.replacement.repoConnectionId);
+          const fingerprint2 = await requiredFingerprint(root);
+          await requireSaved(root, { ...prior.state, updatedAt: clock.now().toISOString(), fingerprint: fingerprint2 });
+          return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary(`Re-linked repository ${verification.replacement.repository} (${verification.replacement.repoConnectionId}).`, findings)));
+        }
+        if (verification.status === "stale") {
+          const resolvedConnection = await dependencies.connection.resolve(root);
+          const guidance = resolvedConnection.status === "unavailable" ? resolvedConnection.reason : "This repository is not connected to this Shore Sight account. Connect it in the dashboard, then rerun init.";
+          return result2(EXIT_CODES.userDecisionRequired, "error", guidance);
+        }
+        if (verification.status === "unavailable") return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary(`Shore Guard is already initialized; no changes made. Repository connection could not be verified: ${verification.reason}`, findings)));
+        return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary("Shore Guard is already initialized; no changes made.", findings)));
+      }
+      const connection2 = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
+      if (existingConfig.status === "ok" && existingConfig.config.repoConnectionId === void 0 && connection2.status === "connected") {
+        await writeConfig(root, connection2.repoConnectionId);
         const fingerprint2 = await requiredFingerprint(root);
         await requireSaved(root, { ...prior.state, updatedAt: clock.now().toISOString(), fingerprint: fingerprint2 });
-        return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary(`Connected repository ${connection.repository}.`, findings)));
+        return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary(`Connected repository ${connection2.repository}.`, findings)));
       }
       return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary("Shore Guard is already initialized; no changes made.", findings)));
     }
   }
+  const connection = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
   const startedAt = prior.status === "ok" ? prior.state.run.startedAt : clock.now().toISOString();
   let run2 = prior.status === "ok" ? prior.state.run : { id: randomUUID2(), startedAt, completedAt: null, plan: [...STEPS], applied: [], skipped: [], errors: [] };
   let count = 0;
@@ -22577,6 +22982,11 @@ async function writeConfig(root, repoConnectionId) {
   const config2 = existing.status === "ok" ? { ...existing.config, ...repoConnectionId === void 0 ? {} : { repoConnectionId } } : { schemaVersion: 1, ...repoConnectionId === void 0 ? {} : { repoConnectionId } };
   await fs12.mkdir(join18(root, ".shore"), { recursive: true });
   await fs12.writeFile(join18(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
+}
+async function replaceRepositoryConnection(root, repoConnectionId) {
+  const existing = await loadGuardConfig(root);
+  if (existing.status !== "ok") throw new Error("existing config is not valid");
+  await fs12.writeFile(join18(root, ".shore", "guard.json"), JSON.stringify({ ...existing.config, repoConnectionId }, null, 2) + "\n");
 }
 async function updateGitignore(root) {
   const path2 = join18(root, ".gitignore");
@@ -22605,8 +23015,8 @@ function summary(prefix, findings) {
   return `${prefix}
 ${findings.map((f) => `[${f.severity}] ${f.problem} Remediation: ${f.remediation}`).join("\n")}`;
 }
-function result2(exitCode3, outcome, message4) {
-  return { command: "init", outcome, exitCode: exitCode3, message: message4 };
+function result2(exitCode3, outcome, message5) {
+  return { command: "init", outcome, exitCode: exitCode3, message: message5 };
 }
 function formatStateFailure(value) {
   return value.status === "corrupt" ? `${value.reason} ${value.remediation}` : `Unsupported state schema ${String(value.version)}. ${value.remediation}`;
@@ -22625,16 +23035,21 @@ function formatPlanStep(step) {
   if (step.status === "blocked") return `\u2717 ${step.title} \u2014 ${step.reason ?? step.detail}`;
   return `\u2022 ${step.title} \u2014 ${step.detail} (manual: ${step.manual})`;
 }
-async function withCommitReminder(root, message4) {
+async function withCommitReminder(root, message5) {
   const commit = await buildCommitPlanStep(root);
-  return `${message4}${commit.status === "pending" ? `
-Remaining: commit .shore/guard.json and .gitignore (${commit.manual}).` : ""}`;
+  const discovery = await buildDiscoveryPlanStep(root, commit);
+  const reminders = [commit.status === "pending" ? `commit .shore/guard.json and .gitignore (${commit.manual})` : void 0, discovery.status !== "done" ? "run discovery and adopt an architecture policy" : void 0].filter((value) => value !== void 0);
+  return `${message5}${reminders.length > 0 ? `
+Remaining: ${reminders.join("; ")}.` : ""}`;
 }
 
 // src/commands/login.ts
 async function runLogin(options) {
   if (options.key === void 0 || options.key.trim().length === 0) {
-    return fail(EXIT_CODES.auth, "No API key provided. Pass --api-key, set SHORE_API_KEY, or run login in an interactive terminal.");
+    if (options.device === void 0) {
+      return fail(EXIT_CODES.auth, "No API key provided. Pass --api-key, set SHORE_API_KEY, or run login in an interactive terminal.");
+    }
+    return runDeviceLogin(options.store, options.clientForKey, options.device, options.fallbackNotice);
   }
   const key = options.key.trim();
   try {
@@ -22653,8 +23068,53 @@ async function runLogin(options) {
 ${options.fallbackNotice}`}`
   };
 }
-function fail(exitCode3, message4) {
-  return { command: "login", outcome: "error", exitCode: exitCode3, message: message4 };
+async function runDeviceLogin(store, clientForKey, device, fallbackNotice) {
+  const startedAt = device.now();
+  let start;
+  try {
+    start = await device.client.startDeviceLogin({ clientName: device.clientName, hostname: device.hostname });
+  } catch (error62) {
+    if (error62 instanceof DeviceLoginUnavailableError) {
+      return fail(EXIT_CODES.auth, "Browser login is not enabled on the server. Pass --api-key, set SHORE_API_KEY, or run login in an interactive terminal.");
+    }
+    throw error62;
+  }
+  device.stderr(`Open ${start.verificationUrl} and confirm code ${formatUserCode(start.userCode)}`);
+  if (!device.noBrowser && !await device.openBrowser(start.verificationUrl)) {
+    device.stderr("Could not open a browser automatically.");
+  }
+  const timeoutMs = device.timeoutMs ?? 6e5;
+  for (; ; ) {
+    await device.sleep(start.intervalSeconds * 1e3);
+    const poll = await device.client.pollDeviceLogin(start.deviceCode);
+    if (poll.status === "too_fast") {
+      await device.sleep(poll.retryAfterSeconds * 1e3);
+      continue;
+    }
+    if (poll.status === "pending") {
+      if (device.now() - startedAt > timeoutMs) return fail(EXIT_CODES.remoteUnavailable, "Login timed out; run shore-guard login again.");
+      continue;
+    }
+    if (poll.status === "denied") return fail(EXIT_CODES.auth, "Login was denied.");
+    if (poll.status === "expired") return fail(EXIT_CODES.remoteUnavailable, "Login expired; run shore-guard login again.");
+    if (poll.status === "consumed") return fail(EXIT_CODES.auth, "This login code was already redeemed; run shore-guard login again.");
+    await store.set(poll.apiKey);
+    await clientForKey(poll.apiKey).getAccount();
+    return {
+      command: "login",
+      outcome: "pass",
+      exitCode: EXIT_CODES.pass,
+      message: `Authenticated as ${poll.accountName} (${poll.accountId}). API key stored.${fallbackNotice === void 0 ? "" : `
+${fallbackNotice}`}`
+    };
+  }
+}
+function formatUserCode(code) {
+  if (code.includes("-")) return code;
+  return `${code.slice(0, 4)}-${code.slice(4)}`;
+}
+function fail(exitCode3, message5) {
+  return { command: "login", outcome: "error", exitCode: exitCode3, message: message5 };
 }
 
 // src/commands/status.ts
@@ -22685,8 +23145,8 @@ async function runStatus(options) {
     throw error62;
   }
 }
-function fail2(exitCode3, message4) {
-  return { command: "status", outcome: "error", exitCode: exitCode3, message: message4 };
+function fail2(exitCode3, message5) {
+  return { command: "status", outcome: "error", exitCode: exitCode3, message: message5 };
 }
 
 // src/commands/verify.ts
@@ -22717,8 +23177,13 @@ function defaultDependencies(options) {
 function createHealthApiPort(client, repoConnectionId) {
   return {
     lookupExactScan: repoConnectionId === void 0 ? () => Promise.resolve({ status: "unmappable", explanation: 'No repoConnectionId is configured. Run "shore-guard init" to connect this repository.' }) : async (id, sha) => {
-      const lookup = await client.lookupExactScan(id, sha.toLowerCase());
-      return lookup.status === "not-found" ? { status: "not-found" } : { status: "found", scanId: lookup.scanRunId };
+      try {
+        const lookup = await client.lookupExactScan(id, sha.toLowerCase());
+        return lookup.status === "not-found" ? { status: "not-found" } : { status: "found", scanId: lookup.scanRunId };
+      } catch (error62) {
+        if (error62 instanceof UnavailableError && error62.status === 404 && error62.code === "not_found") return { status: "unmappable", explanation: `Repository connection ${id} is not connected to this account. Run "shore-guard init" to re-link it.` };
+        throw error62;
+      }
     },
     triggerScan: (input2) => client.triggerScan(input2),
     getScanRun: (id) => client.getScanRun(id),
@@ -22728,8 +23193,8 @@ function createHealthApiPort(client, repoConnectionId) {
 var SYSTEM_CLOCK = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve6) => {
-    setTimeout(resolve6, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve8) => {
+    setTimeout(resolve8, milliseconds);
   })
 };
 function humanMessage(result3) {
@@ -22767,8 +23232,8 @@ function defaultPorts(options) {
 var SYSTEM_CLOCK2 = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve6) => {
-    setTimeout(resolve6, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve8) => {
+    setTimeout(resolve8, milliseconds);
   })
 };
 function exitCode(result3) {
@@ -22784,8 +23249,8 @@ function humanMessage2(result3) {
 }
 
 // src/commands/adopt.ts
-import { mkdir as mkdir7, readFile as readFile13, rename as rename2, rm as rm2, writeFile as writeFile8 } from "node:fs/promises";
-import { dirname as dirname4, join as join20 } from "node:path";
+import { mkdir as mkdir7, readFile as readFile13, realpath, rename as rename2, rm as rm2, writeFile as writeFile8 } from "node:fs/promises";
+import { dirname as dirname4, isAbsolute as isAbsolute3, relative as relative4, resolve as resolve6 } from "node:path";
 
 // src/commands/decision-record.ts
 import { mkdir as mkdir6, writeFile as writeFile7 } from "node:fs/promises";
@@ -22835,7 +23300,7 @@ If a rule appears wrong for one case, STOP and obtain explicit human approval fo
 ${END}`;
 async function runAdopt(options) {
   if (options.proposalPath === void 0) return failure2(EXIT_CODES.config, "Pass --proposal <file>.");
-  const proposalPath = join20(options.root, options.proposalPath);
+  const proposalPath = resolve6(options.root, options.proposalPath);
   let raw;
   try {
     raw = await readFile13(proposalPath, "utf8");
@@ -22859,7 +23324,7 @@ async function runAdopt(options) {
     return failure2(EXIT_CODES.userDecisionRequired, `Edit ${options.proposalPath}, then rerun adopt and explicitly approve or reject it.`);
   }
   if (choice !== "approve") return failure2(EXIT_CODES.userDecisionRequired, "Approval is required. Choose approve, modify, or reject; no files were changed.");
-  const lockPath = join20(options.root, ".shore", "policy.lock.json");
+  const lockPath = confinedPath(options.root, ".shore/policy.lock.json");
   const existingLock = await readIfPresent(lockPath);
   if (existingLock !== void 0 && !options.replaceLock) return failure2(EXIT_CODES.userDecisionRequired, `An existing decision is recorded at .shore/policy.lock.json:
 ${existingLock}
@@ -22870,21 +23335,48 @@ Pass --replace-lock to explicitly replace it.`);
   } catch (error62) {
     return validationFailure(error62);
   }
+  let blueprint;
+  try {
+    blueprint = blueprintWrite(options.root, artifacts);
+  } catch (error62) {
+    return validationFailure(error62);
+  }
+  try {
+    await assertWriteTargets(options.root, [lockPath, confinedPath(options.root, ".shore/policy.json"), confinedPath(options.root, "AGENTS.md"), ...blueprint === void 0 ? [] : [blueprint.path]]);
+  } catch (error62) {
+    return validationFailure(error62);
+  }
+  if (blueprint !== void 0 && await readIfPresent(blueprint.path) !== void 0 && !options.replaceLock) {
+    return failure2(EXIT_CODES.userDecisionRequired, `A blueprint already exists at ${blueprint.relativePath}. Pass --replace-lock to explicitly replace it.`);
+  }
   try {
     await options.beforeCommit?.(artifacts);
   } catch {
     return failure2(EXIT_CODES.userDecisionRequired, "Adoption aborted before commit. No files were changed.");
   }
-  const agentsPath = join20(options.root, "AGENTS.md");
+  const agentsPath = confinedPath(options.root, "AGENTS.md");
   const agents = mergeAgents(await readIfPresent(agentsPath));
-  await mkdir7(join20(options.root, ".shore"), { recursive: true });
-  await writeAtomic(join20(options.root, ".shore", "policy.json"), `${JSON.stringify(artifacts.pack, null, 2)}
+  await mkdir7(confinedPath(options.root, ".shore"), { recursive: true });
+  if (blueprint !== void 0) await writeAtomic(blueprint.path, blueprint.contents);
+  await writeAtomic(confinedPath(options.root, ".shore/policy.json"), `${JSON.stringify(artifacts.pack, null, 2)}
 `);
   await writeAtomic(agentsPath, agents);
   if (existingLock !== void 0) await rm2(lockPath);
   const local = await (options.recorder ?? new LockFileDecisionRecorder()).record({ root: options.root, ...artifacts });
   const remote = await (options.remoteRecorder ?? new ShoreSightDecisionRecorder()).record({ root: options.root, ...artifacts });
-  return { command: "adopt", outcome: "pass", exitCode: EXIT_CODES.pass, message: `Policy adopted. ${local.note} ${remote.note}`, data: { pack: ".shore/policy.json", lock: ".shore/policy.lock.json", contentHash: artifacts.lock.contentHash } };
+  const blueprintNote = blueprint === void 0 ? "" : ` Blueprint saved at ${blueprint.relativePath}.`;
+  return {
+    command: "adopt",
+    outcome: "pass",
+    exitCode: EXIT_CODES.pass,
+    message: `Policy adopted.${blueprintNote} ${local.note} ${remote.note}`,
+    data: {
+      pack: ".shore/policy.json",
+      lock: ".shore/policy.lock.json",
+      contentHash: artifacts.lock.contentHash,
+      ...blueprint === void 0 ? {} : { blueprint: blueprint.relativePath }
+    }
+  };
 }
 function approval(options) {
   return { approvedBy: options.approvedBy?.trim() || "local-user", approvedAt: (options.now ?? (() => /* @__PURE__ */ new Date()))().toISOString(), rationale: options.rationale?.trim() || "Approved through the Shore Guard adoption gate." };
@@ -22893,13 +23385,54 @@ function serializeForRoot(input2, options) {
   const proposal = validateProposal(input2, { root: options.root });
   return serializeProposal(proposal, approval(options));
 }
-function failure2(exitCode3, message4) {
-  return { command: "adopt", outcome: "error", exitCode: exitCode3, message: message4 };
+function failure2(exitCode3, message5) {
+  return { command: "adopt", outcome: "error", exitCode: exitCode3, message: message5 };
 }
 function validationFailure(error62) {
   if (error62 instanceof ProposalValidationError) return failure2(EXIT_CODES.config, `Proposal validation failed:
 ${error62.issues.map((issue2) => `- ${issue2.path}: ${issue2.message}`).join("\n")}`);
   return failure2(EXIT_CODES.config, error62 instanceof Error ? error62.message : String(error62));
+}
+function blueprintWrite(root, artifacts) {
+  if (artifacts.blueprint === void 0) return void 0;
+  if (artifacts.blueprintId === void 0) throw new Error("Authored proposal serialization did not include a blueprint id.");
+  const slug = artifacts.blueprintId.slice("shore.authored.".length);
+  const relativePath = `.shore/blueprints/${slug}.json`;
+  return { path: confinedPath(root, relativePath), relativePath, contents: `${JSON.stringify(artifacts.blueprint, null, 2)}
+` };
+}
+function confinedPath(root, repositoryPath) {
+  const resolvedRoot = resolve6(root);
+  const candidate = resolve6(resolvedRoot, repositoryPath);
+  const fromRoot = relative4(resolvedRoot, candidate);
+  if (fromRoot === ".." || fromRoot.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) || isAbsolute3(fromRoot)) {
+    throw new Error(`Refusing to write outside the repository root: ${repositoryPath}`);
+  }
+  return candidate;
+}
+async function assertWriteTargets(root, paths) {
+  const realRoot = await realpath(root);
+  for (const path2 of paths) {
+    const destination = await resolveThroughExistingParent(path2);
+    if (isOutside(realRoot, destination)) throw new Error(`Refusing to write outside the repository root: ${path2}`);
+  }
+}
+async function resolveThroughExistingParent(path2) {
+  let ancestor = dirname4(path2);
+  for (; ; ) {
+    try {
+      return resolve6(await realpath(ancestor), relative4(ancestor, path2));
+    } catch (error62) {
+      if (!isNotFound(error62)) throw error62;
+      const parent = dirname4(ancestor);
+      if (parent === ancestor) throw error62;
+      ancestor = parent;
+    }
+  }
+}
+function isOutside(root, path2) {
+  const fromRoot = relative4(root, path2);
+  return fromRoot === ".." || fromRoot.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) || isAbsolute3(fromRoot);
 }
 async function readIfPresent(path2) {
   try {
@@ -23077,16 +23610,21 @@ function message3(error62) {
   return error62 instanceof Error ? error62.message : String(error62);
 }
 
+// src/commands/blueprint-submit.ts
+import { readFile as readFile14 } from "node:fs/promises";
+import { resolve as resolve7 } from "node:path";
+
 // src/agents/exec.ts
 import { execFile as execFile4 } from "node:child_process";
 function createCommandRunner(execute = execFile4) {
-  return (file2, args, options) => new Promise((resolve6) => {
+  return (file2, args, options) => new Promise((resolve8) => {
     execute(file2, args, {
       cwd: options?.cwd ?? process.cwd(),
+      detached: options?.detached ?? false,
       encoding: "utf8",
       windowsHide: true
     }, (error62, stdout, stderr) => {
-      resolve6({
+      resolve8({
         code: exitCode2(error62),
         stdout: stdout || errorText(error62?.stdout),
         stderr: stderr || errorText(error62?.stderr)
@@ -23105,8 +23643,195 @@ function errorText(value) {
 }
 var runCommand2 = createCommandRunner();
 
+// src/commands/blueprint-submit.ts
+var ISSUES_URL = "https://api.github.com/repos/dcassil/shore-guard-blueprints/issues";
+var NEW_ISSUE_URL = "https://github.com/dcassil/shore-guard-blueprints/issues/new";
+var BODY_LIMIT = 65 * 1024;
+var PREFILLED_LIMIT = 8 * 1024;
+async function runBlueprintSubmit(options) {
+  if (options.file === void 0 || options.file === "") return failure3(EXIT_CODES.config, "Missing required --file <path>.");
+  const read = await readBlueprint(resolve7(options.cwd, options.file));
+  if (read.status === "error") return failure3(EXIT_CODES.config, read.message);
+  const parsed = read.value;
+  let pack;
+  try {
+    pack = validate2(parsed).pack;
+  } catch (error62) {
+    return failure3(EXIT_CODES.config, message4(error62));
+  }
+  const stateResult = await loadState(options.cwd);
+  if (stateResult.status !== "ok") return failure3(EXIT_CODES.config, stateGuidance(stateResult.status));
+  const prior = stateResult.state.submittedBlueprints?.find((entry2) => entry2.id === pack.metadata.id);
+  if (prior !== void 0 && options.force !== true) return failure3(EXIT_CODES.userDecisionRequired, `Blueprint already submitted at ${prior.issueUrl}. Use --force to submit it again.`);
+  const assessment2 = assessBlueprint(pack);
+  if (!assessment2.strong && options.force !== true) return failure3(EXIT_CODES.userDecisionRequired, `Blueprint is not strong enough to submit:
+${assessment2.reasons.map((reason) => `- ${reason}`).join("\n")}`);
+  const remote = await readRemote(options);
+  let scrubbed;
+  try {
+    scrubbed = scrubBlueprint(pack, { repoIdentifiers: identifiersFromRemote(remote) });
+  } catch (error62) {
+    return failure3(EXIT_CODES.userDecisionRequired, message4(error62));
+  }
+  const title = `Blueprint submission: ${scrubbed.metadata.name}`;
+  const body = issueBody(scrubbed);
+  if (Buffer.byteLength(body, "utf8") > BODY_LIMIT) return failure3(EXIT_CODES.config, "Blueprint issue body exceeds 65 KB. Submit the blueprint by pull request instead.");
+  const payload = { title, body, labels: ["blueprint"] };
+  const warning = remote === void 0 ? "No origin remote was found; repository identifier checks were limited." : void 0;
+  if (options.dryRun === true) return success2(`${warningText(warning)}Dry run; no issue was created.
+${JSON.stringify(payload, null, 2)}`, { payload, ...warning === void 0 ? {} : { warning } });
+  const token = await resolveToken(options);
+  if (token === void 0) {
+    const prefilledUrl = prefilledIssueUrl(title, body);
+    return failure3(EXIT_CODES.userDecisionRequired, `${warningText(warning)}No GitHub credential was found. Open this prefilled issue URL to submit manually:
+${prefilledUrl}`, { prefilledUrl, ...warning === void 0 ? {} : { warning } });
+  }
+  let response;
+  try {
+    response = await (options.http ?? defaultHttp)(ISSUES_URL, request(token, payload));
+  } catch (error62) {
+    return failure3(EXIT_CODES.remoteUnavailable, `GitHub issue submission was unavailable: ${message4(error62)}`);
+  }
+  if (response.status === 401) return failure3(EXIT_CODES.auth, "GitHub rejected the credential. Refresh gh authentication or GITHUB_TOKEN.");
+  if (response.status === 403) return forbidden(response.headers);
+  if (response.status >= 500) return failure3(EXIT_CODES.remoteUnavailable, `GitHub issue submission was unavailable (HTTP ${String(response.status)}).`);
+  if (response.status < 200 || response.status >= 300) return failure3(EXIT_CODES.config, `GitHub issue submission failed (HTTP ${String(response.status)}).`);
+  let issue2;
+  try {
+    issue2 = await response.json();
+  } catch (error62) {
+    return failure3(EXIT_CODES.config, `GitHub returned an invalid issue response: ${message4(error62)}`);
+  }
+  const created = issueRecord(issue2);
+  if (created === void 0) return failure3(EXIT_CODES.config, "GitHub returned an invalid issue response.");
+  const at = (options.clock ?? { now: () => /* @__PURE__ */ new Date() }).now().toISOString();
+  const updated = { ...stateResult.state, updatedAt: at, submittedBlueprints: [...stateResult.state.submittedBlueprints ?? [], { id: pack.metadata.id, issueUrl: created.issueUrl, at }] };
+  const saved = await saveState(options.cwd, updated);
+  if (saved.status === "error") return failure3(EXIT_CODES.config, `Issue created at ${created.issueUrl}, but state could not be updated: ${saved.reason}`);
+  return success2(`${warningText(warning)}Blueprint submitted: ${created.issueUrl}`, { issueUrl: created.issueUrl, ...warning === void 0 ? {} : { warning } });
+}
+async function readBlueprint(path2) {
+  try {
+    return { status: "ok", value: JSON.parse(await readFile14(path2, "utf8")) };
+  } catch (error62) {
+    return { status: "error", message: `Could not read blueprint file: ${message4(error62)}` };
+  }
+}
+async function readRemote(options) {
+  const result3 = await (options.git ?? runGit)(options.cwd, ["remote", "get-url", "origin"]);
+  const remote = result3.stdout.trim();
+  return result3.code === 0 && remote !== "" ? remote : void 0;
+}
+function identifiersFromRemote(remote) {
+  if (remote === void 0) return [];
+  const scp = /^[^@]+@([^:]+):(.+)$/u.exec(remote);
+  let host;
+  let path2;
+  if (scp?.[1] !== void 0 && scp[2] !== void 0) {
+    host = scp[1];
+    path2 = scp[2];
+  } else {
+    try {
+      const parsed = new URL(remote);
+      host = parsed.host;
+      path2 = parsed.pathname;
+    } catch {
+      return [];
+    }
+  }
+  const cleanPath = path2.replace(/^\/+|\/+$/gu, "").replace(/\.git$/iu, "");
+  const parts = cleanPath.split("/").filter((part) => part !== "");
+  const owner = parts.at(-2);
+  const name = parts.at(-1);
+  return [...new Set([owner, name, `${host}/${cleanPath}`].filter((value) => value !== void 0 && value !== ""))];
+}
+async function resolveToken(options) {
+  const result3 = await (options.exec ?? runCommand2)("gh", ["auth", "token"], { cwd: options.cwd });
+  const ghToken = result3.code === 0 ? result3.stdout.trim() : "";
+  return ghToken !== "" ? ghToken : options.env?.GITHUB_TOKEN ?? process.env.GITHUB_TOKEN;
+}
+function issueBody(pack) {
+  const sections = descriptionSections(pack.metadata.description);
+  return [
+    "## Blueprint JSON",
+    "```json",
+    JSON.stringify(pack, null, 2),
+    "```",
+    "",
+    "## Overview",
+    sections.overview,
+    "",
+    "## When to avoid",
+    sections.whenToAvoid,
+    "",
+    "## Layers",
+    sections.layers,
+    "",
+    "## Target stack",
+    pack.metadata.name,
+    "",
+    "## Privacy consent",
+    "- [x] This blueprint contains no code, repository names, URLs, or project-specific evidence"
+  ].join("\n");
+}
+function descriptionSections(description) {
+  const match = /^Overview:\s*(.*?)\nWhen to avoid:\s*(.*?)\nLayers:\s*([\s\S]*)$/iu.exec(description);
+  return { overview: match?.[1]?.trim() ?? "", whenToAvoid: match?.[2]?.trim() ?? "", layers: match?.[3]?.trim() ?? "" };
+}
+function prefilledIssueUrl(title, body) {
+  const make = (value) => `${NEW_ISSUE_URL}?template=blueprint-submission.yml&title=${encodeURIComponent(title)}&body=${encodeURIComponent(value)}`;
+  const note = "\n\n[Blueprint body truncated to keep this prefilled URL below 8 KB. Attach the complete scrubbed blueprint manually.]";
+  if (Buffer.byteLength(make(body), "utf8") <= PREFILLED_LIMIT) return make(body);
+  let low = 0;
+  let high = body.length;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (Buffer.byteLength(make(`${body.slice(0, middle)}${note}`), "utf8") <= PREFILLED_LIMIT) low = middle;
+    else high = middle - 1;
+  }
+  return make(`${body.slice(0, low)}${note}`);
+}
+function request(token, payload) {
+  return { method: "POST", headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28" }, body: JSON.stringify(payload) };
+}
+var defaultHttp = async (input2, init) => {
+  const response = await fetch(input2, init);
+  return { status: response.status, headers: Object.fromEntries(response.headers.entries()), json: () => response.json() };
+};
+function forbidden(headers) {
+  if (headers["x-ratelimit-remaining"] === "0") {
+    const retry = headers["retry-after"];
+    return failure3(EXIT_CODES.remoteUnavailable, `GitHub rate limit exceeded.${retry === void 0 ? "" : ` Retry after ${retry} seconds.`}`);
+  }
+  return failure3(EXIT_CODES.auth, "GitHub denied issue creation. Check the credential permissions.");
+}
+function issueRecord(value) {
+  if (typeof value !== "object" || value === null || !("html_url" in value)) return void 0;
+  const issueUrl = value.html_url;
+  return typeof issueUrl === "string" && issueUrl !== "" ? { issueUrl } : void 0;
+}
+function stateGuidance(status) {
+  if (status === "not-found") {
+    return 'Shore Guard state was not found at .shore/state.json in the current directory. Blueprint submission records each submission there so it is never offered twice, so run "shore-guard init" in the repository that owns the blueprint first (this also applies to --dry-run), or run this command from that repository root.';
+  }
+  return `Shore Guard state at .shore/state.json is ${status}; repair it (see "shore-guard doctor") before submitting a blueprint.`;
+}
+function warningText(warning) {
+  return warning === void 0 ? "" : `Warning: ${warning}
+`;
+}
+function success2(messageText, data) {
+  return { command: "blueprint submit", outcome: "pass", exitCode: EXIT_CODES.pass, message: messageText, data };
+}
+function failure3(exitCode3, messageText, data) {
+  return { command: "blueprint submit", outcome: "error", exitCode: exitCode3, message: messageText, ...data === void 0 ? {} : { data } };
+}
+function message4(error62) {
+  return error62 instanceof Error ? error62.message : String(error62);
+}
+
 // src/agents/claude-code.ts
-import { join as join21 } from "node:path";
+import { join as join20 } from "node:path";
 var PLUGIN = "shore-guard@shore-guard";
 var MARKETPLACE = "dcassil/shore-guard-plugin";
 function claudeCode(context) {
@@ -23139,15 +23864,15 @@ function claudeCode(context) {
 }
 async function readInstalledPlugin(context) {
   try {
-    const raw = await context.fs.readFile(join21(context.homeDir, ".claude/plugins/installed_plugins.json"));
+    const raw = await context.fs.readFile(join20(context.homeDir, ".claude/plugins/installed_plugins.json"));
     const parsed = JSON.parse(raw);
-    if (!isRecord3(parsed)) return { installed: false };
+    if (!isRecord4(parsed)) return { installed: false };
     const plugins = parsed["plugins"];
-    if (!isRecord3(plugins)) return { installed: false };
+    if (!isRecord4(plugins)) return { installed: false };
     const entries = plugins[PLUGIN];
     if (!Array.isArray(entries) || entries.length === 0) return { installed: false };
     const latest = entries.at(-1);
-    const version2 = isRecord3(latest) && typeof latest["version"] === "string" ? latest["version"] : void 0;
+    const version2 = isRecord4(latest) && typeof latest["version"] === "string" ? latest["version"] : void 0;
     return { installed: true, ...version2 === void 0 ? {} : { version: version2 } };
   } catch (error62) {
     if (isMissing3(error62) || error62 instanceof SyntaxError) return { installed: false };
@@ -23164,7 +23889,7 @@ ${result3.stderr}`);
 function commandError(action, stderr) {
   return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
 }
-function isRecord3(value) {
+function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function isMissing3(error62) {
@@ -23222,7 +23947,7 @@ function findPlugin(value) {
     }
     return void 0;
   }
-  if (!isRecord4(value)) return void 0;
+  if (!isRecord5(value)) return void 0;
   const identity2 = [value["id"], value["name"], value["plugin"], value["selector"]].filter((candidate) => typeof candidate === "string");
   if (value["installed"] !== false && identity2.some((candidate) => candidate === "shore-guard" || candidate === PLUGIN2)) {
     return typeof value["version"] === "string" ? { version: value["version"] } : {};
@@ -23240,7 +23965,7 @@ ${result3.stderr}`);
 function commandError2(action, stderr) {
   return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
 }
-function isRecord4(value) {
+function isRecord5(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -23252,13 +23977,14 @@ function createAgentAdapters(context) {
 // src/help.ts
 var COMMANDS = {
   setup: "Install the CLI, sign in, and add the plugin to your coding agents",
-  login: "Authenticate with Shore services",
+  login: "Authenticate with Shore services in your browser or with SHORE_API_KEY",
   status: "Show Shore Guard status",
   init: "Initialize Shore Guard configuration",
   check: "Check the repository for violations",
   verify: "Run the completion verification gate",
   doctor: "Diagnose Shore Guard setup problems",
-  adopt: "Approve, modify, or reject a discovery proposal"
+  adopt: "Approve, modify, or reject a discovery proposal",
+  blueprint: "Submit a scrubbed policy blueprint to the public catalog"
 };
 var GLOBAL_FLAGS = [
   { flag: "--json", description: "Emit the stable JSON result envelope." },
@@ -23290,10 +24016,13 @@ var COMMAND_HELP = {
   login: {
     command: "login",
     purpose: COMMANDS.login,
-    usage: "shore-guard login [--api-key <key>]",
-    flags: [{ flag: "--api-key <key>", description: "Authenticate with this key (or set SHORE_API_KEY)." }],
+    usage: "shore-guard login [--api-key <key>] [--no-browser]",
+    flags: [
+      { flag: "--api-key <key>", description: "Authenticate with this key (or set SHORE_API_KEY for CI)." },
+      { flag: "--no-browser", description: "Print the browser URL and code without opening it automatically." }
+    ],
     exitCodes: [PASS, CONFIG, AUTH, REMOTE],
-    example: "shore-guard login --api-key <key>"
+    example: "shore-guard login"
   },
   status: {
     command: "status",
@@ -23348,6 +24077,18 @@ var COMMAND_HELP = {
     ],
     exitCodes: [PASS, CONFIG, DECISION],
     example: "shore-guard adopt --proposal .shore/proposal.json --approve"
+  },
+  blueprint: {
+    command: "blueprint",
+    purpose: COMMANDS.blueprint,
+    usage: "shore-guard blueprint submit --file <path> [options]",
+    flags: [
+      { flag: "--file <path>", description: "Read the policy blueprint JSON from this path." },
+      { flag: "--force", description: "Submit despite strength or duplicate-submission checks." },
+      { flag: "--dry-run", description: "Print the scrubbed issue payload without creating an issue." }
+    ],
+    exitCodes: [PASS, CONFIG, AUTH, REMOTE, DECISION],
+    example: "shore-guard blueprint submit --file .shore/blueprints/my-blueprint.json --dry-run"
   }
 };
 function renderCommandHelp(name) {
@@ -23382,6 +24123,7 @@ function renderGlobalHelp() {
     ...GLOBAL_FLAGS.map((flag) => `  ${flag.flag.padEnd(20)} ${flag.description}`),
     "",
     "Environment:",
+    "  SHORE_API_KEY        Authenticates non-interactive and CI commands.",
     "  SHORE_API_BASE_URL   Overrides the API base URL; for testing only.",
     "",
     "Run shore-guard <command> --help for details."
@@ -23409,6 +24151,17 @@ async function route(argv, cwd, dependencies = {}) {
   if (command === void 0) return { json: json2, result: pass("help", renderGlobalHelp(), { commands: Object.keys(COMMANDS) }) };
   if (command === "--version" || command === "-V") return { json: json2, result: pass("version", CLI_VERSION) };
   if (!isCommandName(command)) return { json: json2, result: fail3(command, `Unknown command "${command}". Run "shore-guard --help" for usage.`) };
+  if (command === "blueprint") {
+    if (args[1] !== "submit") return { json: json2, result: fail3(command, "Unknown blueprint command. Usage: shore-guard blueprint submit --file <path>") };
+    return { json: json2, result: await runBlueprintSubmit({
+      cwd,
+      file: readValueFlag(argv, "--file"),
+      force: argv.includes("--force"),
+      dryRun: argv.includes("--dry-run"),
+      env: dependencies.env ?? process.env,
+      ...dependencies.blueprint
+    }) };
+  }
   const apiKeyFlag = readValueFlag(argv, "--api-key");
   const configResult = await loadGuardConfig(cwd);
   if (configResult.status === "invalid" && command !== "doctor" && command !== "setup" && !(command === "init" && argv.includes("--plan"))) return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
@@ -23424,7 +24177,7 @@ async function route(argv, cwd, dependencies = {}) {
       homeDir: homedir2(),
       artifactRoot: artifactRoot(),
       pluginVersion: CLI_BUILD.version,
-      fs: { readFile: (path2) => readFile14(path2, "utf8") }
+      fs: { readFile: (path2) => readFile15(path2, "utf8") }
     };
     const agentsFlag = readValueFlag(argv, "--agents");
     const login = async () => {
@@ -23451,19 +24204,47 @@ async function route(argv, cwd, dependencies = {}) {
   }
   if (command === "login") {
     const selection2 = dependencies.storeSelection ?? await selectCredentialStore();
-    const key = apiKeyFlag ?? env.SHORE_API_KEY ?? (dependencies.isTTY ?? process.stdin.isTTY ? await (dependencies.promptForKey ?? promptForKey)() : void 0);
-    return { json: json2, result: await runLogin({
+    const key = apiKeyFlag ?? env.SHORE_API_KEY;
+    const clientForKey = (candidate) => createApiClient({ baseUrl, getApiKey: () => candidate, fetch: dependencies.fetch });
+    const client2 = createApiClient({ baseUrl, getApiKey: () => void 0, fetch: dependencies.fetch });
+    let result3 = await runLogin({
       key,
       store: selection2.store,
       fallbackNotice: selection2.notice,
-      clientForKey: (candidate) => createApiClient({ baseUrl, getApiKey: () => candidate, fetch: dependencies.fetch })
-    }) };
+      clientForKey,
+      device: {
+        client: client2,
+        openBrowser: dependencies.deviceLogin?.openBrowser ?? createBrowserOpener(dependencies.deviceLogin?.platform ?? process.platform),
+        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve8) => setTimeout(resolve8, ms))),
+        now: dependencies.deviceLogin?.now ?? Date.now,
+        stderr: dependencies.deviceLogin?.stderr ?? ((line) => {
+          process.stderr.write(`${line}
+`);
+        }),
+        clientName: "shore-guard",
+        hostname: dependencies.deviceLogin?.hostname ?? hostname3(),
+        noBrowser: argv.includes("--no-browser"),
+        ...dependencies.deviceLogin?.timeoutMs === void 0 ? {} : { timeoutMs: dependencies.deviceLogin.timeoutMs }
+      }
+    });
+    const unavailable = "Browser login is not enabled on the server.";
+    if (key === void 0 && result3.message.startsWith(unavailable) && (dependencies.isTTY ?? process.stdin.isTTY)) {
+      const unavailableNotice = result3.message;
+      const prompted = await (dependencies.promptForKey ?? promptForKey)();
+      result3 = await runLogin({
+        key: prompted,
+        store: selection2.store,
+        clientForKey,
+        fallbackNotice: [unavailableNotice, selection2.notice].filter((notice) => notice !== void 0).join("\n")
+      });
+    }
+    return { json: json2, result: result3 };
   }
   if (command === "status") {
     const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
     const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
     const warnings = [];
-    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store, onWarning: (message4) => warnings.push(message4) });
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store, onWarning: (message5) => warnings.push(message5) });
     const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
     return { json: json2, result: await runStatus({
       resolved: resolved2,
@@ -23527,11 +24308,11 @@ var NOOP_STORE = {
   set: () => Promise.reject(new Error("Credential store was not selected.")),
   delete: () => Promise.resolve(void 0)
 };
-function pass(command, message4, data) {
-  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message4, ...data === void 0 ? {} : { data } };
+function pass(command, message5, data) {
+  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message5, ...data === void 0 ? {} : { data } };
 }
-function fail3(command, message4) {
-  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message4 };
+function fail3(command, message5) {
+  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message5 };
 }
 function isCommandName(value) {
   return Object.hasOwn(COMMANDS, value);
@@ -23547,16 +24328,24 @@ function stripOptions(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
     if (value === void 0) continue;
-    if (value === "--json" || value === "--plan" || value === "--help" || value === "-h") continue;
-    if (["--api-key", "--proposal", "--approved-by", "--rationale", "--agents"].includes(value)) {
+    if (value === "--json" || value === "--plan" || value === "--help" || value === "-h" || value === "--no-browser") continue;
+    if (["--api-key", "--proposal", "--approved-by", "--rationale", "--agents", "--file"].includes(value)) {
       index += 1;
       continue;
     }
-    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale=", "--agents="].some((prefix) => value.startsWith(prefix))) continue;
-    if (["--approve", "--modify", "--reject", "--replace-lock", "--skip-agents", "--dry-run"].includes(value)) continue;
+    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale=", "--agents=", "--file="].some((prefix) => value.startsWith(prefix))) continue;
+    if (["--approve", "--modify", "--reject", "--replace-lock", "--skip-agents", "--dry-run", "--force"].includes(value)) continue;
     result3.push(value);
   }
   return result3;
+}
+function createBrowserOpener(platform) {
+  const exec = createCommandRunner();
+  return async (url2) => {
+    const command = platform === "darwin" ? { file: "open", args: [url2] } : platform === "win32" ? { file: "cmd", args: ["/c", "start", "", url2] } : { file: "xdg-open", args: [url2] };
+    const result3 = await exec(command.file, command.args, { detached: true });
+    return result3.code === 0;
+  };
 }
 function artifactRoot() {
   const executable2 = process.argv[1];

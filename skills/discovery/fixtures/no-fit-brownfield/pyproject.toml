@@ -1,0 +1,7 @@
+[project]
+name = "no-fit-brownfield"
+version = "0.1.0"
+dependencies = ["flask>=3.1"]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]

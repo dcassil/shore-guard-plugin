@@ -1,7 +1,7 @@
 # Shore Guard
 
 Shore Guard provides a standalone repository-health CLI and a Claude Code plugin.
-This artifact was built from monorepo commit `3e08250690b5f1521ef3c5b6fed3f28ddd517d80` (version `0.2.0`).
+This artifact was built from monorepo commit `d350b3ff810d405f66cebb17141ba299cc503fd8` (version `0.3.0`).
 
 ## Getting started
 
@@ -26,6 +26,9 @@ shore-guard login
 shore-guard init
 shore-guard verify --json
 ```
+
+`shore-guard login` opens a browser for account approval and stores the resulting
+credential without printing it.
 
 For terminals and CI, install from GitHub or run the CLI directly:
 

@@ -4,7 +4,7 @@ description: Guided, approval-first Shore Guard setup for this repository.
 ---
 # Guided initialization
 
-Step ids: `cli, login, connection, write-config, update-gitignore, commit`
+Step ids: `cli, login, connection, write-config, update-gitignore, commit, discovery`
 
 ## 0. Follow the safety rules
 
@@ -79,7 +79,18 @@ For (a), run `git push -u origin shore-guard/setup`. If `gh auth status` succeed
 Manual:
 `git push -u origin shore-guard/setup && gh pr create --base <default> --title "Add Shore Guard configuration" --body <short-body>`
 
-## 9. Finish
+## 10. Discover architecture policy
+
+After the configuration commit, follow the discovery skill; do not reinvent it here. Write the proposal to `.shore/proposals/<YYYY-MM-DD>-discovery.json`, then summarize its modules, edges, rules, and tradeoffs in no more than 10 lines. Ask exactly one question with exactly these options: approve / modify / reject / skip.
+
+For approve, run `shore-guard adopt --proposal <file> --approve --json`. For modify, ask the user to edit the proposal JSON, then rerun adopt with `--approve`. For reject, run `shore-guard adopt --proposal <file> --reject --json`; rejection writes nothing. For skip, say discovery can be run later from the discovery skill and continue to finish.
+
+After approval, show `git status --porcelain` and the diffs for `.shore/policy.json`, `.shore/policy.lock.json`, and `AGENTS.md`. Ask for approval, then commit them with `chore: adopt Shore Guard architecture policy`. For option (a), push to the same `shore-guard/setup` branch so the pull request includes the policy; if the pull request already exists, say the push updates it.
+
+Manual:
+`shore-guard adopt --proposal <file> --approve --json`
+
+## 11. Finish
 
 Run `shore-guard doctor --json` and summarize the result using the completion-contract table. Remind the user that `check` and `verify` need the configuration commit on the branch being verified.
 

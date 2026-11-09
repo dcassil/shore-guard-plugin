@@ -1,6 +1,6 @@
 {
   "name": "shore-guard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CLI-only Shore Guard workflows for coding agents",
   "author": {
     "name": "Daniel Cassil"
