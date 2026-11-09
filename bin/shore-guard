@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "57aa02c0c725543c154726f7b3bde06371cc25dd", version: "0.1.3" };
+var define_SHORE_GUARD_BUILD_default = { sha: "3e08250690b5f1521ef3c5b6fed3f28ddd517d80", version: "0.2.0" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -1179,8 +1179,8 @@ function prefixIssues(path2, issues) {
     return iss;
   });
 }
-function unwrapMessage(message3) {
-  return typeof message3 === "string" ? message3 : message3?.message;
+function unwrapMessage(message4) {
+  return typeof message4 === "string" ? message4 : message4?.message;
 }
 function attachSchema(issues, start, inst) {
   var _a3;
@@ -1198,7 +1198,7 @@ function finalizeIssue(iss, ctx, config2) {
       iss.schema = iss.inst;
   }
   const schemaError = iss.schema !== iss.inst ? iss.schema?._zod.def?.error : void 0;
-  const message3 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const message4 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
   const full = {};
   for (const k of Object.keys(iss)) {
     if (k === "inst" || k === "schema" || k === "continue" || k === "input" || k === "__proto__")
@@ -1206,7 +1206,7 @@ function finalizeIssue(iss, ctx, config2) {
     full[k] = iss[k];
   }
   full.path ?? (full.path = []);
-  full.message = message3;
+  full.message = message4;
   if (ctx?.reportInput) {
     full.input = iss.input;
   }
@@ -12917,8 +12917,8 @@ var globalRegistry = globalThis.__zod_globalRegistry;
 var INVALID = /* @__PURE__ */ Symbol.for("zod.compile.invalid");
 var FALLBACK_FLAG = /* @__PURE__ */ Symbol.for("zod.compile.fallback");
 var ZodCompileAsyncError = class extends Error {
-  constructor(message3 = "z.compile does not support async refinements, transforms, or checks") {
-    super(message3);
+  constructor(message4 = "z.compile does not support async refinements, transforms, or checks") {
+    super(message4);
     this.name = "ZodCompileAsyncError";
   }
 };
@@ -15610,12 +15610,12 @@ function initializeContext(params) {
     external: params?.external ?? void 0
   };
 }
-function handleUnrepresentable(schema, ctx, json2, params, message3) {
-  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message3 }) : ctx.unrepresentable;
+function handleUnrepresentable(schema, ctx, json2, params, message4) {
+  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message4 }) : ctx.unrepresentable;
   if (result3 === "any")
     return false;
   if (result3 === void 0 || result3 === "throw")
-    throw new Error(message3);
+    throw new Error(message4);
   Object.assign(json2, result3);
   return true;
 }
@@ -19756,8 +19756,8 @@ var runGit = createGitRunner();
 var GitResolutionError = class extends Error {
   kind;
   remediation;
-  constructor(kind, message3, remediation) {
-    super(message3);
+  constructor(kind, message4, remediation) {
+    super(message4);
     this.name = "GitResolutionError";
     this.kind = kind;
     this.remediation = remediation;
@@ -19848,7 +19848,7 @@ function evaluateThresholds(comparison, thresholds) {
     const count = SEVERITIES.slice(0, boundary + 1).reduce((sum, item) => sum + (comparison.issues.newBySeverity[item] ?? 0), 0);
     if (count > 0) reasons.push({ code: "new-issues-threshold", message: `${String(count)} new ${severity}-or-higher issue(s) violate failOnNewIssues.`, remediation: `Resolve the new ${severity}-or-higher issues before merging.` });
   }
-  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message3) => ({ code: "remote-comparison-failed", message: message3, remediation: "Review and resolve the reported regression." })));
+  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message4) => ({ code: "remote-comparison-failed", message: message4, remediation: "Review and resolve the reported regression." })));
   return reasons;
 }
 
@@ -19916,8 +19916,8 @@ function result(verdict, reasons, scanIds, extras = {}) {
 var GateRegistrationError = class extends Error {
   code;
   gateId;
-  constructor(code, message3, gateId) {
-    super(message3);
+  constructor(code, message4, gateId) {
+    super(message4);
     this.name = "GateRegistrationError";
     this.code = code;
     this.gateId = gateId;
@@ -20387,17 +20387,17 @@ function detectDrift(stored, current) {
 // ../core/src/state/fingerprint.ts
 import { createHash } from "node:crypto";
 import { resolve, relative, sep } from "node:path";
-async function fingerprintManagedFiles(root, managedPaths, fs12) {
+async function fingerprintManagedFiles(root, managedPaths, fs13) {
   const paths = [...new Set(managedPaths)].sort();
   const files = [];
   for (const path2 of paths) {
     const safe = resolveManagedPath(root, path2);
     if (!safe) return { status: "file-error", path: path2, reason: "path escapes repository root" };
     try {
-      const stat2 = await fs12.lstat(safe);
+      const stat2 = await fs13.lstat(safe);
       if (stat2.isSymbolicLink()) return { status: "file-error", path: path2, reason: "managed file is a symbolic link" };
       if (!stat2.isFile()) return { status: "file-error", path: path2, reason: "managed path is not a regular file" };
-      const contents = await fs12.readFile(safe);
+      const contents = await fs13.readFile(safe);
       files.push({ path: path2, sha256: digest(contents) });
     } catch (error62) {
       if (isNodeError3(error62) && error62.code === "ENOENT") continue;
@@ -20465,11 +20465,11 @@ var systemClock = { now: () => /* @__PURE__ */ new Date() };
 function statePath(root) {
   return join4(root, ".shore", "state.json");
 }
-async function loadState(root, fs12 = nodeFileSystem) {
+async function loadState(root, fs13 = nodeFileSystem) {
   const path2 = statePath(root);
   let text3;
   try {
-    text3 = (await fs12.readFile(path2)).toString("utf8");
+    text3 = (await fs13.readFile(path2)).toString("utf8");
   } catch (error62) {
     if (isNodeError4(error62) && error62.code === "ENOENT") return { status: "not-found" };
     return corrupt(path2, message2(error62));
@@ -20486,19 +20486,19 @@ async function loadState(root, fs12 = nodeFileSystem) {
   const result3 = shoreStateSchema.safeParse(parsed);
   return result3.success ? { status: "ok", state: result3.data } : corrupt(path2, result3.error.issues.map((i) => `${i.path.join(".") || "$"}: ${i.message}`).join("; "));
 }
-async function saveState(root, state, fs12 = nodeFileSystem) {
+async function saveState(root, state, fs13 = nodeFileSystem) {
   const path2 = statePath(root);
   const tmp = `${path2}.${randomUUID()}.tmp`;
   try {
     const validated = shoreStateSchema.parse(state);
-    await fs12.mkdir(dirname3(path2), { recursive: true });
-    await fs12.writeFile(tmp, `${JSON.stringify(validated, null, 2)}
+    await fs13.mkdir(dirname3(path2), { recursive: true });
+    await fs13.writeFile(tmp, `${JSON.stringify(validated, null, 2)}
 `);
-    await fs12.rename(tmp, path2);
+    await fs13.rename(tmp, path2);
     return { status: "ok", path: path2 };
   } catch (error62) {
     try {
-      await fs12.unlink(tmp);
+      await fs13.unlink(tmp);
     } catch {
     }
     return { status: "error", path: path2, reason: message2(error62) };
@@ -20523,29 +20523,29 @@ function finding(probe, id, severity, problem, remediation, evidence = []) {
 }
 
 // ../core/src/probes/ci.ts
-var ciProbe = { id: "ci", async run({ root, fs: fs12 }) {
+var ciProbe = { id: "ci", async run({ root, fs: fs13 }) {
   const path2 = ".github/workflows";
-  const files = (await fs12.list(join5(root, path2))).filter((f) => /\.ya?ml$/.test(f));
+  const files = (await fs13.list(join5(root, path2))).filter((f) => /\.ya?ml$/.test(f));
   return files.length ? [finding("ci", "ci.github-actions", "info", `Detected ${String(files.length)} GitHub Actions workflow(s).`, "Review workflows before adding a Shore gate.", files.map((f) => `${path2}/${f}`))] : [finding("ci", "ci.missing", "info", "No GitHub Actions workflows detected.", "Add CI when automated verification is desired.")];
 } };
 
 // ../core/src/probes/eslint.ts
 import { join as join6 } from "node:path";
-var eslintProbe = { id: "eslint", async run({ root, fs: fs12 }) {
+var eslintProbe = { id: "eslint", async run({ root, fs: fs13 }) {
   const flat = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts"];
   const legacy = [".eslintrc", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs"];
-  for (const p of flat) if (await fs12.exists(join6(root, p))) return [finding("eslint", "eslint.flat", "info", "ESLint flat configuration detected.", "No action required.", [p])];
-  for (const p of legacy) if (await fs12.exists(join6(root, p))) return [finding("eslint", "eslint.legacy", "warning", "Legacy ESLint configuration detected.", "Migrate to eslint.config.* flat configuration.", [p])];
+  for (const p of flat) if (await fs13.exists(join6(root, p))) return [finding("eslint", "eslint.flat", "info", "ESLint flat configuration detected.", "No action required.", [p])];
+  for (const p of legacy) if (await fs13.exists(join6(root, p))) return [finding("eslint", "eslint.legacy", "warning", "Legacy ESLint configuration detected.", "Migrate to eslint.config.* flat configuration.", [p])];
   return [finding("eslint", "eslint.missing", "info", "ESLint was not detected.", "Add ESLint if lint enforcement is desired.")];
 } };
 
 // ../core/src/probes/hooks.ts
 import { join as join7 } from "node:path";
-var hooksProbe = { id: "hooks", async run({ root, fs: fs12 }) {
+var hooksProbe = { id: "hooks", async run({ root, fs: fs13 }) {
   const candidates = [".husky/pre-commit", ".git/hooks/pre-commit"];
-  for (const p of candidates) if (await fs12.exists(join7(root, p))) return [finding("hooks", "hooks.detected", "info", "Commit hooks detected.", "Review hooks for compatibility; init will not install or overwrite them.", [p])];
+  for (const p of candidates) if (await fs13.exists(join7(root, p))) return [finding("hooks", "hooks.detected", "info", "Commit hooks detected.", "Review hooks for compatibility; init will not install or overwrite them.", [p])];
   try {
-    const pkg = JSON.parse(await fs12.readText(join7(root, "package.json")));
+    const pkg = JSON.parse(await fs13.readText(join7(root, "package.json")));
     if (pkg.simpleGitHooks) return [finding("hooks", "hooks.simple-git-hooks", "info", "simple-git-hooks configuration detected.", "Review hooks for compatibility.", ["package.json"])];
   } catch {
   }
@@ -20554,13 +20554,13 @@ var hooksProbe = { id: "hooks", async run({ root, fs: fs12 }) {
 
 // ../core/src/probes/package-manager.ts
 import { join as join8 } from "node:path";
-var packageManagerProbe = { id: "package-manager", async run({ root, fs: fs12 }) {
+var packageManagerProbe = { id: "package-manager", async run({ root, fs: fs13 }) {
   const locks = [["pnpm", "pnpm-lock.yaml"], ["npm", "package-lock.json"], ["yarn", "yarn.lock"]];
   const found = [];
-  for (const [name, file2] of locks) if (await fs12.exists(join8(root, file2))) found.push(name);
+  for (const [name, file2] of locks) if (await fs13.exists(join8(root, file2))) found.push(name);
   let declared;
   try {
-    declared = JSON.parse(await fs12.readText(join8(root, "package.json"))).packageManager?.split("@")[0];
+    declared = JSON.parse(await fs13.readText(join8(root, "package.json"))).packageManager?.split("@")[0];
   } catch {
   }
   if (!declared && found.length === 0) return [finding("package-manager", "package-manager.missing", "info", "No package manager was detected.", "Add a lockfile and packageManager field when the project adopts Node tooling.")];
@@ -20570,9 +20570,9 @@ var packageManagerProbe = { id: "package-manager", async run({ root, fs: fs12 })
 
 // ../core/src/probes/scripts.ts
 import { join as join9 } from "node:path";
-var scriptsProbe = { id: "scripts", async run({ root, fs: fs12 }) {
+var scriptsProbe = { id: "scripts", async run({ root, fs: fs13 }) {
   try {
-    const pkg = JSON.parse(await fs12.readText(join9(root, "package.json")));
+    const pkg = JSON.parse(await fs13.readText(join9(root, "package.json")));
     const names = Object.keys(pkg.scripts ?? {});
     return names.length ? [finding("scripts", "scripts.detected", "info", `Detected package scripts: ${names.sort().join(", ")}.`, "No action required.", ["package.json"])] : [finding("scripts", "scripts.missing", "info", "No package scripts detected.", "Add test, lint, or typecheck scripts as appropriate.", ["package.json"])];
   } catch {
@@ -20672,37 +20672,37 @@ function packagePatterns(text3) {
   }
   return [];
 }
-async function workspaceConfigs(root, fs12) {
+async function workspaceConfigs(root, fs13) {
   const patterns = [];
   const pnpm = join10(root, "pnpm-workspace.yaml");
   const pkg = join10(root, "package.json");
-  if (await fs12.exists(pnpm)) patterns.push(...pnpmPatterns(await fs12.readText(pnpm)));
-  if (await fs12.exists(pkg)) patterns.push(...packagePatterns(await fs12.readText(pkg)));
+  if (await fs13.exists(pnpm)) patterns.push(...pnpmPatterns(await fs13.readText(pnpm)));
+  if (await fs13.exists(pkg)) patterns.push(...packagePatterns(await fs13.readText(pkg)));
   const found = [];
   for (const pattern of patterns) {
     const star = pattern.indexOf("*");
     if (star < 0) {
       const relative4 = `${pattern.replace(/\/$/, "")}/tsconfig.json`;
-      if (await fs12.exists(join10(root, relative4))) found.push(relative4);
+      if (await fs13.exists(join10(root, relative4))) found.push(relative4);
       continue;
     }
     const prefix = pattern.slice(0, star).replace(/\/$/, "");
-    for (const child of await fs12.list(join10(root, prefix))) {
+    for (const child of await fs13.list(join10(root, prefix))) {
       const relative4 = [prefix, child, "tsconfig.json"].filter(Boolean).join("/");
-      if (await fs12.exists(join10(root, relative4))) found.push(relative4);
+      if (await fs13.exists(join10(root, relative4))) found.push(relative4);
     }
   }
   return [...new Set(found)];
 }
-var tsconfigProbe = { id: "tsconfig", async run({ root, fs: fs12 }) {
-  const rootConfigs = (await fs12.list(root)).filter((name) => /^tsconfig(\..+)?\.json$/.test(name));
-  const configs = rootConfigs.length > 0 ? [...rootConfigs] : [...await workspaceConfigs(root, fs12)];
+var tsconfigProbe = { id: "tsconfig", async run({ root, fs: fs13 }) {
+  const rootConfigs = (await fs13.list(root)).filter((name) => /^tsconfig(\..+)?\.json$/.test(name));
+  const configs = rootConfigs.length > 0 ? [...rootConfigs] : [...await workspaceConfigs(root, fs13)];
   if (configs.length === 0) return [finding("tsconfig", "tsconfig.missing", "info", "TypeScript configuration was not detected.", "Add tsconfig.json if this is a TypeScript project.")];
   const evidence = rootConfigs.length > 0 ? configs : configs.slice(0, 10);
   const findings = [finding("tsconfig", "tsconfig.present", "info", "TypeScript configuration detected.", "No action required.", evidence)];
   for (const config2 of configs) {
     try {
-      parseJsonc(await fs12.readText(join10(root, config2)));
+      parseJsonc(await fs13.readText(join10(root, config2)));
     } catch {
       findings.push(finding("tsconfig", "tsconfig.invalid", "warning", `${config2} is not strict JSON.`, "Validate or repair tsconfig.json.", [config2]));
     }
@@ -20744,6 +20744,12 @@ var nodeProbeFileSystem = {
   }
 };
 
+// src/router.ts
+import { realpathSync } from "node:fs";
+import { readFile as readFile14 } from "node:fs/promises";
+import { homedir as homedir2 } from "node:os";
+import { dirname as dirname5 } from "node:path";
+
 // ../api-client/src/compare.ts
 var severitySchema = external_exports.enum(["blocker", "critical", "high", "medium", "low", "info"]);
 var metricDeltaSchema = external_exports.object({
@@ -20781,8 +20787,8 @@ var compareResponseSchema = external_exports.object({
 var ShoreApiError = class extends Error {
   status;
   code;
-  constructor(message3, options = {}) {
-    super(message3, options.cause === void 0 ? void 0 : { cause: options.cause });
+  constructor(message4, options = {}) {
+    super(message4, options.cause === void 0 ? void 0 : { cause: options.cause });
     this.name = new.target.name;
     if (options.status !== void 0) this.status = options.status;
     if (options.code !== void 0) this.code = options.code;
@@ -20799,20 +20805,20 @@ var ShoreApiError = class extends Error {
 };
 var AuthError = class extends ShoreApiError {
   kind = "auth";
-  constructor(message3 = "Authentication failed.", options = {}) {
-    super(message3, options);
+  constructor(message4 = "Authentication failed.", options = {}) {
+    super(message4, options);
   }
 };
 var UnavailableError = class extends ShoreApiError {
   kind = "unavailable";
-  constructor(message3 = "Shore API is unavailable.", options = {}) {
-    super(message3, options);
+  constructor(message4 = "Shore API is unavailable.", options = {}) {
+    super(message4, options);
   }
 };
 var QuotaError = class extends ShoreApiError {
   kind = "quota";
-  constructor(message3 = "Shore API allowance is exhausted.", options = {}) {
-    super(message3, options);
+  constructor(message4 = "Shore API allowance is exhausted.", options = {}) {
+    super(message4, options);
   }
 };
 
@@ -20997,8 +21003,8 @@ function createApiClient(options) {
           signal: controller.signal
         });
       } catch (cause) {
-        const message3 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
-        throw retryable(message3, void 0, new UnavailableError(message3, {
+        const message4 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
+        throw retryable(message4, void 0, new UnavailableError(message4, {
           code: controller.signal.aborted ? "timeout" : "network_error",
           cause
         }));
@@ -21074,8 +21080,8 @@ function serverRetryHintMs(envelope) {
   const seconds = issues.retryAfterSeconds ?? issues.retryAfter;
   return typeof seconds === "number" && Number.isFinite(seconds) && seconds >= 0 ? seconds * 1e3 : void 0;
 }
-function retryable(message3, retryAfterMs, cause) {
-  return Object.assign(new Error(message3, { cause }), {
+function retryable(message4, retryAfterMs, cause) {
+  return Object.assign(new Error(message4, { cause }), {
     retryable: true,
     ...retryAfterMs === void 0 ? {} : { retryAfterMs }
   });
@@ -21217,9 +21223,9 @@ async function checkSuppressionBaselineFiles(committedPath, currentPath) {
     const current = parseSuppressionBaseline(await fs2.readFile(currentPath, "utf8"), currentPath);
     return compareSuppressionBaselines(committed, current);
   } catch (error62) {
-    const message3 = error62 instanceof Error ? error62.message : String(error62);
-    const file2 = message3.includes(currentPath) ? currentPath : committedPath;
-    return { ok: false, status: "parse-error", file: file2, message: message3 };
+    const message4 = error62 instanceof Error ? error62.message : String(error62);
+    const file2 = message4.includes(currentPath) ? currentPath : committedPath;
+    return { ok: false, status: "parse-error", file: file2, message: message4 };
   }
 }
 
@@ -21229,8 +21235,8 @@ import { spawn as spawn2 } from "node:child_process";
 import { isAbsolute, relative as relative2, resolve as resolve2, sep as sep2 } from "node:path";
 var DEPCRUISE_BASELINE_NAME = ".dependency-cruiser-known-violations.json";
 var DepcruiseConfigurationError = class extends Error {
-  constructor(message3) {
-    super(message3);
+  constructor(message4) {
+    super(message4);
     this.name = "DepcruiseConfigurationError";
   }
 };
@@ -22298,25 +22304,25 @@ var commitGateRegistration = {
 function registeredGates() {
   return { gates: [editGateRegistration, commitGateRegistration] };
 }
-function fromExit(kind, exitCode2, message3, files) {
+function fromExit(kind, exitCode3, message4, files) {
   const evidence = { files };
-  if (exitCode2 === 0) return { outcome: "pass", reasons: [], evidence };
-  if (exitCode2 === 70) {
+  if (exitCode3 === 0) return { outcome: "pass", reasons: [], evidence };
+  if (exitCode3 === 70) {
     return {
       outcome: "unavailable",
-      reasons: [{ code: `${kind}-gate-unavailable`, message: message3, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
+      reasons: [{ code: `${kind}-gate-unavailable`, message: message4, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
       evidence,
       failureKind: "unavailable"
     };
   }
   return {
     outcome: "fail",
-    reasons: [{ code: `${kind}-gate-failed`, message: message3, remediation: "Fix the reported violations and re-run the gate." }],
+    reasons: [{ code: `${kind}-gate-failed`, message: message4, remediation: "Fix the reported violations and re-run the gate." }],
     evidence
   };
 }
-function skipped(code, message3, remediation) {
-  return { outcome: "skipped", reasons: [{ code, message: message3, remediation }], evidence: {} };
+function skipped(code, message4, remediation) {
+  return { outcome: "skipped", reasons: [{ code, message: message4, remediation }], evidence: {} };
 }
 
 // src/commands/doctor-dependencies.ts
@@ -22394,8 +22400,8 @@ function parseGitHubRepository(url2) {
 
 // src/commands/init.ts
 import { randomUUID as randomUUID2 } from "node:crypto";
-import * as fs11 from "node:fs/promises";
-import { join as join17 } from "node:path";
+import * as fs12 from "node:fs/promises";
+import { join as join18 } from "node:path";
 
 // src/migrate/shoreguard-json.ts
 import * as fs10 from "node:fs/promises";
@@ -22453,11 +22459,72 @@ async function migrateLegacyConfig(root) {
   return { status: "migrated", source, destination, settings: translated.settings };
 }
 
+// src/commands/init-plan.ts
+import * as fs11 from "node:fs/promises";
+import { join as join17 } from "node:path";
+var INIT_IGNORE_LINES = [".shore/state.json", ".shore/cache/", ".shore/receipts/"];
+async function buildInitPlan(root, deps) {
+  const config2 = await loadGuardConfig(root);
+  const auth = await deps.auth();
+  const cli = { id: "cli", status: "done", title: "Install Shore Guard CLI", detail: `shore-guard ${deps.cliVersion}`, manual: "npm install -g shore-guard" };
+  const login = auth.status === "valid" ? { id: "login", status: "done", title: "Authenticate", detail: auth.detail, manual: "shore-guard login" } : auth.status === "missing" ? { id: "login", status: "pending", title: "Authenticate", detail: auth.detail, manual: "shore-guard login" } : { id: "login", status: "blocked", title: "Authenticate", detail: auth.detail, manual: "shore-guard login", reason: auth.detail };
+  let repoConnectionId = config2.status === "ok" ? config2.config.repoConnectionId : void 0;
+  let connection;
+  if (repoConnectionId !== void 0) {
+    connection = { id: "connection", status: "done", title: "Connect repository", detail: `Repository connection ${repoConnectionId}`, manual: "shore-guard init" };
+  } else if (login.status !== "done") {
+    connection = { id: "connection", status: "pending", title: "Connect repository", detail: "requires login", manual: "shore-guard init" };
+  } else {
+    const resolved = await deps.connection.resolve(root);
+    if (resolved.status === "connected") {
+      repoConnectionId = resolved.repoConnectionId;
+      connection = { id: "connection", status: "done", title: "Connect repository", detail: `origin ${resolved.repository} \u2192 ${resolved.repoConnectionId}`, manual: "shore-guard init" };
+    } else if (resolved.status === "auth-required") {
+      connection = { id: "connection", status: "pending", title: "Connect repository", detail: resolved.guidance, manual: "shore-guard init" };
+    } else {
+      connection = { id: "connection", status: "blocked", title: "Connect repository", detail: resolved.reason, manual: "shore-guard init", reason: resolved.reason };
+    }
+  }
+  const writeConfig2 = config2.status === "ok" ? { id: "write-config", status: "done", title: "Write configuration", detail: ".shore/guard.json is valid", manual: "shore-guard init" } : { id: "write-config", status: "pending", title: "Write configuration", detail: `Write schemaVersion 1${repoConnectionId === void 0 ? "" : ` with repoConnectionId ${repoConnectionId}`}`, manual: "shore-guard init", changes: [".shore/guard.json"] };
+  const missingIgnoreLines = await findMissingIgnoreLines(root);
+  const updateGitignore2 = missingIgnoreLines.length === 0 ? { id: "update-gitignore", status: "done", title: "Update .gitignore", detail: "All Shore Guard runtime paths are ignored", manual: "shore-guard init" } : { id: "update-gitignore", status: "pending", title: "Update .gitignore", detail: `Add ${missingIgnoreLines.join(", ")}`, manual: "shore-guard init", changes: [".gitignore"] };
+  const commit = await buildCommitPlanStep(root, deps.git);
+  const steps = [cli, login, connection, writeConfig2, updateGitignore2, commit];
+  return { steps, nextStep: steps.find((step) => step.status !== "done")?.id ?? null };
+}
+async function buildCommitPlanStep(root, git = runGit) {
+  const manual = 'git add .shore/guard.json .gitignore && git commit -m "chore: add Shore Guard configuration"';
+  const repository = await git(root, ["rev-parse", "--is-inside-work-tree"]);
+  if (repository.code !== 0 || repository.stdout.trim() !== "true") return { id: "commit", status: "blocked", title: "Commit configuration", detail: "Not a git repository", manual, reason: "Not a git repository" };
+  const status = await git(root, ["status", "--porcelain", "--", ".gitignore", ".shore/guard.json"]);
+  const gitignore = await git(root, ["ls-files", "--error-unmatch", "--", ".gitignore"]);
+  const config2 = await git(root, ["ls-files", "--error-unmatch", "--", ".shore/guard.json"]);
+  if (status.code === 0 && status.stdout.trim().length === 0 && gitignore.code === 0 && config2.code === 0) return { id: "commit", status: "done", title: "Commit configuration", detail: "Configuration files are committed", manual };
+  return { id: "commit", status: "pending", title: "Commit configuration", detail: "Configuration files have uncommitted changes", manual };
+}
+async function findMissingIgnoreLines(root) {
+  let text3 = "";
+  try {
+    text3 = await fs11.readFile(join17(root, ".gitignore"), "utf8");
+  } catch (error62) {
+    if (!isMissing(error62)) throw error62;
+  }
+  const lines = new Set(text3.split(/\r?\n/));
+  return INIT_IGNORE_LINES.filter((line) => !lines.has(line));
+}
+function isMissing(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+
 // src/commands/init.ts
 var MANAGED_PATHS = [".gitignore", ".shore/guard.json"];
-var IGNORE_LINES = [".shore/state.json", ".shore/cache/", ".shore/receipts/"];
 var STEPS = ["write-config", "update-gitignore"];
 async function runInit(root, dependencies = {}) {
+  if (dependencies.plan === true) {
+    const planDependencies = dependencies.planDependencies ?? { cliVersion: "unknown", auth: () => Promise.resolve({ status: "missing", detail: "Not authenticated." }), connection: dependencies.connection ?? { resolve: () => Promise.resolve({ status: "auth-required", guidance: "Run shore-guard login." }) } };
+    const plan = await buildInitPlan(root, planDependencies);
+    return { command: "init", outcome: "pass", exitCode: EXIT_CODES.pass, message: formatPlan(plan), data: { plan } };
+  }
   const clock = dependencies.clock ?? systemClock;
   const migration = await migrateLegacyConfig(root);
   if (migration.status === "conflict") return result2(EXIT_CODES.userDecisionRequired, "error", "Both .shoreguard.json and .shore/guard.json exist; no file was overwritten. Choose which configuration to keep, then rerun init.");
@@ -22479,9 +22546,9 @@ async function runInit(root, dependencies = {}) {
         await writeConfig(root, connection.repoConnectionId);
         const fingerprint2 = await requiredFingerprint(root);
         await requireSaved(root, { ...prior.state, updatedAt: clock.now().toISOString(), fingerprint: fingerprint2 });
-        return result2(EXIT_CODES.pass, "pass", summary(`Connected repository ${connection.repository}.`, findings));
+        return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary(`Connected repository ${connection.repository}.`, findings)));
       }
-      return result2(EXIT_CODES.pass, "pass", summary("Shore Guard is already initialized; no changes made.", findings));
+      return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary("Shore Guard is already initialized; no changes made.", findings)));
     }
   }
   const startedAt = prior.status === "ok" ? prior.state.run.startedAt : clock.now().toISOString();
@@ -22501,29 +22568,29 @@ async function runInit(root, dependencies = {}) {
   const fingerprint = await requiredFingerprint(root);
   await requireSaved(root, { schemaVersion: 1, updatedAt: clock.now().toISOString(), managedPaths: [...MANAGED_PATHS], fingerprint, run: run2 });
   const connectionNote = connection.status === "connected" ? ` Repository: ${connection.repository} (${connection.repoConnectionId}).` : connection.status === "auth-required" ? ` Repository connection deferred: ${connection.guidance}` : ` Repository connection unavailable: ${connection.reason}`;
-  return result2(EXIT_CODES.pass, "pass", summary(`Initialized Shore Guard.${migrationNote}${connectionNote}`, findings));
+  return result2(EXIT_CODES.pass, "pass", await withCommitReminder(root, summary(`Initialized Shore Guard.${migrationNote}${connectionNote}`, findings)));
 }
 async function writeConfig(root, repoConnectionId) {
   const existing = await loadGuardConfig(root);
   if (existing.status === "ok" && existing.config.repoConnectionId !== void 0) return;
   if (existing.status === "invalid") throw new Error(`existing config is invalid: ${existing.reason}`);
   const config2 = existing.status === "ok" ? { ...existing.config, ...repoConnectionId === void 0 ? {} : { repoConnectionId } } : { schemaVersion: 1, ...repoConnectionId === void 0 ? {} : { repoConnectionId } };
-  await fs11.mkdir(join17(root, ".shore"), { recursive: true });
-  await fs11.writeFile(join17(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
+  await fs12.mkdir(join18(root, ".shore"), { recursive: true });
+  await fs12.writeFile(join18(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
 }
 async function updateGitignore(root) {
-  const path2 = join17(root, ".gitignore");
+  const path2 = join18(root, ".gitignore");
   let text3 = "";
   try {
-    text3 = await fs11.readFile(path2, "utf8");
+    text3 = await fs12.readFile(path2, "utf8");
   } catch (error62) {
-    if (!isMissing(error62)) throw error62;
+    if (!isMissing2(error62)) throw error62;
   }
   const lines = new Set(text3.split(/\r?\n/));
-  const additions = IGNORE_LINES.filter((line) => !lines.has(line));
+  const additions = INIT_IGNORE_LINES.filter((line) => !lines.has(line));
   if (!additions.length) return;
   const prefix = text3 && !text3.endsWith("\n") ? "\n" : "";
-  await fs11.writeFile(path2, text3 + prefix + additions.join("\n") + "\n");
+  await fs12.writeFile(path2, text3 + prefix + additions.join("\n") + "\n");
 }
 async function requiredFingerprint(root) {
   const value = await fingerprintManagedFiles(root, MANAGED_PATHS, nodeFileSystem);
@@ -22538,14 +22605,30 @@ function summary(prefix, findings) {
   return `${prefix}
 ${findings.map((f) => `[${f.severity}] ${f.problem} Remediation: ${f.remediation}`).join("\n")}`;
 }
-function result2(exitCode2, outcome, message3) {
-  return { command: "init", outcome, exitCode: exitCode2, message: message3 };
+function result2(exitCode3, outcome, message4) {
+  return { command: "init", outcome, exitCode: exitCode3, message: message4 };
 }
 function formatStateFailure(value) {
   return value.status === "corrupt" ? `${value.reason} ${value.remediation}` : `Unsupported state schema ${String(value.version)}. ${value.remediation}`;
 }
-function isMissing(error62) {
+function isMissing2(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+function formatPlan(plan) {
+  const lines = plan.steps.map(formatPlanStep);
+  if (plan.nextStep === null) return [...lines, "Nothing left to do."].join("\n");
+  const next = plan.steps.find((step) => step.id === plan.nextStep);
+  return [...lines, `Next: ${next?.title ?? plan.nextStep}`].join("\n");
+}
+function formatPlanStep(step) {
+  if (step.status === "done") return `\u2713 ${step.title} \u2014 ${step.detail}`;
+  if (step.status === "blocked") return `\u2717 ${step.title} \u2014 ${step.reason ?? step.detail}`;
+  return `\u2022 ${step.title} \u2014 ${step.detail} (manual: ${step.manual})`;
+}
+async function withCommitReminder(root, message4) {
+  const commit = await buildCommitPlanStep(root);
+  return `${message4}${commit.status === "pending" ? `
+Remaining: commit .shore/guard.json and .gitignore (${commit.manual}).` : ""}`;
 }
 
 // src/commands/login.ts
@@ -22570,8 +22653,8 @@ async function runLogin(options) {
 ${options.fallbackNotice}`}`
   };
 }
-function fail(exitCode2, message3) {
-  return { command: "login", outcome: "error", exitCode: exitCode2, message: message3 };
+function fail(exitCode3, message4) {
+  return { command: "login", outcome: "error", exitCode: exitCode3, message: message4 };
 }
 
 // src/commands/status.ts
@@ -22602,8 +22685,8 @@ async function runStatus(options) {
     throw error62;
   }
 }
-function fail2(exitCode2, message3) {
-  return { command: "status", outcome: "error", exitCode: exitCode2, message: message3 };
+function fail2(exitCode3, message4) {
+  return { command: "status", outcome: "error", exitCode: exitCode3, message: message4 };
 }
 
 // src/commands/verify.ts
@@ -22701,16 +22784,16 @@ function humanMessage2(result3) {
 }
 
 // src/commands/adopt.ts
-import { mkdir as mkdir7, readFile as readFile12, rename as rename2, rm as rm2, writeFile as writeFile8 } from "node:fs/promises";
-import { dirname as dirname4, join as join19 } from "node:path";
+import { mkdir as mkdir7, readFile as readFile13, rename as rename2, rm as rm2, writeFile as writeFile8 } from "node:fs/promises";
+import { dirname as dirname4, join as join20 } from "node:path";
 
 // src/commands/decision-record.ts
 import { mkdir as mkdir6, writeFile as writeFile7 } from "node:fs/promises";
-import { join as join18 } from "node:path";
+import { join as join19 } from "node:path";
 var LockFileDecisionRecorder = class {
   async record(decision) {
-    await mkdir6(join18(decision.root, ".shore"), { recursive: true });
-    await writeFile7(join18(decision.root, ".shore", "policy.lock.json"), `${JSON.stringify(decision.lock, null, 2)}
+    await mkdir6(join19(decision.root, ".shore"), { recursive: true });
+    await writeFile7(join19(decision.root, ".shore", "policy.lock.json"), `${JSON.stringify(decision.lock, null, 2)}
 `, { flag: "wx" });
     return { recorded: true, note: "Decision recorded in .shore/policy.lock.json; remote submission is deferred until SCA-634." };
   }
@@ -22752,10 +22835,10 @@ If a rule appears wrong for one case, STOP and obtain explicit human approval fo
 ${END}`;
 async function runAdopt(options) {
   if (options.proposalPath === void 0) return failure2(EXIT_CODES.config, "Pass --proposal <file>.");
-  const proposalPath = join19(options.root, options.proposalPath);
+  const proposalPath = join20(options.root, options.proposalPath);
   let raw;
   try {
-    raw = await readFile12(proposalPath, "utf8");
+    raw = await readFile13(proposalPath, "utf8");
   } catch {
     return failure2(EXIT_CODES.config, `Cannot read proposal at ${options.proposalPath}.`);
   }
@@ -22776,7 +22859,7 @@ async function runAdopt(options) {
     return failure2(EXIT_CODES.userDecisionRequired, `Edit ${options.proposalPath}, then rerun adopt and explicitly approve or reject it.`);
   }
   if (choice !== "approve") return failure2(EXIT_CODES.userDecisionRequired, "Approval is required. Choose approve, modify, or reject; no files were changed.");
-  const lockPath = join19(options.root, ".shore", "policy.lock.json");
+  const lockPath = join20(options.root, ".shore", "policy.lock.json");
   const existingLock = await readIfPresent(lockPath);
   if (existingLock !== void 0 && !options.replaceLock) return failure2(EXIT_CODES.userDecisionRequired, `An existing decision is recorded at .shore/policy.lock.json:
 ${existingLock}
@@ -22792,10 +22875,10 @@ Pass --replace-lock to explicitly replace it.`);
   } catch {
     return failure2(EXIT_CODES.userDecisionRequired, "Adoption aborted before commit. No files were changed.");
   }
-  const agentsPath = join19(options.root, "AGENTS.md");
+  const agentsPath = join20(options.root, "AGENTS.md");
   const agents = mergeAgents(await readIfPresent(agentsPath));
-  await mkdir7(join19(options.root, ".shore"), { recursive: true });
-  await writeAtomic(join19(options.root, ".shore", "policy.json"), `${JSON.stringify(artifacts.pack, null, 2)}
+  await mkdir7(join20(options.root, ".shore"), { recursive: true });
+  await writeAtomic(join20(options.root, ".shore", "policy.json"), `${JSON.stringify(artifacts.pack, null, 2)}
 `);
   await writeAtomic(agentsPath, agents);
   if (existingLock !== void 0) await rm2(lockPath);
@@ -22810,8 +22893,8 @@ function serializeForRoot(input2, options) {
   const proposal = validateProposal(input2, { root: options.root });
   return serializeProposal(proposal, approval(options));
 }
-function failure2(exitCode2, message3) {
-  return { command: "adopt", outcome: "error", exitCode: exitCode2, message: message3 };
+function failure2(exitCode3, message4) {
+  return { command: "adopt", outcome: "error", exitCode: exitCode3, message: message4 };
 }
 function validationFailure(error62) {
   if (error62 instanceof ProposalValidationError) return failure2(EXIT_CODES.config, `Proposal validation failed:
@@ -22820,7 +22903,7 @@ ${error62.issues.map((issue2) => `- ${issue2.path}: ${issue2.message}`).join("\n
 }
 async function readIfPresent(path2) {
   try {
-    return await readFile12(path2, "utf8");
+    return await readFile13(path2, "utf8");
   } catch (error62) {
     if (isNotFound(error62)) return void 0;
     throw error62;
@@ -22847,12 +22930,328 @@ async function writeAtomic(path2, contents) {
   await rename2(temporary, path2);
 }
 
-// src/router.ts
-var DEV_BUILD = { sha: "dev", version: "0.1.0" };
-var CLI_BUILD = typeof define_SHORE_GUARD_BUILD_default === "undefined" ? DEV_BUILD : define_SHORE_GUARD_BUILD_default;
-var CLI_VERSION = CLI_BUILD.sha === "dev" ? CLI_BUILD.version : `${CLI_BUILD.version} (${CLI_BUILD.sha})`;
-var API_BASE_URL = "https://www.shore-sight.com/api/v1";
+// src/commands/setup.ts
+async function runSetup(options) {
+  const steps = [];
+  const agents = [];
+  const lines = [];
+  let exitCode3 = EXIT_CODES.pass;
+  const emit = (line) => {
+    lines.push(line);
+    options.stdout(line);
+  };
+  const initialCli = await options.isCliOnPath();
+  if (initialCli.found) {
+    const detail = initialCli.version ?? "found on PATH";
+    addStep(steps, emit, "cli", "done", detail);
+  } else if (options.dryRun === true) {
+    addStep(steps, emit, "cli", "skipped", "dry-run; would run npm install -g shore-guard");
+  } else {
+    try {
+      await options.installCli();
+      const installed = await options.isCliOnPath();
+      if (!installed.found) throw new Error("shore-guard was not found on PATH after installation");
+      addStep(steps, emit, "cli", "installed", installed.version ?? "installed on PATH");
+    } catch (error62) {
+      const detail = `${message3(error62)} Manual: npm install -g shore-guard (fallback: npm install -g github:dcassil/shore-guard-plugin)`;
+      addStep(steps, emit, "cli", "manual", detail);
+      exitCode3 = EXIT_CODES.config;
+    }
+  }
+  const authentication = await options.authStatus();
+  if (authentication === "valid") {
+    addStep(steps, emit, "login", "done", "already authenticated");
+  } else if (authentication === "unavailable") {
+    addStep(steps, emit, "login", "failed", "authentication service unavailable; continuing");
+    if (exitCode3 === EXIT_CODES.pass) exitCode3 = EXIT_CODES.remoteUnavailable;
+  } else if (options.dryRun === true) {
+    addStep(steps, emit, "login", "skipped", `dry-run; would log in (${authentication} credentials)`);
+  } else {
+    const loginResult = await options.login();
+    if (loginResult.exitCode === EXIT_CODES.pass) addStep(steps, emit, "login", "done", "authenticated");
+    else {
+      addStep(steps, emit, "login", "failed", loginResult.message);
+      if (exitCode3 !== EXIT_CODES.config) {
+        exitCode3 = loginResult.exitCode === EXIT_CODES.remoteUnavailable ? EXIT_CODES.remoteUnavailable : EXIT_CODES.auth;
+      }
+    }
+  }
+  const selected = selectAdapters(options.adapters, options.agentsFilter);
+  if (options.skipAgents === true) {
+    addStep(steps, emit, "agents", "skipped", "agent installation disabled");
+  } else {
+    for (const adapter of selected) {
+      const detection = await adapter.detect();
+      if (!detection.installed) {
+        agents.push({ id: adapter.id, detected: false, pluginInstalled: false, action: "manual" });
+        emit(`[3/4] ${adapter.displayName} \u2026 manual (${adapter.manualInstructions().join("; ")})`);
+        continue;
+      }
+      const installed = await adapter.isPluginInstalled();
+      if (installed.installed) {
+        agents.push({
+          id: adapter.id,
+          detected: true,
+          ...detection.version === void 0 ? {} : { version: detection.version },
+          pluginInstalled: true,
+          action: "present"
+        });
+        emit(`[3/4] ${adapter.displayName} \u2026 present`);
+        continue;
+      }
+      if (options.dryRun === true) {
+        agents.push({
+          id: adapter.id,
+          detected: true,
+          ...detection.version === void 0 ? {} : { version: detection.version },
+          pluginInstalled: false,
+          action: "manual"
+        });
+        emit(`[3/4] ${adapter.displayName} \u2026 skipped (dry-run; would install plugin)`);
+        continue;
+      }
+      try {
+        await adapter.installPlugin();
+        if (!await adapter.verify()) throw new Error("plugin verification failed");
+        agents.push({
+          id: adapter.id,
+          detected: true,
+          ...detection.version === void 0 ? {} : { version: detection.version },
+          pluginInstalled: true,
+          action: "installed"
+        });
+        emit(`[3/4] ${adapter.displayName} \u2026 installed`);
+      } catch (error62) {
+        agents.push({
+          id: adapter.id,
+          detected: true,
+          ...detection.version === void 0 ? {} : { version: detection.version },
+          pluginInstalled: false,
+          action: "failed"
+        });
+        emit(`[3/4] ${adapter.displayName} \u2026 failed (${message3(error62)}; ${adapter.manualInstructions().join("; ")})`);
+        exitCode3 = EXIT_CODES.config;
+      }
+    }
+    const agentStatus = agents.some((agent) => agent.action === "failed") ? "failed" : agents.some((agent) => agent.action === "installed") ? "installed" : agents.some((agent) => agent.action === "present") ? "present" : "manual";
+    steps.push({ id: "agents", status: agentStatus, detail: `${String(agents.length)} agent(s) checked` });
+  }
+  const agentCommands = selected.map((adapter) => adapter.displayName).join(", ");
+  const next = `Open your coding agent in the project and run /shore-guard:init${agentCommands === "" ? "" : ` (${agentCommands})`}`;
+  addStep(steps, emit, "next-step", "done", next);
+  const data = { steps, agents };
+  return {
+    command: "setup",
+    outcome: exitCode3 === EXIT_CODES.pass ? "pass" : "error",
+    exitCode: exitCode3,
+    message: lines.join("\n"),
+    data
+  };
+}
+function createCliDetector(exec) {
+  return async () => {
+    const result3 = await exec("shore-guard", ["--version"]);
+    const version2 = result3.code === 0 ? result3.stdout.match(/\d+(?:\.\d+)+/)?.[0] : void 0;
+    return { found: result3.code === 0, ...version2 === void 0 ? {} : { version: version2 } };
+  };
+}
+function createCliInstaller(exec, version2) {
+  return async () => {
+    requireSuccess(await exec("npm", ["install", "-g", `shore-guard@${version2}`]));
+  };
+}
+function selectAdapters(adapters, filter) {
+  if (filter === void 0 || filter.length === 0) return adapters;
+  const selected = new Set(filter);
+  return adapters.filter((adapter) => selected.has(adapter.id));
+}
+function addStep(steps, emit, id, status, detail) {
+  const number4 = id === "cli" ? 1 : id === "login" ? 2 : id === "agents" ? 3 : 4;
+  steps.push({ id, status, detail });
+  emit(`[${String(number4)}/4] ${id === "cli" ? "Shore Guard CLI" : id === "login" ? "Login" : id === "agents" ? "Coding agents" : "Next step"} \u2026 ${status}${detail === "" ? "" : ` (${detail})`}`);
+}
+function requireSuccess(result3) {
+  if (result3.code !== 0) throw new Error(result3.stderr.trim() || `command exited with code ${String(result3.code)}`);
+}
+function message3(error62) {
+  return error62 instanceof Error ? error62.message : String(error62);
+}
+
+// src/agents/exec.ts
+import { execFile as execFile4 } from "node:child_process";
+function createCommandRunner(execute = execFile4) {
+  return (file2, args, options) => new Promise((resolve6) => {
+    execute(file2, args, {
+      cwd: options?.cwd ?? process.cwd(),
+      encoding: "utf8",
+      windowsHide: true
+    }, (error62, stdout, stderr) => {
+      resolve6({
+        code: exitCode2(error62),
+        stdout: stdout || errorText(error62?.stdout),
+        stderr: stderr || errorText(error62?.stderr)
+      });
+    });
+  });
+}
+function exitCode2(error62) {
+  if (error62 === null) return 0;
+  if (error62.code === "ENOENT") return 127;
+  return typeof error62.code === "number" ? error62.code : 1;
+}
+function errorText(value) {
+  if (value === void 0) return "";
+  return typeof value === "string" ? value : value.toString("utf8");
+}
+var runCommand2 = createCommandRunner();
+
+// src/agents/claude-code.ts
+import { join as join21 } from "node:path";
+var PLUGIN = "shore-guard@shore-guard";
+var MARKETPLACE = "dcassil/shore-guard-plugin";
+function claudeCode(context) {
+  return {
+    id: "claude-code",
+    displayName: "Claude Code",
+    detect: async () => {
+      const result3 = await context.exec("claude", ["--version"]);
+      const version2 = result3.code === 0 ? parseVersion(result3.stdout) : void 0;
+      return {
+        installed: result3.code === 0,
+        ...version2 === void 0 ? {} : { version: version2 },
+        evidence: result3.code === 0 ? result3.stdout.trim() : result3.stderr.trim() || "claude was not found on PATH"
+      };
+    },
+    isPluginInstalled: () => readInstalledPlugin(context),
+    installPlugin: async () => {
+      const marketplace = await context.exec("claude", ["plugin", "marketplace", "add", MARKETPLACE]);
+      if (!succeededOrExists(marketplace)) throw commandError("add the Claude marketplace", marketplace.stderr);
+      const installed = await context.exec("claude", ["plugin", "install", PLUGIN]);
+      if (!succeededOrExists(installed)) throw commandError("install the Claude plugin", installed.stderr);
+    },
+    verify: async () => (await readInstalledPlugin(context)).installed,
+    manualInstructions: () => [
+      `claude plugin marketplace add ${MARKETPLACE}`,
+      `claude plugin install ${PLUGIN}`,
+      "Legacy project-local installation is available through the Shore Guard settings/hook installer."
+    ]
+  };
+}
+async function readInstalledPlugin(context) {
+  try {
+    const raw = await context.fs.readFile(join21(context.homeDir, ".claude/plugins/installed_plugins.json"));
+    const parsed = JSON.parse(raw);
+    if (!isRecord3(parsed)) return { installed: false };
+    const plugins = parsed["plugins"];
+    if (!isRecord3(plugins)) return { installed: false };
+    const entries = plugins[PLUGIN];
+    if (!Array.isArray(entries) || entries.length === 0) return { installed: false };
+    const latest = entries.at(-1);
+    const version2 = isRecord3(latest) && typeof latest["version"] === "string" ? latest["version"] : void 0;
+    return { installed: true, ...version2 === void 0 ? {} : { version: version2 } };
+  } catch (error62) {
+    if (isMissing3(error62) || error62 instanceof SyntaxError) return { installed: false };
+    throw error62;
+  }
+}
+function parseVersion(output2) {
+  return output2.match(/\d+(?:\.\d+)+/)?.[0];
+}
+function succeededOrExists(result3) {
+  return result3.code === 0 || /already (?:exists|installed|added)/iu.test(`${result3.stdout}
+${result3.stderr}`);
+}
+function commandError(action, stderr) {
+  return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
+}
+function isRecord3(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isMissing3(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+
+// src/agents/codex.ts
+var PLUGIN2 = "shore-guard@shore-guard";
+var MARKETPLACE2 = "dcassil/shore-guard-plugin";
+function codex(context) {
+  return {
+    id: "codex",
+    displayName: "Codex",
+    detect: async () => {
+      const result3 = await context.exec("codex", ["--version"]);
+      const version2 = result3.code === 0 ? result3.stdout.match(/\d+(?:\.\d+)+/)?.[0] : void 0;
+      return {
+        installed: result3.code === 0,
+        ...version2 === void 0 ? {} : { version: version2 },
+        evidence: result3.code === 0 ? result3.stdout.trim() : result3.stderr.trim() || "codex was not found on PATH"
+      };
+    },
+    isPluginInstalled: () => pluginStatus(context),
+    installPlugin: async () => {
+      const marketplace = await context.exec("codex", ["plugin", "marketplace", "add", MARKETPLACE2]);
+      if (!succeededOrExists2(marketplace)) throw commandError2("add the Codex marketplace", marketplace.stderr);
+      const installed = await context.exec("codex", ["plugin", "add", PLUGIN2]);
+      if (!succeededOrExists2(installed)) throw commandError2("install the Codex plugin", installed.stderr);
+    },
+    verify: async () => (await pluginStatus(context)).installed,
+    manualInstructions: () => [
+      `codex plugin marketplace add ${MARKETPLACE2}`,
+      `codex plugin add ${PLUGIN2}`,
+      "Add the Shore Guard completion-contract instructions to AGENTS.md if your Codex version does not load plugin skills automatically."
+    ]
+  };
+}
+async function pluginStatus(context) {
+  const result3 = await context.exec("codex", ["plugin", "list", "--json"]);
+  if (result3.code !== 0) return { installed: false };
+  let parsed;
+  try {
+    parsed = JSON.parse(result3.stdout);
+  } catch {
+    return { installed: false };
+  }
+  const match = findPlugin(parsed);
+  return match === void 0 ? { installed: false } : { installed: true, ...match.version === void 0 ? {} : { version: match.version } };
+}
+function findPlugin(value) {
+  if (Array.isArray(value)) {
+    for (const entry2 of value) {
+      const found = findPlugin(entry2);
+      if (found !== void 0) return found;
+    }
+    return void 0;
+  }
+  if (!isRecord4(value)) return void 0;
+  const identity2 = [value["id"], value["name"], value["plugin"], value["selector"]].filter((candidate) => typeof candidate === "string");
+  if (value["installed"] !== false && identity2.some((candidate) => candidate === "shore-guard" || candidate === PLUGIN2)) {
+    return typeof value["version"] === "string" ? { version: value["version"] } : {};
+  }
+  for (const nested of Object.values(value)) {
+    const found = findPlugin(nested);
+    if (found !== void 0) return found;
+  }
+  return void 0;
+}
+function succeededOrExists2(result3) {
+  return result3.code === 0 || /already (?:exists|installed|added)/iu.test(`${result3.stdout}
+${result3.stderr}`);
+}
+function commandError2(action, stderr) {
+  return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
+}
+function isRecord4(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// src/agents/registry.ts
+function createAgentAdapters(context) {
+  return [claudeCode(context), codex(context)];
+}
+
+// src/help.ts
 var COMMANDS = {
+  setup: "Install the CLI, sign in, and add the plugin to your coding agents",
   login: "Authenticate with Shore services",
   status: "Show Shore Guard status",
   init: "Initialize Shore Guard configuration",
@@ -22861,47 +23260,236 @@ var COMMANDS = {
   doctor: "Diagnose Shore Guard setup problems",
   adopt: "Approve, modify, or reject a discovery proposal"
 };
+var GLOBAL_FLAGS = [
+  { flag: "--json", description: "Emit the stable JSON result envelope." },
+  { flag: "--help, -h", description: "Show global or per-command help." },
+  { flag: "--version, -V", description: "Show the Shore Guard version." }
+];
+var exit = (code, meaning) => ({ code, meaning });
+var PASS = exit(EXIT_CODES.pass, "Pass.");
+var FINDINGS = exit(EXIT_CODES.violation, "Findings or regressions detected.");
+var CONFIG = exit(EXIT_CODES.config, "Configuration or internal error.");
+var AUTH = exit(EXIT_CODES.auth, "Authentication error.");
+var REMOTE = exit(EXIT_CODES.remoteUnavailable, "Remote service unavailable.");
+var QUOTA = exit(EXIT_CODES.quota, "Quota exceeded.");
+var DECISION = exit(EXIT_CODES.userDecisionRequired, "User decision required.");
+var UNSAFE = exit(EXIT_CODES.unsafeGitState, "Unsafe git state.");
+var COMMAND_HELP = {
+  setup: {
+    command: "setup",
+    purpose: COMMANDS.setup,
+    usage: "shore-guard setup [options]",
+    flags: [
+      { flag: "--agents <a,b>", description: "Only configure the named coding agents." },
+      { flag: "--skip-agents", description: "Skip coding-agent plugin installation." },
+      { flag: "--dry-run", description: "Show setup actions without applying them." }
+    ],
+    exitCodes: [PASS, CONFIG, AUTH, REMOTE],
+    example: "shore-guard setup --agents codex,claude-code"
+  },
+  login: {
+    command: "login",
+    purpose: COMMANDS.login,
+    usage: "shore-guard login [--api-key <key>]",
+    flags: [{ flag: "--api-key <key>", description: "Authenticate with this key (or set SHORE_API_KEY)." }],
+    exitCodes: [PASS, CONFIG, AUTH, REMOTE],
+    example: "shore-guard login --api-key <key>"
+  },
+  status: {
+    command: "status",
+    purpose: COMMANDS.status,
+    usage: "shore-guard status",
+    flags: [],
+    exitCodes: [PASS, CONFIG, AUTH, REMOTE, QUOTA],
+    example: "shore-guard status"
+  },
+  init: {
+    command: "init",
+    purpose: COMMANDS.init,
+    usage: "shore-guard init [--plan]",
+    flags: [{ flag: "--plan", description: "Preview initialization steps without writing files." }],
+    exitCodes: [PASS, CONFIG, DECISION],
+    example: "shore-guard init --plan"
+  },
+  check: {
+    command: "check",
+    purpose: COMMANDS.check,
+    usage: "shore-guard check",
+    flags: [],
+    exitCodes: [PASS, FINDINGS, CONFIG, AUTH, REMOTE, QUOTA, UNSAFE],
+    example: "shore-guard check"
+  },
+  verify: {
+    command: "verify",
+    purpose: COMMANDS.verify,
+    usage: "shore-guard verify",
+    flags: [],
+    exitCodes: [PASS, FINDINGS, CONFIG, AUTH, REMOTE, QUOTA, UNSAFE],
+    example: "shore-guard verify --json"
+  },
+  doctor: {
+    command: "doctor",
+    purpose: COMMANDS.doctor,
+    usage: "shore-guard doctor",
+    flags: [],
+    exitCodes: [PASS, CONFIG, AUTH, REMOTE, DECISION, UNSAFE],
+    example: "shore-guard doctor"
+  },
+  adopt: {
+    command: "adopt",
+    purpose: COMMANDS.adopt,
+    usage: "shore-guard adopt --proposal <file> (--approve | --modify | --reject) [options]",
+    flags: [
+      { flag: "--proposal <file>", description: "Read the discovery proposal from this file." },
+      { flag: "--approve, --modify, --reject", description: "Record the explicit proposal decision." },
+      { flag: "--replace-lock", description: "Explicitly replace an existing policy decision lock." },
+      { flag: "--approved-by <name>", description: "Record the approver name." },
+      { flag: "--rationale <text>", description: "Record the approval rationale." }
+    ],
+    exitCodes: [PASS, CONFIG, DECISION],
+    example: "shore-guard adopt --proposal .shore/proposal.json --approve"
+  }
+};
+function renderCommandHelp(name) {
+  const help = COMMAND_HELP[name];
+  const flags = [...help.flags, ...GLOBAL_FLAGS.filter((flag) => !flag.flag.startsWith("--version"))];
+  return [
+    help.purpose,
+    "",
+    `Usage: ${help.usage}`,
+    "",
+    "Flags:",
+    ...flags.map((flag) => `  ${flag.flag.padEnd(34)} ${flag.description}`),
+    "",
+    "Exit codes:",
+    ...help.exitCodes.map(({ code, meaning }) => `  ${String(code)}  ${meaning}`),
+    "",
+    "Example:",
+    `  ${help.example}`
+  ].join("\n");
+}
+function renderGlobalHelp() {
+  const lines = Object.entries(COMMANDS).map(([name, purpose]) => `  ${name.padEnd(8)} ${purpose}`);
+  return [
+    "Shore Guard repository health CLI",
+    "",
+    "Usage: shore-guard [--json] <command>",
+    "",
+    "Commands:",
+    ...lines,
+    "",
+    "Global flags:",
+    ...GLOBAL_FLAGS.map((flag) => `  ${flag.flag.padEnd(20)} ${flag.description}`),
+    "",
+    "Environment:",
+    "  SHORE_API_BASE_URL   Overrides the API base URL; for testing only.",
+    "",
+    "Run shore-guard <command> --help for details."
+  ].join("\n");
+}
+
+// src/router.ts
+var DEV_BUILD = { sha: "dev", version: "0.1.0" };
+var CLI_BUILD = typeof define_SHORE_GUARD_BUILD_default === "undefined" ? DEV_BUILD : define_SHORE_GUARD_BUILD_default;
+var CLI_VERSION = CLI_BUILD.sha === "dev" ? CLI_BUILD.version : `${CLI_BUILD.version} (${CLI_BUILD.sha})`;
+var API_BASE_URL = "https://www.shore-sight.com/api/v1";
 async function route(argv, cwd, dependencies = {}) {
   const json2 = argv.includes("--json");
-  const apiKeyFlag = readValueFlag(argv, "--api-key");
   const args = stripOptions(argv);
   const command = args[0];
-  if (command === void 0 || command === "--help" || command === "-h") return { json: json2, result: pass("help", helpText()) };
+  if (argv.includes("--help") || argv.includes("-h")) {
+    if (command !== void 0 && isCommandName(command)) {
+      const help = COMMAND_HELP[command];
+      return { json: json2, result: pass("help", renderCommandHelp(command), { command, usage: help.usage, flags: help.flags }) };
+    }
+    const unknown2 = command === void 0 || command === "--help" || command === "-h" ? "" : `Unknown command "${command}".
+`;
+    return { json: json2, result: pass("help", `${unknown2}${renderGlobalHelp()}`, { commands: Object.keys(COMMANDS) }) };
+  }
+  if (command === void 0) return { json: json2, result: pass("help", renderGlobalHelp(), { commands: Object.keys(COMMANDS) }) };
   if (command === "--version" || command === "-V") return { json: json2, result: pass("version", CLI_VERSION) };
-  if (!(command in COMMANDS)) return { json: json2, result: fail3(command, `Unknown command "${command}". Run "shore-guard --help" for usage.`) };
+  if (!isCommandName(command)) return { json: json2, result: fail3(command, `Unknown command "${command}". Run "shore-guard --help" for usage.`) };
+  const apiKeyFlag = readValueFlag(argv, "--api-key");
   const configResult = await loadGuardConfig(cwd);
-  if (configResult.status === "invalid" && command !== "doctor") return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
+  if (configResult.status === "invalid" && command !== "doctor" && command !== "setup" && !(command === "init" && argv.includes("--plan"))) return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
   const env = dependencies.env ?? process.env;
-  const baseUrl = dependencies.baseUrl ?? API_BASE_URL;
+  const baseUrl = dependencies.baseUrl ?? env["SHORE_API_BASE_URL"] ?? API_BASE_URL;
+  if (command === "setup") {
+    const exec = dependencies.setup?.exec ?? runCommand2;
+    const selection2 = dependencies.storeSelection ?? await selectCredentialStore();
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store });
+    const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
+    const adapterContext = {
+      exec,
+      homeDir: homedir2(),
+      artifactRoot: artifactRoot(),
+      pluginVersion: CLI_BUILD.version,
+      fs: { readFile: (path2) => readFile14(path2, "utf8") }
+    };
+    const agentsFlag = readValueFlag(argv, "--agents");
+    const login = async () => {
+      const key = apiKeyFlag ?? env.SHORE_API_KEY ?? (dependencies.isTTY ?? process.stdin.isTTY ? await (dependencies.promptForKey ?? promptForKey)() : void 0);
+      return runLogin({
+        key,
+        store: selection2.store,
+        fallbackNotice: selection2.notice,
+        clientForKey: (candidate) => createApiClient({ baseUrl, getApiKey: () => candidate, fetch: dependencies.fetch })
+      });
+    };
+    return { json: json2, result: await runSetup({
+      exec,
+      adapters: dependencies.setup?.adapters ?? createAgentAdapters(adapterContext),
+      isCliOnPath: dependencies.setup?.isCliOnPath ?? createCliDetector(exec),
+      installCli: dependencies.setup?.installCli ?? createCliInstaller(exec, CLI_BUILD.version),
+      authStatus: dependencies.setup?.authStatus ?? (() => checkAuthentication(resolved2, client2)),
+      login: dependencies.setup?.login ?? login,
+      ...agentsFlag === void 0 ? {} : { agentsFilter: agentsFlag.split(",").map((value) => value.trim()).filter((value) => value !== "") },
+      skipAgents: argv.includes("--skip-agents"),
+      dryRun: argv.includes("--dry-run"),
+      stdout: dependencies.setup?.stdout ?? (() => void 0)
+    }) };
+  }
   if (command === "login") {
-    const selection = dependencies.storeSelection ?? await selectCredentialStore();
+    const selection2 = dependencies.storeSelection ?? await selectCredentialStore();
     const key = apiKeyFlag ?? env.SHORE_API_KEY ?? (dependencies.isTTY ?? process.stdin.isTTY ? await (dependencies.promptForKey ?? promptForKey)() : void 0);
     return { json: json2, result: await runLogin({
       key,
-      store: selection.store,
-      fallbackNotice: selection.notice,
+      store: selection2.store,
+      fallbackNotice: selection2.notice,
       clientForKey: (candidate) => createApiClient({ baseUrl, getApiKey: () => candidate, fetch: dependencies.fetch })
     }) };
   }
   if (command === "status") {
-    const direct = apiKeyFlag ?? env.SHORE_API_KEY;
-    const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+    const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
+    const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
     const warnings = [];
-    const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store, onWarning: (message3) => warnings.push(message3) });
-    const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store, onWarning: (message4) => warnings.push(message4) });
+    const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
     return { json: json2, result: await runStatus({
-      resolved,
-      client,
+      resolved: resolved2,
+      client: client2,
       config: configResult.status === "ok" ? configResult.config : void 0,
-      warning: [direct === void 0 ? selection.notice : void 0, ...warnings].filter((value) => value !== void 0).join("\n") || void 0
+      warning: [direct2 === void 0 ? selection2.notice : void 0, ...warnings].filter((value) => value !== void 0).join("\n") || void 0
     }) };
   }
   if (command === "init") {
-    const direct = apiKeyFlag ?? env.SHORE_API_KEY;
-    const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
-    const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store });
-    const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
-    return { json: json2, result: await runInit(cwd, { connection: createRepositoryConnection({ resolved, client }) }) };
+    const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
+    const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store });
+    const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
+    const connection = createRepositoryConnection({ resolved: resolved2, client: client2 });
+    const auth = async () => {
+      if (resolved2 === void 0) return { status: "missing", detail: "Not authenticated." };
+      try {
+        const account = await client2.getAccount();
+        return { status: "valid", detail: `Account ${account.accountId} (${account.plan})` };
+      } catch (error62) {
+        if (error62 instanceof AuthError) return { status: "invalid", detail: error62.message };
+        if (error62 instanceof UnavailableError) return { status: "unavailable", detail: error62.message };
+        throw error62;
+      }
+    };
+    return { json: json2, result: await runInit(cwd, { connection, plan: argv.includes("--plan"), planDependencies: { cliVersion: CLI_BUILD.version, auth, connection } }) };
   }
   if (command === "adopt") return { json: json2, result: await runAdopt({
     root: cwd,
@@ -22913,44 +23501,40 @@ async function route(argv, cwd, dependencies = {}) {
     ...dependencies.isTTY ?? process.stdin.isTTY ? { prompt: dependencies.promptForAdoption ?? promptForAdoption } : {}
   }) };
   if (command === "doctor") {
-    const direct = apiKeyFlag ?? env.SHORE_API_KEY;
-    const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
-    const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store });
-    const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
-    return { json: json2, result: await runDoctor(cwd, createDoctorDependencies({ resolved, client, config: configResult.status === "ok" ? configResult.config : void 0 })) };
+    const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
+    const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store });
+    const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
+    return { json: json2, result: await runDoctor(cwd, createDoctorDependencies({ resolved: resolved2, client: client2, config: configResult.status === "ok" ? configResult.config : void 0 })) };
   }
   if (command === "check") {
     if (configResult.status !== "ok") return { json: json2, result: fail3(command, 'Shore Guard is not initialized. Run "shore-guard init" first.') };
-    const direct = apiKeyFlag ?? env.SHORE_API_KEY;
-    const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
-    const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store });
-    const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
-    return { json: json2, result: await runCheck({ cwd, config: configResult.config, api: client }) };
+    const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
+    const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store });
+    const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
+    return { json: json2, result: await runCheck({ cwd, config: configResult.config, api: client2 }) };
   }
-  if (command === "verify") {
-    if (configResult.status !== "ok") return { json: json2, result: fail3(command, 'Shore Guard is not initialized. Run "shore-guard init" first.') };
-    const direct = apiKeyFlag ?? env.SHORE_API_KEY;
-    const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
-    const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store });
-    const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
-    return { json: json2, result: await runVerify({ cwd, config: configResult.config, api: client }) };
-  }
-  return { json: json2, result: { command, outcome: "not-implemented", exitCode: EXIT_CODES.config, message: `${command}: not implemented` } };
+  if (configResult.status !== "ok") return { json: json2, result: fail3(command, 'Shore Guard is not initialized. Run "shore-guard init" first.') };
+  const direct = apiKeyFlag ?? env.SHORE_API_KEY;
+  const selection = direct === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+  const resolved = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection.store });
+  const client = createApiClient({ baseUrl, getApiKey: () => resolved?.key, fetch: dependencies.fetch });
+  return { json: json2, result: await runVerify({ cwd, config: configResult.config, api: client }) };
 }
 var NOOP_STORE = {
   get: () => Promise.resolve(void 0),
   set: () => Promise.reject(new Error("Credential store was not selected.")),
   delete: () => Promise.resolve(void 0)
 };
-function pass(command, message3) {
-  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message3 };
+function pass(command, message4, data) {
+  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message4, ...data === void 0 ? {} : { data } };
 }
-function fail3(command, message3) {
-  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message3 };
+function fail3(command, message4) {
+  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message4 };
 }
-function helpText() {
-  const lines = Object.entries(COMMANDS).map(([name, purpose]) => `  ${name.padEnd(8)} ${purpose}`);
-  return ["Shore Guard repository health CLI", "", "Usage: shore-guard [--json] <command>", "", "Commands:", ...lines].join("\n");
+function isCommandName(value) {
+  return Object.hasOwn(COMMANDS, value);
 }
 function readValueFlag(argv, name) {
   const equals = argv.find((value) => value.startsWith(`${name}=`));
@@ -22963,16 +23547,36 @@ function stripOptions(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
     if (value === void 0) continue;
-    if (value === "--json") continue;
-    if (["--api-key", "--proposal", "--approved-by", "--rationale"].includes(value)) {
+    if (value === "--json" || value === "--plan" || value === "--help" || value === "-h") continue;
+    if (["--api-key", "--proposal", "--approved-by", "--rationale", "--agents"].includes(value)) {
       index += 1;
       continue;
     }
-    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale="].some((prefix) => value.startsWith(prefix))) continue;
-    if (["--approve", "--modify", "--reject", "--replace-lock"].includes(value)) continue;
+    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale=", "--agents="].some((prefix) => value.startsWith(prefix))) continue;
+    if (["--approve", "--modify", "--reject", "--replace-lock", "--skip-agents", "--dry-run"].includes(value)) continue;
     result3.push(value);
   }
   return result3;
+}
+function artifactRoot() {
+  const executable2 = process.argv[1];
+  if (executable2 === void 0) return void 0;
+  try {
+    return dirname5(dirname5(realpathSync(executable2)));
+  } catch {
+    return void 0;
+  }
+}
+async function checkAuthentication(resolved, client) {
+  if (resolved === void 0) return "missing";
+  try {
+    await client.getAccount();
+    return "valid";
+  } catch (error62) {
+    if (error62 instanceof AuthError) return "invalid";
+    if (error62 instanceof UnavailableError) return "unavailable";
+    throw error62;
+  }
 }
 async function promptForKey() {
   process.stderr.write("Shore API key: ");

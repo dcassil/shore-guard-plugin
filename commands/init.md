@@ -1,2 +1,4 @@
-Run `shore-guard init --json`. Interpret the CommandResult envelope and exit code using the completion-contract table. Do not bypass the CLI.
-If `shore-guard` is not on PATH, run `node "${CLAUDE_PLUGIN_ROOT}/bin/shore-guard"` with the same arguments, or install it with `npm install -g github:dcassil/shore-guard-plugin`.
+Use the `shore-guard-init` skill for an approval-first repository setup.
+Run `shore-guard init --plan --json` and show the plan before changing anything.
+Never proceed without the user's explicit worktree, current-branch, or manual-runbook choice.
+Follow every remaining step and fallback in the skill.

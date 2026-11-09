@@ -1,7 +1,13 @@
 # Shore Guard
 
 Shore Guard provides a standalone repository-health CLI and a Claude Code plugin.
-This artifact was built from monorepo commit `57aa02c0c725543c154726f7b3bde06371cc25dd` (version `0.1.3`).
+This artifact was built from monorepo commit `3e08250690b5f1521ef3c5b6fed3f28ddd517d80` (version `0.2.0`).
+
+## Getting started
+
+Run `npx shore-guard setup`, open your coding agent in the project, then run
+`/shore-guard:init`. The approval-first flow shows its plan before changing anything;
+review and approve the work, then merge the generated pull request.
 
 ## Install
 
@@ -28,6 +34,12 @@ npm install -g github:dcassil/shore-guard-plugin   # or: npx github:dcassil/shor
 ```
 
 Once the package is published to the npm registry, `npm install -g shore-guard` works too.
+
+### CI
+
+Set `SHORE_API_KEY` in the CI environment and run `shore-guard verify --json` as
+the completion gate. Exit 0 passes; exit 1 reports findings; all other exit codes must
+be handled according to the bundled completion-contract skill.
 
 The completion contract permits an agent to claim completion only when
 `shore-guard verify --json` passes for the exact candidate commit. All other exit
