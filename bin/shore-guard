@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "d350b3ff810d405f66cebb17141ba299cc503fd8", version: "0.3.0" };
+var define_SHORE_GUARD_BUILD_default = { sha: "05691acd208259a02193d38941d4d9a3dd8ecde7", version: "0.4.0" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -1179,8 +1179,8 @@ function prefixIssues(path2, issues) {
     return iss;
   });
 }
-function unwrapMessage(message5) {
-  return typeof message5 === "string" ? message5 : message5?.message;
+function unwrapMessage(message7) {
+  return typeof message7 === "string" ? message7 : message7?.message;
 }
 function attachSchema(issues, start, inst) {
   var _a3;
@@ -1198,7 +1198,7 @@ function finalizeIssue(iss, ctx, config2) {
       iss.schema = iss.inst;
   }
   const schemaError = iss.schema !== iss.inst ? iss.schema?._zod.def?.error : void 0;
-  const message5 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const message7 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
   const full = {};
   for (const k of Object.keys(iss)) {
     if (k === "inst" || k === "schema" || k === "continue" || k === "input" || k === "__proto__")
@@ -1206,7 +1206,7 @@ function finalizeIssue(iss, ctx, config2) {
     full[k] = iss[k];
   }
   full.path ?? (full.path = []);
-  full.message = message5;
+  full.message = message7;
   if (ctx?.reportInput) {
     full.input = iss.input;
   }
@@ -5038,7 +5038,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve8) {
+function isRecursive(inst, stack, resolve10) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -5048,7 +5048,7 @@ function isRecursive(inst, stack, resolve8) {
   let result3 = NONE;
   const check2 = (child) => {
     if (result3 !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve8);
+      const answer = isRecursive(child, stack, resolve10);
       if (answer > result3)
         result3 = answer;
     }
@@ -5059,7 +5059,7 @@ function isRecursive(inst, stack, resolve8) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve8) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve10) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -5123,7 +5123,7 @@ function isRecursive(inst, stack, resolve8) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve8 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve10 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -12917,8 +12917,8 @@ var globalRegistry = globalThis.__zod_globalRegistry;
 var INVALID = /* @__PURE__ */ Symbol.for("zod.compile.invalid");
 var FALLBACK_FLAG = /* @__PURE__ */ Symbol.for("zod.compile.fallback");
 var ZodCompileAsyncError = class extends Error {
-  constructor(message5 = "z.compile does not support async refinements, transforms, or checks") {
-    super(message5);
+  constructor(message7 = "z.compile does not support async refinements, transforms, or checks") {
+    super(message7);
     this.name = "ZodCompileAsyncError";
   }
 };
@@ -15610,12 +15610,12 @@ function initializeContext(params) {
     external: params?.external ?? void 0
   };
 }
-function handleUnrepresentable(schema, ctx, json2, params, message5) {
-  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message5 }) : ctx.unrepresentable;
+function handleUnrepresentable(schema, ctx, json2, params, message7) {
+  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message7 }) : ctx.unrepresentable;
   if (result3 === "any")
     return false;
   if (result3 === void 0 || result3 === "throw")
-    throw new Error(message5);
+    throw new Error(message7);
   Object.assign(json2, result3);
   return true;
 }
@@ -19688,6 +19688,11 @@ var guardConfigSchema = external_exports.object({
   developBranch: external_exports.string().min(1).optional(),
   autoCreateTempBranch: external_exports.boolean().optional(),
   installedGates: external_exports.array(external_exports.string().min(1)).optional(),
+  lint: external_exports.object({
+    tool: external_exports.enum(["eslint", "custom"]),
+    singleFileCommand: external_exports.string().min(1),
+    checkCommand: external_exports.string().min(1)
+  }).strict().optional(),
   thresholds: external_exports.object({
     maxHealthDrop: external_exports.number().nonnegative().optional(),
     failOnNewIssues: external_exports.enum(["blocker", "critical", "high", "medium", "low", "info"]).optional()
@@ -19736,9 +19741,9 @@ function errorMessage(error62) {
 // ../core/src/git/exec.ts
 import { execFile } from "node:child_process";
 function createGitRunner(execute = execFile) {
-  return (cwd, args) => new Promise((resolve8) => {
+  return (cwd, args) => new Promise((resolve10) => {
     execute("git", args, { cwd, encoding: "utf8", windowsHide: true }, (error62, stdout, stderr) => {
-      resolve8({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
+      resolve10({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
     });
   });
 }
@@ -19756,8 +19761,8 @@ var runGit = createGitRunner();
 var GitResolutionError = class extends Error {
   kind;
   remediation;
-  constructor(kind, message5, remediation) {
-    super(message5);
+  constructor(kind, message7, remediation) {
+    super(message7);
     this.name = "GitResolutionError";
     this.kind = kind;
     this.remediation = remediation;
@@ -19842,13 +19847,13 @@ function evaluateThresholds(comparison, thresholds) {
   const maxDrop = thresholds?.maxHealthDrop;
   const delta = comparison.metrics.health.delta;
   if (maxDrop !== void 0 && delta !== null && delta < -maxDrop) reasons.push({ code: "max-health-drop", message: `Health dropped by ${String(Math.abs(delta))}; the allowed drop is ${String(maxDrop)}.`, remediation: "Improve the regressed health findings or adjust thresholds.maxHealthDrop deliberately." });
-  const severity = thresholds?.failOnNewIssues;
-  if (severity !== void 0) {
-    const boundary = SEVERITIES.indexOf(severity);
+  const severity3 = thresholds?.failOnNewIssues;
+  if (severity3 !== void 0) {
+    const boundary = SEVERITIES.indexOf(severity3);
     const count = SEVERITIES.slice(0, boundary + 1).reduce((sum, item) => sum + (comparison.issues.newBySeverity[item] ?? 0), 0);
-    if (count > 0) reasons.push({ code: "new-issues-threshold", message: `${String(count)} new ${severity}-or-higher issue(s) violate failOnNewIssues.`, remediation: `Resolve the new ${severity}-or-higher issues before merging.` });
+    if (count > 0) reasons.push({ code: "new-issues-threshold", message: `${String(count)} new ${severity3}-or-higher issue(s) violate failOnNewIssues.`, remediation: `Resolve the new ${severity3}-or-higher issues before merging.` });
   }
-  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message5) => ({ code: "remote-comparison-failed", message: message5, remediation: "Review and resolve the reported regression." })));
+  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message7) => ({ code: "remote-comparison-failed", message: message7, remediation: "Review and resolve the reported regression." })));
   return reasons;
 }
 
@@ -19916,8 +19921,8 @@ function result(verdict, reasons, scanIds, extras = {}) {
 var GateRegistrationError = class extends Error {
   code;
   gateId;
-  constructor(code, message5, gateId) {
-    super(message5);
+  constructor(code, message7, gateId) {
+    super(message7);
     this.name = "GateRegistrationError";
     this.code = code;
     this.gateId = gateId;
@@ -20331,7 +20336,7 @@ async function selectCredentialStore(options = {}) {
   };
 }
 function spawnWithInput(command, args, input2) {
-  return new Promise((resolve8, reject) => {
+  return new Promise((resolve10, reject) => {
     const child = spawn(command, args, { stdio: ["pipe", "ignore", "pipe"] });
     let stderr = "";
     child.stderr.on("data", (chunk) => {
@@ -20340,7 +20345,7 @@ function spawnWithInput(command, args, input2) {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {
-        resolve8();
+        resolve10();
       } else {
         reject(new Error(`${command} exited ${String(code)}: ${stderr.trim()}`));
       }
@@ -20387,17 +20392,17 @@ function detectDrift(stored, current) {
 // ../core/src/state/fingerprint.ts
 import { createHash } from "node:crypto";
 import { resolve, relative, sep } from "node:path";
-async function fingerprintManagedFiles(root, managedPaths, fs13) {
+async function fingerprintManagedFiles(root, managedPaths, fs19) {
   const paths = [...new Set(managedPaths)].sort();
   const files = [];
   for (const path2 of paths) {
     const safe = resolveManagedPath(root, path2);
     if (!safe) return { status: "file-error", path: path2, reason: "path escapes repository root" };
     try {
-      const stat2 = await fs13.lstat(safe);
+      const stat2 = await fs19.lstat(safe);
       if (stat2.isSymbolicLink()) return { status: "file-error", path: path2, reason: "managed file is a symbolic link" };
       if (!stat2.isFile()) return { status: "file-error", path: path2, reason: "managed path is not a regular file" };
-      const contents = await fs13.readFile(safe);
+      const contents = await fs19.readFile(safe);
       files.push({ path: path2, sha256: digest(contents) });
     } catch (error62) {
       if (isNodeError3(error62) && error62.code === "ENOENT") continue;
@@ -20449,13 +20454,20 @@ var submittedBlueprintSchema = external_exports.object({
   issueUrl: external_exports.url(),
   at: external_exports.iso.datetime()
 }).strict();
+var guardsStateSchema = external_exports.object({
+  policyHash: external_exports.string().min(1),
+  choice: external_exports.enum(["shore", "existing"]),
+  appliedAt: external_exports.iso.datetime(),
+  files: external_exports.array(external_exports.string())
+}).strict();
 var shoreStateSchema = external_exports.object({
   schemaVersion: external_exports.literal(STATE_SCHEMA_VERSION),
   updatedAt: external_exports.iso.datetime(),
   managedPaths: external_exports.array(external_exports.string()),
   fingerprint: repositoryFingerprintSchema,
   run: runRecordSchema,
-  submittedBlueprints: external_exports.array(submittedBlueprintSchema).optional()
+  submittedBlueprints: external_exports.array(submittedBlueprintSchema).optional(),
+  guards: guardsStateSchema.optional()
 }).strict();
 
 // ../core/src/state/store.ts
@@ -20471,11 +20483,11 @@ var systemClock = { now: () => /* @__PURE__ */ new Date() };
 function statePath(root) {
   return join4(root, ".shore", "state.json");
 }
-async function loadState(root, fs13 = nodeFileSystem) {
+async function loadState(root, fs19 = nodeFileSystem) {
   const path2 = statePath(root);
   let text3;
   try {
-    text3 = (await fs13.readFile(path2)).toString("utf8");
+    text3 = (await fs19.readFile(path2)).toString("utf8");
   } catch (error62) {
     if (isNodeError4(error62) && error62.code === "ENOENT") return { status: "not-found" };
     return corrupt(path2, message2(error62));
@@ -20492,19 +20504,19 @@ async function loadState(root, fs13 = nodeFileSystem) {
   const result3 = shoreStateSchema.safeParse(parsed);
   return result3.success ? { status: "ok", state: result3.data } : corrupt(path2, result3.error.issues.map((i) => `${i.path.join(".") || "$"}: ${i.message}`).join("; "));
 }
-async function saveState(root, state, fs13 = nodeFileSystem) {
+async function saveState(root, state, fs19 = nodeFileSystem) {
   const path2 = statePath(root);
   const tmp = `${path2}.${randomUUID()}.tmp`;
   try {
     const validated = shoreStateSchema.parse(state);
-    await fs13.mkdir(dirname3(path2), { recursive: true });
-    await fs13.writeFile(tmp, `${JSON.stringify(validated, null, 2)}
+    await fs19.mkdir(dirname3(path2), { recursive: true });
+    await fs19.writeFile(tmp, `${JSON.stringify(validated, null, 2)}
 `);
-    await fs13.rename(tmp, path2);
+    await fs19.rename(tmp, path2);
     return { status: "ok", path: path2 };
   } catch (error62) {
     try {
-      await fs13.unlink(tmp);
+      await fs19.unlink(tmp);
     } catch {
     }
     return { status: "error", path: path2, reason: message2(error62) };
@@ -20524,34 +20536,34 @@ function message2(error62) {
 import { join as join5 } from "node:path";
 
 // ../core/src/probes/types.ts
-function finding(probe, id, severity, problem, remediation, evidence = []) {
-  return { probe, id, severity, problem, remediation, evidence };
+function finding(probe, id, severity3, problem, remediation, evidence = []) {
+  return { probe, id, severity: severity3, problem, remediation, evidence };
 }
 
 // ../core/src/probes/ci.ts
-var ciProbe = { id: "ci", async run({ root, fs: fs13 }) {
+var ciProbe = { id: "ci", async run({ root, fs: fs19 }) {
   const path2 = ".github/workflows";
-  const files = (await fs13.list(join5(root, path2))).filter((f) => /\.ya?ml$/.test(f));
+  const files = (await fs19.list(join5(root, path2))).filter((f) => /\.ya?ml$/.test(f));
   return files.length ? [finding("ci", "ci.github-actions", "info", `Detected ${String(files.length)} GitHub Actions workflow(s).`, "Review workflows before adding a Shore gate.", files.map((f) => `${path2}/${f}`))] : [finding("ci", "ci.missing", "info", "No GitHub Actions workflows detected.", "Add CI when automated verification is desired.")];
 } };
 
 // ../core/src/probes/eslint.ts
 import { join as join6 } from "node:path";
-var eslintProbe = { id: "eslint", async run({ root, fs: fs13 }) {
-  const flat = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts"];
-  const legacy = [".eslintrc", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs"];
-  for (const p of flat) if (await fs13.exists(join6(root, p))) return [finding("eslint", "eslint.flat", "info", "ESLint flat configuration detected.", "No action required.", [p])];
-  for (const p of legacy) if (await fs13.exists(join6(root, p))) return [finding("eslint", "eslint.legacy", "warning", "Legacy ESLint configuration detected.", "Migrate to eslint.config.* flat configuration.", [p])];
+var ESLINT_FLAT_CONFIG_PATHS = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts"];
+var ESLINT_LEGACY_CONFIG_PATHS = [".eslintrc", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.yml", ".eslintrc.yaml"];
+var eslintProbe = { id: "eslint", async run({ root, fs: fs19 }) {
+  for (const p of ESLINT_FLAT_CONFIG_PATHS) if (await fs19.exists(join6(root, p))) return [finding("eslint", "eslint.flat", "info", "ESLint flat configuration detected.", "No action required.", [p])];
+  for (const p of ESLINT_LEGACY_CONFIG_PATHS) if (await fs19.exists(join6(root, p))) return [finding("eslint", "eslint.legacy", "warning", "Legacy ESLint configuration detected.", "Migrate to eslint.config.* flat configuration.", [p])];
   return [finding("eslint", "eslint.missing", "info", "ESLint was not detected.", "Add ESLint if lint enforcement is desired.")];
 } };
 
 // ../core/src/probes/hooks.ts
 import { join as join7 } from "node:path";
-var hooksProbe = { id: "hooks", async run({ root, fs: fs13 }) {
+var hooksProbe = { id: "hooks", async run({ root, fs: fs19 }) {
   const candidates = [".husky/pre-commit", ".git/hooks/pre-commit"];
-  for (const p of candidates) if (await fs13.exists(join7(root, p))) return [finding("hooks", "hooks.detected", "info", "Commit hooks detected.", "Review hooks for compatibility; init will not install or overwrite them.", [p])];
+  for (const p of candidates) if (await fs19.exists(join7(root, p))) return [finding("hooks", "hooks.detected", "info", "Commit hooks detected.", "Review hooks for compatibility; init will not install or overwrite them.", [p])];
   try {
-    const pkg = JSON.parse(await fs13.readText(join7(root, "package.json")));
+    const pkg = JSON.parse(await fs19.readText(join7(root, "package.json")));
     if (pkg.simpleGitHooks) return [finding("hooks", "hooks.simple-git-hooks", "info", "simple-git-hooks configuration detected.", "Review hooks for compatibility.", ["package.json"])];
   } catch {
   }
@@ -20560,13 +20572,14 @@ var hooksProbe = { id: "hooks", async run({ root, fs: fs13 }) {
 
 // ../core/src/probes/package-manager.ts
 import { join as join8 } from "node:path";
-var packageManagerProbe = { id: "package-manager", async run({ root, fs: fs13 }) {
-  const locks = [["pnpm", "pnpm-lock.yaml"], ["npm", "package-lock.json"], ["yarn", "yarn.lock"]];
+var PACKAGE_MANAGER_LOCKS = [["pnpm", "pnpm-lock.yaml"], ["npm", "package-lock.json"], ["yarn", "yarn.lock"]];
+var packageManagerProbe = { id: "package-manager", async run({ root, fs: fs19 }) {
+  const locks = PACKAGE_MANAGER_LOCKS;
   const found = [];
-  for (const [name, file2] of locks) if (await fs13.exists(join8(root, file2))) found.push(name);
+  for (const [name, file2] of locks) if (await fs19.exists(join8(root, file2))) found.push(name);
   let declared;
   try {
-    declared = JSON.parse(await fs13.readText(join8(root, "package.json"))).packageManager?.split("@")[0];
+    declared = JSON.parse(await fs19.readText(join8(root, "package.json"))).packageManager?.split("@")[0];
   } catch {
   }
   if (!declared && found.length === 0) return [finding("package-manager", "package-manager.missing", "info", "No package manager was detected.", "Add a lockfile and packageManager field when the project adopts Node tooling.")];
@@ -20576,9 +20589,9 @@ var packageManagerProbe = { id: "package-manager", async run({ root, fs: fs13 })
 
 // ../core/src/probes/scripts.ts
 import { join as join9 } from "node:path";
-var scriptsProbe = { id: "scripts", async run({ root, fs: fs13 }) {
+var scriptsProbe = { id: "scripts", async run({ root, fs: fs19 }) {
   try {
-    const pkg = JSON.parse(await fs13.readText(join9(root, "package.json")));
+    const pkg = JSON.parse(await fs19.readText(join9(root, "package.json")));
     const names = Object.keys(pkg.scripts ?? {});
     return names.length ? [finding("scripts", "scripts.detected", "info", `Detected package scripts: ${names.sort().join(", ")}.`, "No action required.", ["package.json"])] : [finding("scripts", "scripts.missing", "info", "No package scripts detected.", "Add test, lint, or typecheck scripts as appropriate.", ["package.json"])];
   } catch {
@@ -20678,37 +20691,37 @@ function packagePatterns(text3) {
   }
   return [];
 }
-async function workspaceConfigs(root, fs13) {
+async function workspaceConfigs(root, fs19) {
   const patterns = [];
   const pnpm = join10(root, "pnpm-workspace.yaml");
   const pkg = join10(root, "package.json");
-  if (await fs13.exists(pnpm)) patterns.push(...pnpmPatterns(await fs13.readText(pnpm)));
-  if (await fs13.exists(pkg)) patterns.push(...packagePatterns(await fs13.readText(pkg)));
+  if (await fs19.exists(pnpm)) patterns.push(...pnpmPatterns(await fs19.readText(pnpm)));
+  if (await fs19.exists(pkg)) patterns.push(...packagePatterns(await fs19.readText(pkg)));
   const found = [];
   for (const pattern of patterns) {
     const star = pattern.indexOf("*");
     if (star < 0) {
-      const relative5 = `${pattern.replace(/\/$/, "")}/tsconfig.json`;
-      if (await fs13.exists(join10(root, relative5))) found.push(relative5);
+      const relative8 = `${pattern.replace(/\/$/, "")}/tsconfig.json`;
+      if (await fs19.exists(join10(root, relative8))) found.push(relative8);
       continue;
     }
     const prefix = pattern.slice(0, star).replace(/\/$/, "");
-    for (const child of await fs13.list(join10(root, prefix))) {
-      const relative5 = [prefix, child, "tsconfig.json"].filter(Boolean).join("/");
-      if (await fs13.exists(join10(root, relative5))) found.push(relative5);
+    for (const child of await fs19.list(join10(root, prefix))) {
+      const relative8 = [prefix, child, "tsconfig.json"].filter(Boolean).join("/");
+      if (await fs19.exists(join10(root, relative8))) found.push(relative8);
     }
   }
   return [...new Set(found)];
 }
-var tsconfigProbe = { id: "tsconfig", async run({ root, fs: fs13 }) {
-  const rootConfigs = (await fs13.list(root)).filter((name) => /^tsconfig(\..+)?\.json$/.test(name));
-  const configs = rootConfigs.length > 0 ? [...rootConfigs] : [...await workspaceConfigs(root, fs13)];
+var tsconfigProbe = { id: "tsconfig", async run({ root, fs: fs19 }) {
+  const rootConfigs = (await fs19.list(root)).filter((name) => /^tsconfig(\..+)?\.json$/.test(name));
+  const configs = rootConfigs.length > 0 ? [...rootConfigs] : [...await workspaceConfigs(root, fs19)];
   if (configs.length === 0) return [finding("tsconfig", "tsconfig.missing", "info", "TypeScript configuration was not detected.", "Add tsconfig.json if this is a TypeScript project.")];
   const evidence = rootConfigs.length > 0 ? configs : configs.slice(0, 10);
   const findings = [finding("tsconfig", "tsconfig.present", "info", "TypeScript configuration detected.", "No action required.", evidence)];
   for (const config2 of configs) {
     try {
-      parseJsonc(await fs13.readText(join10(root, config2)));
+      parseJsonc(await fs19.readText(join10(root, config2)));
     } catch {
       findings.push(finding("tsconfig", "tsconfig.invalid", "warning", `${config2} is not strict JSON.`, "Validate or repair tsconfig.json.", [config2]));
     }
@@ -20750,11 +20763,116 @@ var nodeProbeFileSystem = {
   }
 };
 
+// ../core/src/probes/toolchain.ts
+import { join as join11 } from "node:path";
+var DEPCRUISE_CONFIG_PATHS = [".dependency-cruiser.cjs", ".dependency-cruiser.js", ".dependency-cruiser.mjs", ".dependency-cruiser.json"];
+var BIOME_CONFIG_PATHS = ["biome.json", "biome.jsonc"];
+var PRETTIER_CONFIG_PATHS = [".prettierrc", ".prettierrc.json", ".prettierrc.js", ".prettierrc.cjs", ".prettierrc.mjs", ".prettierrc.yml", ".prettierrc.yaml"];
+var ESLINT_SUPPRESSIONS_PATHS = [".shore/eslint-suppressions.json", "eslint-suppressions.json"];
+var DEPCRUISE_BASELINE_PATHS = [".shore/dependency-cruiser-known-violations.json", ".dependency-cruiser-known-violations.json"];
+async function inventoryToolchain({ root, fs: fs19 }) {
+  const pkg = await readPackageJson(root, fs19);
+  const dependencies = dependencyNames(pkg);
+  const rootEntries = await fs19.list(root);
+  const prettierPaths = rootEntries.filter((path2) => path2.startsWith(".prettierrc"));
+  const [flatConfig, legacyConfig, eslintVersion, depcruiseConfig, biomeConfig, prettierConfig, tsconfigPath, suppressionsPath, knownViolationsPath, packageManager] = await Promise.all([
+    firstExisting(root, fs19, ESLINT_FLAT_CONFIG_PATHS),
+    firstExisting(root, fs19, ESLINT_LEGACY_CONFIG_PATHS),
+    readEslintVersion(root, fs19),
+    firstExisting(root, fs19, DEPCRUISE_CONFIG_PATHS),
+    firstExisting(root, fs19, BIOME_CONFIG_PATHS),
+    firstExisting(root, fs19, [...PRETTIER_CONFIG_PATHS, ...prettierPaths]),
+    firstExisting(root, fs19, ["tsconfig.json"]),
+    firstExisting(root, fs19, ESLINT_SUPPRESSIONS_PATHS),
+    firstExisting(root, fs19, DEPCRUISE_BASELINE_PATHS),
+    detectPackageManager(root, fs19, pkg)
+  ]);
+  const strict = tsconfigPath === void 0 ? void 0 : await readStrict(join11(root, tsconfigPath), fs19);
+  const eslintPresent = dependencies.has("eslint") || eslintVersion !== void 0 || flatConfig !== void 0 || legacyConfig !== void 0;
+  return {
+    packageManager,
+    eslint: {
+      present: eslintPresent,
+      flat: flatConfig !== void 0,
+      supported: eslintVersion !== void 0 && versionAtLeast(eslintVersion, [9, 24, 0]),
+      ...legacyConfig === void 0 ? {} : { legacyConfigPath: legacyConfig },
+      ...eslintVersion === void 0 ? {} : { version: eslintVersion },
+      ...flatConfig === void 0 ? {} : { configPath: flatConfig },
+      ...suppressionsPath === void 0 ? {} : { suppressionsPath }
+    },
+    eslintD: { present: dependencies.has("eslint_d") },
+    depcruise: { present: dependencies.has("dependency-cruiser") || depcruiseConfig !== void 0, ...depcruiseConfig === void 0 ? {} : { configPath: depcruiseConfig }, ...knownViolationsPath === void 0 ? {} : { knownViolationsPath } },
+    biome: { present: dependencies.has("@biomejs/biome") || biomeConfig !== void 0, ...biomeConfig === void 0 ? {} : { configPath: biomeConfig } },
+    prettier: { present: dependencies.has("prettier") || prettierConfig !== void 0 || pkg?.prettier !== void 0 },
+    typescript: { present: dependencies.has("typescript") || tsconfigPath !== void 0, ...tsconfigPath === void 0 ? {} : { tsconfigPath }, ...strict === void 0 ? {} : { strict } },
+    hooks: { husky: dependencies.has("husky") || await fs19.exists(join11(root, ".husky")), simpleGitHooks: dependencies.has("simple-git-hooks") || pkg?.simpleGitHooks !== void 0, lefthook: dependencies.has("lefthook") || await fs19.exists(join11(root, "lefthook.yml")) },
+    scripts: stringRecord(pkg?.scripts)
+  };
+}
+async function readPackageJson(root, fs19) {
+  try {
+    const value = JSON.parse(await fs19.readText(join11(root, "package.json")));
+    return isRecord(value) ? value : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function dependencyNames(pkg) {
+  return /* @__PURE__ */ new Set([...Object.keys(stringRecord(pkg?.dependencies)), ...Object.keys(stringRecord(pkg?.devDependencies))]);
+}
+function stringRecord(value) {
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(Object.entries(value).filter((entry2) => typeof entry2[1] === "string"));
+}
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+async function firstExisting(root, fs19, paths) {
+  for (const path2 of paths) if (await fs19.exists(join11(root, path2))) return path2;
+  return void 0;
+}
+async function readEslintVersion(root, fs19) {
+  try {
+    const value = JSON.parse(await fs19.readText(join11(root, "node_modules/eslint/package.json")));
+    return isRecord(value) && typeof value.version === "string" ? value.version : void 0;
+  } catch {
+    return void 0;
+  }
+}
+async function readStrict(path2, fs19) {
+  try {
+    const value = parseJsonc(await fs19.readText(path2));
+    if (!isRecord(value) || !isRecord(value.compilerOptions) || typeof value.compilerOptions.strict !== "boolean") return void 0;
+    return value.compilerOptions.strict;
+  } catch {
+    return void 0;
+  }
+}
+function versionAtLeast(version2, minimum) {
+  const found = /^(\d+)\.(\d+)\.(\d+)/.exec(version2);
+  if (found === null) return false;
+  const parts = found.slice(1).map(Number);
+  for (let index = 0; index < minimum.length; index += 1) {
+    const current = parts[index] ?? 0;
+    const required2 = minimum[index] ?? 0;
+    if (current !== required2) return current > required2;
+  }
+  return true;
+}
+async function detectPackageManager(root, fs19, pkg) {
+  if (typeof pkg?.packageManager === "string") {
+    const name = pkg.packageManager.split("@")[0];
+    if (name === "pnpm" || name === "npm" || name === "yarn") return name;
+  }
+  for (const [name, path2] of PACKAGE_MANAGER_LOCKS) if (await fs19.exists(join11(root, path2))) return name;
+  return void 0;
+}
+
 // src/router.ts
 import { realpathSync } from "node:fs";
-import { readFile as readFile15 } from "node:fs/promises";
+import { readFile as readFile22 } from "node:fs/promises";
 import { homedir as homedir2, hostname as hostname3 } from "node:os";
-import { dirname as dirname5 } from "node:path";
+import { dirname as dirname7 } from "node:path";
 
 // ../api-client/src/compare.ts
 var severitySchema = external_exports.enum(["blocker", "critical", "high", "medium", "low", "info"]);
@@ -20816,8 +20934,8 @@ var deviceLoginPollResponseSchema = external_exports.discriminatedUnion("status"
 var ShoreApiError = class extends Error {
   status;
   code;
-  constructor(message5, options = {}) {
-    super(message5, options.cause === void 0 ? void 0 : { cause: options.cause });
+  constructor(message7, options = {}) {
+    super(message7, options.cause === void 0 ? void 0 : { cause: options.cause });
     this.name = new.target.name;
     if (options.status !== void 0) this.status = options.status;
     if (options.code !== void 0) this.code = options.code;
@@ -20834,14 +20952,14 @@ var ShoreApiError = class extends Error {
 };
 var AuthError = class extends ShoreApiError {
   kind = "auth";
-  constructor(message5 = "Authentication failed.", options = {}) {
-    super(message5, options);
+  constructor(message7 = "Authentication failed.", options = {}) {
+    super(message7, options);
   }
 };
 var UnavailableError = class extends ShoreApiError {
   kind = "unavailable";
-  constructor(message5 = "Shore API is unavailable.", options = {}) {
-    super(message5, options);
+  constructor(message7 = "Shore API is unavailable.", options = {}) {
+    super(message7, options);
   }
 };
 var DeviceLoginUnavailableError = class extends UnavailableError {
@@ -20851,8 +20969,8 @@ var DeviceLoginUnavailableError = class extends UnavailableError {
 };
 var QuotaError = class extends ShoreApiError {
   kind = "quota";
-  constructor(message5 = "Shore API allowance is exhausted.", options = {}) {
-    super(message5, options);
+  constructor(message7 = "Shore API allowance is exhausted.", options = {}) {
+    super(message7, options);
   }
 };
 
@@ -20938,7 +21056,7 @@ var DEFAULT_RETRY_POLICY = {
 };
 var DEFAULT_RETRY_RUNTIME = {
   now: Date.now,
-  sleep: (milliseconds) => new Promise((resolve8) => setTimeout(resolve8, milliseconds)),
+  sleep: (milliseconds) => new Promise((resolve10) => setTimeout(resolve10, milliseconds)),
   random: Math.random
 };
 function parseRetryAfter(value, nowMs, ceilingMs) {
@@ -21035,8 +21153,8 @@ function createApiClient(options) {
           signal: controller.signal
         });
       } catch (cause) {
-        const message5 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
-        throw retryable(message5, void 0, new UnavailableError(message5, {
+        const message7 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
+        throw retryable(message7, void 0, new UnavailableError(message7, {
           code: controller.signal.aborted ? "timeout" : "network_error",
           cause
         }));
@@ -21131,8 +21249,8 @@ function serverRetryHintMs(envelope) {
   const seconds = issues.retryAfterSeconds ?? issues.retryAfter;
   return typeof seconds === "number" && Number.isFinite(seconds) && seconds >= 0 ? seconds * 1e3 : void 0;
 }
-function retryable(message5, retryAfterMs, cause) {
-  return Object.assign(new Error(message5, { cause }), {
+function retryable(message7, retryAfterMs, cause) {
+  return Object.assign(new Error(message7, { cause }), {
     retryable: true,
     ...retryAfterMs === void 0 ? {} : { retryAfterMs }
   });
@@ -21191,23 +21309,105 @@ async function defaultRemote(root, git) {
   const r = await git(root, ["ls-remote", "--exit-code", "origin", "HEAD"]);
   return r.code === 0 ? { status: "reachable" } : { status: "unavailable", reason: r.stderr.trim() || "Remote origin is unreachable.", remediation: "Check the origin URL, credentials, and network, then rerun doctor." };
 }
-function diag(probe, severity, problem, remediation, evidence = []) {
-  return { id: `doctor.${probe}`, probe, severity, problem, remediation, evidence };
+function diag(probe, severity3, problem, remediation, evidence = []) {
+  return { id: `doctor.${probe}`, probe, severity: severity3, problem, remediation, evidence };
 }
 
 // ../enforcement/src/eslint/baseline.ts
+import * as fs3 from "node:fs/promises";
+import * as os from "node:os";
 import { execFile as execFile3 } from "node:child_process";
+import { randomUUID as randomUUID2 } from "node:crypto";
+import { dirname as dirname4, join as join12, resolve as resolve2 } from "node:path";
 import { promisify as promisify2 } from "node:util";
 
 // ../enforcement/src/eslint/version-check.ts
+import * as fs2 from "node:fs/promises";
 import { createRequire } from "node:module";
+var MINIMUM_VERSION = [9, 24, 0];
 var require2 = createRequire(import.meta.url);
+var UnsupportedEslintVersionError = class extends Error {
+  constructor(version2) {
+    super(`ESLint ${version2} is unsupported. Upgrade to ESLint >=9.24.0: Shore Guard requires ESLint's bulk-suppressions support to baseline existing violations without weakening rules.`);
+    this.name = "UnsupportedEslintVersionError";
+  }
+};
+function versionParts(version2) {
+  const match = /^(\d+)\.(\d+)\.(\d+)(-[^+]*)?(?:\+.*)?$/u.exec(version2);
+  if (match === null) throw new Error(`Cannot determine ESLint compatibility from invalid version ${JSON.stringify(version2)}.`);
+  return [Number(match[1]), Number(match[2]), Number(match[3]), match[4] !== void 0];
+}
+function assertEslintBulkSuppressionsVersion(version2) {
+  const [major, minor, patch, prerelease] = versionParts(version2);
+  const actual = [major, minor, patch];
+  for (let index = 0; index < MINIMUM_VERSION.length; index += 1) {
+    const part = actual[index] ?? 0;
+    const minimum = MINIMUM_VERSION[index] ?? 0;
+    if (part > minimum) return;
+    if (part < minimum) throw new UnsupportedEslintVersionError(version2);
+  }
+  if (prerelease) throw new UnsupportedEslintVersionError(version2);
+}
+function packageVersion(value, file2) {
+  if (typeof value !== "object" || value === null || !("version" in value) || typeof value.version !== "string") {
+    throw new Error(`Cannot read an ESLint version from ${file2}.`);
+  }
+  return value.version;
+}
+async function checkEslintInstallation(packageJsonPath = require2.resolve("eslint/package.json")) {
+  const source = await fs2.readFile(packageJsonPath, "utf8");
+  let parsed;
+  try {
+    parsed = JSON.parse(source);
+  } catch (error62) {
+    throw new Error(`Cannot parse ESLint package metadata at ${packageJsonPath}.`, { cause: error62 });
+  }
+  const version2 = packageVersion(parsed, packageJsonPath);
+  assertEslintBulkSuppressionsVersion(version2);
+  return { version: version2, packageJsonPath };
+}
 
 // ../enforcement/src/eslint/baseline.ts
 var runFile = promisify2(execFile3);
+var DEFAULT_SUPPRESSIONS_FILE = "eslint-suppressions.json";
+async function sameContents(path2, source) {
+  try {
+    return await fs3.readFile(path2, "utf8") === source;
+  } catch (error62) {
+    if (typeof error62 === "object" && error62 !== null && "code" in error62 && error62.code === "ENOENT") return false;
+    throw error62;
+  }
+}
+async function generateEslintBaseline(options) {
+  const installation = await checkEslintInstallation(options.eslintPackageJsonPath);
+  const eslintBin = join12(dirname4(installation.packageJsonPath), "bin/eslint.js");
+  const outputPath = resolve2(options.repoPath, options.suppressionsPath ?? DEFAULT_SUPPRESSIONS_FILE);
+  const publishPath = `${outputPath}.shore-tmp-${String(process.pid)}-${randomUUID2()}`;
+  const temporaryDirectory = await fs3.mkdtemp(join12(os.tmpdir(), "shore-eslint-baseline-"));
+  const temporaryBaseline = join12(temporaryDirectory, DEFAULT_SUPPRESSIONS_FILE);
+  try {
+    await runFile(process.execPath, [
+      eslintBin,
+      "--suppress-all",
+      "--config",
+      resolve2(options.repoPath, options.configPath),
+      "--suppressions-location",
+      temporaryBaseline,
+      ...options.targets ?? ["."]
+    ], { cwd: options.repoPath });
+    const source = await fs3.readFile(temporaryBaseline, "utf8");
+    if (await sameContents(outputPath, source)) return { path: outputPath, version: installation.version, changed: false };
+    await fs3.writeFile(publishPath, source, { encoding: "utf8", flag: "w" });
+    await fs3.rename(publishPath, outputPath);
+    return { path: outputPath, version: installation.version, changed: true };
+  } finally {
+    await fs3.rm(publishPath, { force: true });
+    await fs3.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+}
 
 // ../enforcement/src/eslint/shrink-check.ts
-import * as fs2 from "node:fs/promises";
+import * as fs4 from "node:fs/promises";
 function suppressionBaseline(value, file2) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`expected an object in ${file2}`);
   const baseline = {};
@@ -21262,7 +21462,7 @@ function compareSuppressionBaselines(committed, current) {
 async function checkSuppressionBaselineFiles(committedPath, currentPath) {
   let committedSource;
   try {
-    committedSource = await fs2.readFile(committedPath, "utf8");
+    committedSource = await fs4.readFile(committedPath, "utf8");
   } catch (error62) {
     if (typeof error62 === "object" && error62 !== null && "code" in error62 && error62.code === "ENOENT") {
       return { ok: false, status: "missing-baseline", file: committedPath, message: `Missing committed ESLint suppressions baseline: ${committedPath}. An empty baseline must be committed as {}.` };
@@ -21271,29 +21471,29 @@ async function checkSuppressionBaselineFiles(committedPath, currentPath) {
   }
   try {
     const committed = parseSuppressionBaseline(committedSource, committedPath);
-    const current = parseSuppressionBaseline(await fs2.readFile(currentPath, "utf8"), currentPath);
+    const current = parseSuppressionBaseline(await fs4.readFile(currentPath, "utf8"), currentPath);
     return compareSuppressionBaselines(committed, current);
   } catch (error62) {
-    const message5 = error62 instanceof Error ? error62.message : String(error62);
-    const file2 = message5.includes(currentPath) ? currentPath : committedPath;
-    return { ok: false, status: "parse-error", file: file2, message: message5 };
+    const message7 = error62 instanceof Error ? error62.message : String(error62);
+    const file2 = message7.includes(currentPath) ? currentPath : committedPath;
+    return { ok: false, status: "parse-error", file: file2, message: message7 };
   }
 }
 
 // ../enforcement/src/depcruise/baseline.ts
-import * as fs3 from "node:fs/promises";
+import * as fs5 from "node:fs/promises";
 import { spawn as spawn2 } from "node:child_process";
-import { isAbsolute, relative as relative2, resolve as resolve2, sep as sep2 } from "node:path";
+import { isAbsolute, relative as relative2, resolve as resolve3, sep as sep2 } from "node:path";
 var DEPCRUISE_BASELINE_NAME = ".dependency-cruiser-known-violations.json";
 var DepcruiseConfigurationError = class extends Error {
-  constructor(message5) {
-    super(message5);
+  constructor(message7) {
+    super(message7);
     this.name = "DepcruiseConfigurationError";
   }
 };
 function repoRelative(repoPath, path2) {
-  const root = resolve2(repoPath);
-  const target = resolve2(root, path2);
+  const root = resolve3(repoPath);
+  const target = resolve3(root, path2);
   const fromRoot = relative2(root, target);
   if (isAbsolute(path2) || fromRoot === ".." || fromRoot.startsWith(`..${sep2}`) || isAbsolute(fromRoot)) {
     throw new DepcruiseConfigurationError(`dependency-cruiser path must stay within the repository: ${path2}`);
@@ -21370,22 +21570,22 @@ function stripJsonComments(source) {
   return out;
 }
 async function aliasPatterns(repoPath, fileName = "tsconfig.json", seen = /* @__PURE__ */ new Set()) {
-  const full = resolve2(repoPath, fileName);
+  const full = resolve3(repoPath, fileName);
   if (seen.has(full)) return [];
   seen.add(full);
   let parsed;
   try {
-    parsed = JSON.parse(stripJsonComments(await fs3.readFile(full, "utf8")));
+    parsed = JSON.parse(stripJsonComments(await fs5.readFile(full, "utf8")));
   } catch (error62) {
     if (error62 instanceof Error && "code" in error62 && error62.code === "ENOENT") {
       throw new DepcruiseConfigurationError(`dependency-cruiser TypeScript resolution requires ${fileName}`);
     }
     throw new DepcruiseConfigurationError(`cannot read TypeScript configuration ${fileName}: ${error62 instanceof Error ? error62.message : String(error62)}`);
   }
-  const inherited = parsed.extends === void 0 || !parsed.extends.startsWith(".") ? [] : await aliasPatterns(repoPath, resolve2(relative2(repoPath, resolve2(full, "..")), parsed.extends.endsWith(".json") ? parsed.extends : `${parsed.extends}.json`), seen);
+  const inherited = parsed.extends === void 0 || !parsed.extends.startsWith(".") ? [] : await aliasPatterns(repoPath, resolve3(relative2(repoPath, resolve3(full, "..")), parsed.extends.endsWith(".json") ? parsed.extends : `${parsed.extends}.json`), seen);
   return [...inherited, ...Object.keys(parsed.compilerOptions?.paths ?? {})];
 }
-function isRecord(value) {
+function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function aliasMatches(specifier, pattern) {
@@ -21403,16 +21603,24 @@ async function assertAliasesResolved(options, settings) {
   } catch {
     throw new DepcruiseConfigurationError(`dependency-cruiser could not audit TypeScript aliases: ${audit.stderr.trim() || audit.stdout.trim() || `exit ${String(audit.exitCode)}`}`);
   }
-  if (!isRecord(output2) || !Array.isArray(output2.modules)) throw new DepcruiseConfigurationError("dependency-cruiser returned malformed JSON while auditing TypeScript aliases");
+  if (!isRecord2(output2) || !Array.isArray(output2.modules)) throw new DepcruiseConfigurationError("dependency-cruiser returned malformed JSON while auditing TypeScript aliases");
   const unresolved = /* @__PURE__ */ new Set();
   for (const module of output2.modules) {
-    if (!isRecord(module) || !Array.isArray(module.dependencies)) continue;
+    if (!isRecord2(module) || !Array.isArray(module.dependencies)) continue;
     for (const dependency of module.dependencies) {
-      if (!isRecord(dependency) || dependency.couldNotResolve !== true && dependency.resolved !== false || typeof dependency.module !== "string") continue;
+      if (!isRecord2(dependency) || dependency.couldNotResolve !== true && dependency.resolved !== false || typeof dependency.module !== "string") continue;
       if (aliases.some((alias) => aliasMatches(dependency.module, alias))) unresolved.add(dependency.module);
     }
   }
   if (unresolved.size > 0) throw new DepcruiseConfigurationError(`dependency-cruiser could not resolve TypeScript alias import(s): ${[...unresolved].sort().join(", ")}`);
+}
+async function generateKnownViolations(options) {
+  const settings = commandSettings(options);
+  await assertAliasesResolved(options, settings);
+  const args = ["--config", settings.config, "--no-ignore-known", "--baseline", settings.baseline, "--baseline-mode", options.baselineMode ?? "full", ...settings.sources];
+  const result3 = await run(options.repoPath, settings.binary, args);
+  if (result3.exitCode !== 0) throw new DepcruiseConfigurationError(`dependency-cruiser baseline generation failed: ${result3.stderr.trim() || result3.stdout.trim() || `exit ${String(result3.exitCode)}`}`);
+  return result3;
 }
 async function runDepcruiseEnforcement(options) {
   const settings = commandSettings(options);
@@ -21421,17 +21629,17 @@ async function runDepcruiseEnforcement(options) {
 }
 
 // ../enforcement/src/depcruise/shrink-check.ts
-import * as fs4 from "node:fs/promises";
-function isRecord2(value) {
+import * as fs6 from "node:fs/promises";
+function isRecord3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseViolations(value) {
   if (!Array.isArray(value)) return void 0;
-  return value.every((entry2) => isRecord2(entry2) && typeof entry2.type === "string" && isRecord2(entry2.rule) && typeof entry2.rule.name === "string") ? value : void 0;
+  return value.every((entry2) => isRecord3(entry2) && typeof entry2.type === "string" && isRecord3(entry2.rule) && typeof entry2.rule.name === "string") ? value : void 0;
 }
 function withoutSeverity(value) {
   if (Array.isArray(value)) return value.map(withoutSeverity);
-  if (!isRecord2(value)) return value;
+  if (!isRecord3(value)) return value;
   return Object.fromEntries(Object.keys(value).filter((key) => key !== "severity").sort().map((key) => [key, withoutSeverity(value[key])]));
 }
 function identity(violation) {
@@ -21451,26 +21659,26 @@ function compareKnownViolations(baseline, current) {
 async function checkKnownViolationsFiles(baselinePath, currentPath) {
   let baselineText;
   try {
-    baselineText = await fs4.readFile(baselinePath, "utf8");
+    baselineText = await fs6.readFile(baselinePath, "utf8");
   } catch (error62) {
     if (error62 instanceof Error && "code" in error62 && error62.code === "ENOENT") return { status: "missing-baseline", entries: [] };
     throw error62;
   }
   try {
-    return compareKnownViolations(JSON.parse(baselineText), JSON.parse(await fs4.readFile(currentPath, "utf8")));
+    return compareKnownViolations(JSON.parse(baselineText), JSON.parse(await fs6.readFile(currentPath, "utf8")));
   } catch (error62) {
     return { status: "malformed", entries: [], message: error62 instanceof Error ? error62.message : String(error62) };
   }
 }
 
 // ../enforcement/src/gates/chain.ts
-import * as fs6 from "node:fs/promises";
-import { join as join12 } from "node:path";
+import * as fs8 from "node:fs/promises";
+import { join as join14 } from "node:path";
 
 // ../enforcement/src/gates/process.ts
 import { spawn as spawn3 } from "node:child_process";
 async function runCommand(binary, args, cwd, input2) {
-  return new Promise((resolve8, reject) => {
+  return new Promise((resolve10, reject) => {
     const child = spawn3(binary, args, { cwd, stdio: [input2 === void 0 ? "ignore" : "pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
@@ -21491,7 +21699,7 @@ async function runCommand(binary, args, cwd, input2) {
     });
     child.once("error", reject);
     child.once("close", (code) => {
-      resolve8({ exitCode: code ?? 1, stdout, stderr });
+      resolve10({ exitCode: code ?? 1, stdout, stderr });
     });
     if (input2 !== void 0) {
       if (standardInput === null) {
@@ -21504,8 +21712,8 @@ async function runCommand(binary, args, cwd, input2) {
 }
 
 // ../enforcement/src/gates/policy.ts
-import * as fs5 from "node:fs/promises";
-import { join as join11 } from "node:path";
+import * as fs7 from "node:fs/promises";
+import { join as join13 } from "node:path";
 
 // ../policy/src/hash.ts
 import { createHash as createHash2 } from "node:crypto";
@@ -22068,7 +22276,7 @@ var PROPOSAL_VERSION = 1;
 
 // ../policy/src/proposal-validate.ts
 import { existsSync } from "node:fs";
-import { resolve as resolve3 } from "node:path";
+import { resolve as resolve4 } from "node:path";
 var text2 = external_exports.string().trim().min(1);
 var path = text2.refine((value) => !value.includes("\0") && !value.includes("\n") && !value.includes("\r"), "must be a concrete path");
 var evidenceSchema2 = external_exports.discriminatedUnion("kind", [
@@ -22144,7 +22352,7 @@ function validateProposal(input2, options = {}) {
   if (parsed.success && options.root !== void 0 && options.checkEvidencePaths !== false) {
     const root = options.root;
     visitEvidence(parsed.data, (evidence, evidencePath) => {
-      for (const cited of citedPaths(evidence)) if (!existsSync(resolve3(root, cited))) issues.push({ path: evidencePath, message: `cites non-existent path "${cited}"` });
+      for (const cited of citedPaths(evidence)) if (!existsSync(resolve4(root, cited))) issues.push({ path: evidencePath, message: `cites non-existent path "${cited}"` });
     });
   }
   if (!parsed.success || issues.length > 0) throw new ProposalValidationError(issues);
@@ -22226,7 +22434,7 @@ function scrubBlueprint(pack, options) {
 }
 function removePrivateKeys(value) {
   if (Array.isArray(value)) return value.map(removePrivateKeys);
-  if (!isRecord3(value)) return value;
+  if (!isRecord4(value)) return value;
   return Object.fromEntries(Object.entries(value).filter(([key]) => !PRIVATE_KEYS.has(key)).map(([key, child]) => [key, removePrivateKeys(child)]));
 }
 function findIdentifiers(value, path2, identifiers, fields) {
@@ -22241,13 +22449,13 @@ function findIdentifiers(value, path2, identifiers, fields) {
     });
     return;
   }
-  if (isRecord3(value)) {
+  if (isRecord4(value)) {
     Object.entries(value).forEach(([key, child]) => {
       findIdentifiers(child, `${path2}.${key}`, identifiers, fields);
     });
   }
 }
-function isRecord3(value) {
+function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -22291,11 +22499,11 @@ function record2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 async function loadActivePack(repoPath) {
-  const candidates = [join11(repoPath, ".shore/policy.json"), join11(repoPath, ".shore/guard.json")];
+  const candidates = [join13(repoPath, ".shore/policy.json"), join13(repoPath, ".shore/guard.json")];
   for (const file2 of candidates) {
     let value;
     try {
-      value = JSON.parse(await fs5.readFile(file2, "utf8"));
+      value = JSON.parse(await fs7.readFile(file2, "utf8"));
     } catch (error62) {
       if (error62 instanceof Error && "code" in error62 && error62.code === "ENOENT") continue;
       throw new Error(`Cannot read active policy pack from ${file2}: ${error62 instanceof Error ? error62.message : String(error62)}`);
@@ -22319,7 +22527,7 @@ ${matches.map((rule2) => `${rule2.ruleId}: ${rule2.diagnostic} Remediation: ${ru
 // ../enforcement/src/gates/chain.ts
 async function exists(path2) {
   try {
-    await fs6.access(path2);
+    await fs8.access(path2);
     return true;
   } catch {
     return false;
@@ -22340,8 +22548,8 @@ async function runPolicyChain(options) {
     }
   }
   if (options.runTsc === true) {
-    if (!await exists(join12(options.repoPath, "tsconfig.json"))) return { ok: false, tool: "tsc", exitCode: 2, message: "tsc is required by policy, but tsconfig.json is missing. Add a TypeScript configuration or disable the policy requirement explicitly." };
-    const binary = options.tscBinary ?? join12(options.repoPath, "node_modules/.bin/tsc");
+    if (!await exists(join14(options.repoPath, "tsconfig.json"))) return { ok: false, tool: "tsc", exitCode: 2, message: "tsc is required by policy, but tsconfig.json is missing. Add a TypeScript configuration or disable the policy requirement explicitly." };
+    const binary = options.tscBinary ?? join14(options.repoPath, "node_modules/.bin/tsc");
     let result3;
     try {
       result3 = await runCommand(binary, ["--noEmit", "-p", "tsconfig.json"], options.repoPath);
@@ -22355,17 +22563,17 @@ async function runPolicyChain(options) {
 }
 
 // ../enforcement/src/gates/commit-gate.ts
-import * as fs9 from "node:fs/promises";
-import { basename, join as join15 } from "node:path";
+import * as fs11 from "node:fs/promises";
+import { basename, join as join17 } from "node:path";
 import { pathToFileURL } from "node:url";
 
 // ../enforcement/src/gates/eslint-runner.ts
-import * as fs7 from "node:fs/promises";
-import * as os from "node:os";
-import { join as join13, resolve as resolve4 } from "node:path";
+import * as fs9 from "node:fs/promises";
+import * as os2 from "node:os";
+import { join as join15, resolve as resolve5 } from "node:path";
 async function executable(path2) {
   try {
-    await fs7.access(path2, fs7.constants.X_OK);
+    await fs9.access(path2, fs9.constants.X_OK);
     return true;
   } catch {
     return false;
@@ -22374,8 +22582,8 @@ async function executable(path2) {
 async function runWithSuppressions(options, suppressions) {
   const config2 = options.configPath ?? "eslint.config.shore.mjs";
   const args = ["--max-warnings=0", "--config", config2, "--suppressions-location", suppressions, ...options.files];
-  const daemon = options.eslintDBinary ?? join13(options.repoPath, "node_modules/.bin/eslint_d");
-  const plain = options.eslintBinary ?? join13(options.repoPath, "node_modules/.bin/eslint");
+  const daemon = options.eslintDBinary ?? join15(options.repoPath, "node_modules/.bin/eslint_d");
+  const plain = options.eslintBinary ?? join15(options.repoPath, "node_modules/.bin/eslint");
   if (await executable(daemon)) {
     try {
       const result4 = await runCommand(daemon, args, options.repoPath);
@@ -22393,19 +22601,19 @@ ${result4.stderr}`);
 async function runEslint(options) {
   const suppressions = options.suppressionsPath ?? "eslint-suppressions.json";
   if (options.enforceTouched !== true) return runWithSuppressions(options, suppressions);
-  const sourcePath = resolve4(options.repoPath, suppressions);
-  const temporaryDirectory = await fs7.mkdtemp(join13(os.tmpdir(), "shore-edit-suppressions-"));
-  const temporaryPath = join13(temporaryDirectory, "eslint-suppressions.json");
+  const sourcePath = resolve5(options.repoPath, suppressions);
+  const temporaryDirectory = await fs9.mkdtemp(join15(os2.tmpdir(), "shore-edit-suppressions-"));
+  const temporaryPath = join15(temporaryDirectory, "eslint-suppressions.json");
   try {
-    const value = JSON.parse(await fs7.readFile(sourcePath, "utf8"));
+    const value = JSON.parse(await fs9.readFile(sourcePath, "utf8"));
     if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`Malformed ESLint suppressions file ${sourcePath}: expected an object.`);
     const excluded = new Set(options.files.flatMap((file2) => [file2, `./${file2}`]));
     const filtered = Object.fromEntries(Object.entries(value).filter(([file2]) => !excluded.has(file2)));
-    await fs7.writeFile(temporaryPath, `${JSON.stringify(filtered, null, 2)}
+    await fs9.writeFile(temporaryPath, `${JSON.stringify(filtered, null, 2)}
 `);
     return await runWithSuppressions(options, temporaryPath);
   } finally {
-    await fs7.rm(temporaryDirectory, { recursive: true, force: true });
+    await fs9.rm(temporaryDirectory, { recursive: true, force: true });
   }
 }
 function formatEslintFailure(result3) {
@@ -22418,7 +22626,7 @@ async function assertGateBaselines(repoPath, requireDepcruise) {
   const required2 = ["eslint-suppressions.json", ...requireDepcruise ? [".dependency-cruiser-known-violations.json"] : []];
   for (const file2 of required2) {
     try {
-      await fs7.access(resolve4(repoPath, file2));
+      await fs9.access(resolve5(repoPath, file2));
     } catch {
       throw new Error(`Missing committed baseline ${file2}. Run Shore Guard install before using the gate.`);
     }
@@ -22426,12 +22634,12 @@ async function assertGateBaselines(repoPath, requireDepcruise) {
 }
 
 // ../enforcement/src/gates/paths.ts
-import * as fs8 from "node:fs/promises";
-import { isAbsolute as isAbsolute2, relative as relative3, resolve as resolve5, sep as sep3 } from "node:path";
+import * as fs10 from "node:fs/promises";
+import { isAbsolute as isAbsolute2, relative as relative3, resolve as resolve6, sep as sep3 } from "node:path";
 var SOURCE_EXTENSION = /\.(?:[cm]?[jt]sx?)$/u;
 function confinedRelativePath(repoPath, candidate) {
-  const root = resolve5(repoPath);
-  const target = resolve5(root, candidate);
+  const root = resolve6(repoPath);
+  const target = resolve6(root, candidate);
   const fromRoot = relative3(root, target);
   if (fromRoot === ".." || fromRoot.startsWith(`..${sep3}`) || isAbsolute2(fromRoot) && target !== root) {
     throw new Error(`Changed file is outside the repository root and was rejected: ${candidate}`);
@@ -22448,7 +22656,7 @@ async function existingSourcePaths(repoPath, paths) {
       continue;
     }
     try {
-      const stat2 = await fs8.stat(resolve5(repoPath, relativePath));
+      const stat2 = await fs10.stat(resolve6(repoPath, relativePath));
       if (!stat2.isFile()) skipped2.push(`${relativePath}: no longer a regular file (deleted or renamed)`);
       else files.push(relativePath);
     } catch (error62) {
@@ -22460,12 +22668,12 @@ async function existingSourcePaths(repoPath, paths) {
 }
 
 // ../enforcement/src/gates/growth-check.ts
-import { join as join14 } from "node:path";
+import { join as join16 } from "node:path";
 async function checkBaselineGrowth(options) {
   const messages = [];
   let ok = true;
   let shrunk = false;
-  const eslint = await checkSuppressionBaselineFiles(join14(options.repoPath, "eslint-suppressions.json"), options.currentSuppressionsPath);
+  const eslint = await checkSuppressionBaselineFiles(join16(options.repoPath, "eslint-suppressions.json"), options.currentSuppressionsPath);
   if (!eslint.ok) {
     ok = false;
     messages.push(eslint.status === "grown" ? `ESLint suppression growth: ${eslint.growth.map((item) => `${item.file}/${item.ruleId} ${String(item.baselineCount)}\u2192${String(item.currentCount)}`).join(", ")}. Fix the violations or run an approved re-baseline.` : eslint.message);
@@ -22474,7 +22682,7 @@ async function checkBaselineGrowth(options) {
     messages.push("ESLint baseline can shrink; regenerate the ledger.");
   }
   if (options.currentKnownViolationsPath !== void 0) {
-    const graph = await checkKnownViolationsFiles(join14(options.repoPath, ".dependency-cruiser-known-violations.json"), options.currentKnownViolationsPath);
+    const graph = await checkKnownViolationsFiles(join16(options.repoPath, ".dependency-cruiser-known-violations.json"), options.currentKnownViolationsPath);
     if (graph.status === "growth") {
       ok = false;
       messages.push(`Dependency boundary growth: ${String(graph.entries.filter((entry2) => entry2.kind === "added").length)} new violation(s). Fix them or run an approved re-baseline.`);
@@ -22517,7 +22725,7 @@ async function runCommitGate(options) {
     if (lint.exitCode !== 0) return { exitCode: lint.exitCode, message: formatEslintFailure(lint), files: selected.files };
     let hasTsconfig = true;
     try {
-      await fs9.access(join15(options.repoPath, "tsconfig.json"));
+      await fs11.access(join17(options.repoPath, "tsconfig.json"));
     } catch {
       hasTsconfig = false;
     }
@@ -22638,25 +22846,25 @@ var commitGateRegistration = {
 function registeredGates() {
   return { gates: [editGateRegistration, commitGateRegistration] };
 }
-function fromExit(kind, exitCode3, message5, files) {
+function fromExit(kind, exitCode3, message7, files) {
   const evidence = { files };
   if (exitCode3 === 0) return { outcome: "pass", reasons: [], evidence };
   if (exitCode3 === 70) {
     return {
       outcome: "unavailable",
-      reasons: [{ code: `${kind}-gate-unavailable`, message: message5, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
+      reasons: [{ code: `${kind}-gate-unavailable`, message: message7, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
       evidence,
       failureKind: "unavailable"
     };
   }
   return {
     outcome: "fail",
-    reasons: [{ code: `${kind}-gate-failed`, message: message5, remediation: "Fix the reported violations and re-run the gate." }],
+    reasons: [{ code: `${kind}-gate-failed`, message: message7, remediation: "Fix the reported violations and re-run the gate." }],
     evidence
   };
 }
-function skipped(code, message5, remediation) {
-  return { outcome: "skipped", reasons: [{ code, message: message5, remediation }], evidence: {} };
+function skipped(code, message7, remediation) {
+  return { outcome: "skipped", reasons: [{ code, message: message7, remediation }], evidence: {} };
 }
 
 // src/commands/doctor-dependencies.ts
@@ -22758,19 +22966,19 @@ function parseGitHubRepository(url2) {
 }
 
 // src/commands/init.ts
-import { randomUUID as randomUUID2 } from "node:crypto";
-import * as fs12 from "node:fs/promises";
-import { join as join18 } from "node:path";
+import { randomUUID as randomUUID3 } from "node:crypto";
+import * as fs14 from "node:fs/promises";
+import { join as join20 } from "node:path";
 
 // src/migrate/shoreguard-json.ts
-import * as fs10 from "node:fs/promises";
-import { join as join16 } from "node:path";
+import * as fs12 from "node:fs/promises";
+import { join as join18 } from "node:path";
 var known = /* @__PURE__ */ new Set(["repo", "ref", "thresholds", "timeoutMinutes", "pollSeconds", "apiUrl"]);
 function record4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 async function exists2(path2) {
-  return fs10.access(path2).then(() => true, () => false);
+  return fs12.access(path2).then(() => true, () => false);
 }
 function translateLegacyConfig(legacy) {
   const config2 = { schemaVersion: 1 };
@@ -22800,27 +23008,27 @@ function translateLegacyConfig(legacy) {
   return { config: config2, settings };
 }
 async function migrateLegacyConfig(root) {
-  const source = join16(root, ".shoreguard.json");
-  const destination = join16(root, ".shore", "guard.json");
+  const source = join18(root, ".shoreguard.json");
+  const destination = join18(root, ".shore", "guard.json");
   if (!await exists2(source)) return { status: "not-found" };
   if (await exists2(destination)) return { status: "conflict", source, destination };
   let parsed;
   try {
-    parsed = JSON.parse(await fs10.readFile(source, "utf8"));
+    parsed = JSON.parse(await fs12.readFile(source, "utf8"));
   } catch (error62) {
     return { status: "invalid", source, reason: `invalid JSON: ${error62 instanceof Error ? error62.message : String(error62)}` };
   }
   if (!record4(parsed)) return { status: "invalid", source, reason: "expected a JSON object" };
   const translated = translateLegacyConfig(parsed);
-  await fs10.mkdir(join16(root, ".shore"), { recursive: true });
-  await fs10.writeFile(destination, `${JSON.stringify(translated.config, null, 2)}
+  await fs12.mkdir(join18(root, ".shore"), { recursive: true });
+  await fs12.writeFile(destination, `${JSON.stringify(translated.config, null, 2)}
 `);
   return { status: "migrated", source, destination, settings: translated.settings };
 }
 
 // src/commands/init-plan.ts
-import * as fs11 from "node:fs/promises";
-import { join as join17 } from "node:path";
+import * as fs13 from "node:fs/promises";
+import { join as join19 } from "node:path";
 var INIT_IGNORE_LINES = [".shore/state.json", ".shore/cache/", ".shore/receipts/"];
 async function buildInitPlan(root, deps) {
   const config2 = await loadGuardConfig(root);
@@ -22857,8 +23065,26 @@ async function buildInitPlan(root, deps) {
   const updateGitignore2 = missingIgnoreLines.length === 0 ? { id: "update-gitignore", status: "done", title: "Update .gitignore", detail: "All Shore Guard runtime paths are ignored", manual: "shore-guard init" } : { id: "update-gitignore", status: "pending", title: "Update .gitignore", detail: `Add ${missingIgnoreLines.join(", ")}`, manual: "shore-guard init", changes: [".gitignore"] };
   const commit = await buildCommitPlanStep(root, deps.git);
   const discovery = await buildDiscoveryPlanStep(root, commit);
-  const steps = [cli, login, connection, writeConfig2, updateGitignore2, commit, discovery];
+  const guards = await buildGuardsPlanStep(root, discovery);
+  const steps = [cli, login, connection, writeConfig2, updateGitignore2, commit, discovery, guards];
   return { steps, nextStep: steps.find((step) => step.status !== "done")?.id ?? null };
+}
+async function buildGuardsPlanStep(root, discovery) {
+  const manual = "shore-guard guards plan --json then shore-guard guards apply --choice shore";
+  if (discovery.status !== "done") return { id: "guards", status: "blocked", title: "Configure architecture guards", detail: "Adopt an architecture policy first", manual, reason: "Adopt an architecture policy first" };
+  const policyHash = await currentPolicyHash(root);
+  const state = await loadState(root);
+  if (policyHash !== void 0 && state.status === "ok" && state.state.guards?.policyHash === policyHash) return { id: "guards", status: "done", title: "Configure architecture guards", detail: `Guards applied for ${policyHash}`, manual };
+  return { id: "guards", status: "pending", title: "Configure architecture guards", detail: "Review the guard toolchain plan and apply a choice", manual, changes: ["eslint.config.mjs", ".dependency-cruiser.cjs", ".shore/eslint-suppressions.json", ".shore/guard.json", "package.json"] };
+}
+async function currentPolicyHash(root) {
+  try {
+    const lock = JSON.parse(await fs13.readFile(join19(root, ".shore", "policy.lock.json"), "utf8"));
+    return typeof lock === "object" && lock !== null && "contentHash" in lock && typeof lock.contentHash === "string" ? lock.contentHash : void 0;
+  } catch (error62) {
+    if (isMissing(error62) || error62 instanceof SyntaxError) return void 0;
+    throw error62;
+  }
 }
 async function configuredOrigin(root, git = runGit) {
   const result3 = await git(root, ["remote", "get-url", "origin"]);
@@ -22868,9 +23094,9 @@ async function configuredOrigin(root, git = runGit) {
 }
 async function buildDiscoveryPlanStep(root, commit) {
   const manual = "Run the discovery skill, review the proposal, then: shore-guard adopt --proposal <file> --approve";
-  const lockPath = join17(root, ".shore", "policy.lock.json");
+  const lockPath = join19(root, ".shore", "policy.lock.json");
   try {
-    const lock = JSON.parse(await fs11.readFile(lockPath, "utf8"));
+    const lock = JSON.parse(await fs13.readFile(lockPath, "utf8"));
     const contentHash = typeof lock === "object" && lock !== null && "contentHash" in lock && typeof lock.contentHash === "string" ? lock.contentHash : "policy lock present";
     return { id: "discovery", status: "done", title: "Discover architecture policy", detail: `Architecture policy adopted (${contentHash})`, manual };
   } catch (error62) {
@@ -22893,7 +23119,7 @@ async function buildCommitPlanStep(root, git = runGit) {
 async function findMissingIgnoreLines(root) {
   let text3 = "";
   try {
-    text3 = await fs11.readFile(join17(root, ".gitignore"), "utf8");
+    text3 = await fs13.readFile(join19(root, ".gitignore"), "utf8");
   } catch (error62) {
     if (!isMissing(error62)) throw error62;
   }
@@ -22957,7 +23183,7 @@ async function runInit(root, dependencies = {}) {
   }
   const connection = dependencies.connection ? await dependencies.connection.resolve(root) : { status: "auth-required", guidance: "Run shore-guard login when authentication support is installed." };
   const startedAt = prior.status === "ok" ? prior.state.run.startedAt : clock.now().toISOString();
-  let run2 = prior.status === "ok" ? prior.state.run : { id: randomUUID2(), startedAt, completedAt: null, plan: [...STEPS], applied: [], skipped: [], errors: [] };
+  let run2 = prior.status === "ok" ? prior.state.run : { id: randomUUID3(), startedAt, completedAt: null, plan: [...STEPS], applied: [], skipped: [], errors: [] };
   let count = 0;
   for (const step of STEPS) {
     if (run2.applied.includes(step)) continue;
@@ -22980,19 +23206,19 @@ async function writeConfig(root, repoConnectionId) {
   if (existing.status === "ok" && existing.config.repoConnectionId !== void 0) return;
   if (existing.status === "invalid") throw new Error(`existing config is invalid: ${existing.reason}`);
   const config2 = existing.status === "ok" ? { ...existing.config, ...repoConnectionId === void 0 ? {} : { repoConnectionId } } : { schemaVersion: 1, ...repoConnectionId === void 0 ? {} : { repoConnectionId } };
-  await fs12.mkdir(join18(root, ".shore"), { recursive: true });
-  await fs12.writeFile(join18(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
+  await fs14.mkdir(join20(root, ".shore"), { recursive: true });
+  await fs14.writeFile(join20(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
 }
 async function replaceRepositoryConnection(root, repoConnectionId) {
   const existing = await loadGuardConfig(root);
   if (existing.status !== "ok") throw new Error("existing config is not valid");
-  await fs12.writeFile(join18(root, ".shore", "guard.json"), JSON.stringify({ ...existing.config, repoConnectionId }, null, 2) + "\n");
+  await fs14.writeFile(join20(root, ".shore", "guard.json"), JSON.stringify({ ...existing.config, repoConnectionId }, null, 2) + "\n");
 }
 async function updateGitignore(root) {
-  const path2 = join18(root, ".gitignore");
+  const path2 = join20(root, ".gitignore");
   let text3 = "";
   try {
-    text3 = await fs12.readFile(path2, "utf8");
+    text3 = await fs14.readFile(path2, "utf8");
   } catch (error62) {
     if (!isMissing2(error62)) throw error62;
   }
@@ -23000,7 +23226,7 @@ async function updateGitignore(root) {
   const additions = INIT_IGNORE_LINES.filter((line) => !lines.has(line));
   if (!additions.length) return;
   const prefix = text3 && !text3.endsWith("\n") ? "\n" : "";
-  await fs12.writeFile(path2, text3 + prefix + additions.join("\n") + "\n");
+  await fs14.writeFile(path2, text3 + prefix + additions.join("\n") + "\n");
 }
 async function requiredFingerprint(root) {
   const value = await fingerprintManagedFiles(root, MANAGED_PATHS, nodeFileSystem);
@@ -23015,8 +23241,8 @@ function summary(prefix, findings) {
   return `${prefix}
 ${findings.map((f) => `[${f.severity}] ${f.problem} Remediation: ${f.remediation}`).join("\n")}`;
 }
-function result2(exitCode3, outcome, message5) {
-  return { command: "init", outcome, exitCode: exitCode3, message: message5 };
+function result2(exitCode3, outcome, message7) {
+  return { command: "init", outcome, exitCode: exitCode3, message: message7 };
 }
 function formatStateFailure(value) {
   return value.status === "corrupt" ? `${value.reason} ${value.remediation}` : `Unsupported state schema ${String(value.version)}. ${value.remediation}`;
@@ -23035,11 +23261,11 @@ function formatPlanStep(step) {
   if (step.status === "blocked") return `\u2717 ${step.title} \u2014 ${step.reason ?? step.detail}`;
   return `\u2022 ${step.title} \u2014 ${step.detail} (manual: ${step.manual})`;
 }
-async function withCommitReminder(root, message5) {
+async function withCommitReminder(root, message7) {
   const commit = await buildCommitPlanStep(root);
   const discovery = await buildDiscoveryPlanStep(root, commit);
   const reminders = [commit.status === "pending" ? `commit .shore/guard.json and .gitignore (${commit.manual})` : void 0, discovery.status !== "done" ? "run discovery and adopt an architecture policy" : void 0].filter((value) => value !== void 0);
-  return `${message5}${reminders.length > 0 ? `
+  return `${message7}${reminders.length > 0 ? `
 Remaining: ${reminders.join("; ")}.` : ""}`;
 }
 
@@ -23113,8 +23339,8 @@ function formatUserCode(code) {
   if (code.includes("-")) return code;
   return `${code.slice(0, 4)}-${code.slice(4)}`;
 }
-function fail(exitCode3, message5) {
-  return { command: "login", outcome: "error", exitCode: exitCode3, message: message5 };
+function fail(exitCode3, message7) {
+  return { command: "login", outcome: "error", exitCode: exitCode3, message: message7 };
 }
 
 // src/commands/status.ts
@@ -23145,8 +23371,8 @@ async function runStatus(options) {
     throw error62;
   }
 }
-function fail2(exitCode3, message5) {
-  return { command: "status", outcome: "error", exitCode: exitCode3, message: message5 };
+function fail2(exitCode3, message7) {
+  return { command: "status", outcome: "error", exitCode: exitCode3, message: message7 };
 }
 
 // src/commands/verify.ts
@@ -23193,8 +23419,8 @@ function createHealthApiPort(client, repoConnectionId) {
 var SYSTEM_CLOCK = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve8) => {
-    setTimeout(resolve8, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve10) => {
+    setTimeout(resolve10, milliseconds);
   })
 };
 function humanMessage(result3) {
@@ -23232,8 +23458,8 @@ function defaultPorts(options) {
 var SYSTEM_CLOCK2 = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve8) => {
-    setTimeout(resolve8, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve10) => {
+    setTimeout(resolve10, milliseconds);
   })
 };
 function exitCode(result3) {
@@ -23249,16 +23475,16 @@ function humanMessage2(result3) {
 }
 
 // src/commands/adopt.ts
-import { mkdir as mkdir7, readFile as readFile13, realpath, rename as rename2, rm as rm2, writeFile as writeFile8 } from "node:fs/promises";
-import { dirname as dirname4, isAbsolute as isAbsolute3, relative as relative4, resolve as resolve6 } from "node:path";
+import { mkdir as mkdir7, readFile as readFile15, realpath, rename as rename3, rm as rm3, writeFile as writeFile9 } from "node:fs/promises";
+import { dirname as dirname5, isAbsolute as isAbsolute3, relative as relative4, resolve as resolve7 } from "node:path";
 
 // src/commands/decision-record.ts
-import { mkdir as mkdir6, writeFile as writeFile7 } from "node:fs/promises";
-import { join as join19 } from "node:path";
+import { mkdir as mkdir6, writeFile as writeFile8 } from "node:fs/promises";
+import { join as join21 } from "node:path";
 var LockFileDecisionRecorder = class {
   async record(decision) {
-    await mkdir6(join19(decision.root, ".shore"), { recursive: true });
-    await writeFile7(join19(decision.root, ".shore", "policy.lock.json"), `${JSON.stringify(decision.lock, null, 2)}
+    await mkdir6(join21(decision.root, ".shore"), { recursive: true });
+    await writeFile8(join21(decision.root, ".shore", "policy.lock.json"), `${JSON.stringify(decision.lock, null, 2)}
 `, { flag: "wx" });
     return { recorded: true, note: "Decision recorded in .shore/policy.lock.json; remote submission is deferred until SCA-634." };
   }
@@ -23300,10 +23526,10 @@ If a rule appears wrong for one case, STOP and obtain explicit human approval fo
 ${END}`;
 async function runAdopt(options) {
   if (options.proposalPath === void 0) return failure2(EXIT_CODES.config, "Pass --proposal <file>.");
-  const proposalPath = resolve6(options.root, options.proposalPath);
+  const proposalPath = resolve7(options.root, options.proposalPath);
   let raw;
   try {
-    raw = await readFile13(proposalPath, "utf8");
+    raw = await readFile15(proposalPath, "utf8");
   } catch {
     return failure2(EXIT_CODES.config, `Cannot read proposal at ${options.proposalPath}.`);
   }
@@ -23361,7 +23587,7 @@ Pass --replace-lock to explicitly replace it.`);
   await writeAtomic(confinedPath(options.root, ".shore/policy.json"), `${JSON.stringify(artifacts.pack, null, 2)}
 `);
   await writeAtomic(agentsPath, agents);
-  if (existingLock !== void 0) await rm2(lockPath);
+  if (existingLock !== void 0) await rm3(lockPath);
   const local = await (options.recorder ?? new LockFileDecisionRecorder()).record({ root: options.root, ...artifacts });
   const remote = await (options.remoteRecorder ?? new ShoreSightDecisionRecorder()).record({ root: options.root, ...artifacts });
   const blueprintNote = blueprint === void 0 ? "" : ` Blueprint saved at ${blueprint.relativePath}.`;
@@ -23385,8 +23611,8 @@ function serializeForRoot(input2, options) {
   const proposal = validateProposal(input2, { root: options.root });
   return serializeProposal(proposal, approval(options));
 }
-function failure2(exitCode3, message5) {
-  return { command: "adopt", outcome: "error", exitCode: exitCode3, message: message5 };
+function failure2(exitCode3, message7) {
+  return { command: "adopt", outcome: "error", exitCode: exitCode3, message: message7 };
 }
 function validationFailure(error62) {
   if (error62 instanceof ProposalValidationError) return failure2(EXIT_CODES.config, `Proposal validation failed:
@@ -23402,8 +23628,8 @@ function blueprintWrite(root, artifacts) {
 ` };
 }
 function confinedPath(root, repositoryPath) {
-  const resolvedRoot = resolve6(root);
-  const candidate = resolve6(resolvedRoot, repositoryPath);
+  const resolvedRoot = resolve7(root);
+  const candidate = resolve7(resolvedRoot, repositoryPath);
   const fromRoot = relative4(resolvedRoot, candidate);
   if (fromRoot === ".." || fromRoot.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) || isAbsolute3(fromRoot)) {
     throw new Error(`Refusing to write outside the repository root: ${repositoryPath}`);
@@ -23418,13 +23644,13 @@ async function assertWriteTargets(root, paths) {
   }
 }
 async function resolveThroughExistingParent(path2) {
-  let ancestor = dirname4(path2);
+  let ancestor = dirname5(path2);
   for (; ; ) {
     try {
-      return resolve6(await realpath(ancestor), relative4(ancestor, path2));
+      return resolve7(await realpath(ancestor), relative4(ancestor, path2));
     } catch (error62) {
       if (!isNotFound(error62)) throw error62;
-      const parent = dirname4(ancestor);
+      const parent = dirname5(ancestor);
       if (parent === ancestor) throw error62;
       ancestor = parent;
     }
@@ -23436,7 +23662,7 @@ function isOutside(root, path2) {
 }
 async function readIfPresent(path2) {
   try {
-    return await readFile13(path2, "utf8");
+    return await readFile15(path2, "utf8");
   } catch (error62) {
     if (isNotFound(error62)) return void 0;
     throw error62;
@@ -23458,9 +23684,9 @@ ${SHORE_GUARD_AGENTS_SECTION}
 }
 async function writeAtomic(path2, contents) {
   const temporary = `${path2}.shore-guard-tmp`;
-  await mkdir7(dirname4(path2), { recursive: true });
-  await writeFile8(temporary, contents);
-  await rename2(temporary, path2);
+  await mkdir7(dirname5(path2), { recursive: true });
+  await writeFile9(temporary, contents);
+  await rename3(temporary, path2);
 }
 
 // src/commands/setup.ts
@@ -23611,20 +23837,20 @@ function message3(error62) {
 }
 
 // src/commands/blueprint-submit.ts
-import { readFile as readFile14 } from "node:fs/promises";
-import { resolve as resolve7 } from "node:path";
+import { readFile as readFile16 } from "node:fs/promises";
+import { resolve as resolve8 } from "node:path";
 
 // src/agents/exec.ts
 import { execFile as execFile4 } from "node:child_process";
 function createCommandRunner(execute = execFile4) {
-  return (file2, args, options) => new Promise((resolve8) => {
+  return (file2, args, options) => new Promise((resolve10) => {
     execute(file2, args, {
       cwd: options?.cwd ?? process.cwd(),
       detached: options?.detached ?? false,
       encoding: "utf8",
       windowsHide: true
     }, (error62, stdout, stderr) => {
-      resolve8({
+      resolve10({
         code: exitCode2(error62),
         stdout: stdout || errorText(error62?.stdout),
         stderr: stderr || errorText(error62?.stderr)
@@ -23650,7 +23876,7 @@ var BODY_LIMIT = 65 * 1024;
 var PREFILLED_LIMIT = 8 * 1024;
 async function runBlueprintSubmit(options) {
   if (options.file === void 0 || options.file === "") return failure3(EXIT_CODES.config, "Missing required --file <path>.");
-  const read = await readBlueprint(resolve7(options.cwd, options.file));
+  const read = await readBlueprint(resolve8(options.cwd, options.file));
   if (read.status === "error") return failure3(EXIT_CODES.config, read.message);
   const parsed = read.value;
   let pack;
@@ -23712,7 +23938,7 @@ ${prefilledUrl}`, { prefilledUrl, ...warning === void 0 ? {} : { warning } });
 }
 async function readBlueprint(path2) {
   try {
-    return { status: "ok", value: JSON.parse(await readFile14(path2, "utf8")) };
+    return { status: "ok", value: JSON.parse(await readFile16(path2, "utf8")) };
   } catch (error62) {
     return { status: "error", message: `Could not read blueprint file: ${message4(error62)}` };
   }
@@ -23830,8 +24056,829 @@ function message4(error62) {
   return error62 instanceof Error ? error62.message : String(error62);
 }
 
+// src/commands/guards-plan.ts
+import * as fs15 from "node:fs/promises";
+import { join as join22 } from "node:path";
+var POLICY_REQUIRED = "Adopt an architecture policy first (run discovery, then shore-guard adopt).";
+var LEGACY_SUFFIX = "will be ignored by flat config; Shore baselines require ESLint 9.24 or newer.";
+async function readPolicyLockHash(root) {
+  try {
+    const value = JSON.parse(await fs15.readFile(join22(root, ".shore", "policy.lock.json"), "utf8"));
+    return isRecord5(value) && typeof value.contentHash === "string" ? value.contentHash : void 0;
+  } catch (error62) {
+    if (isMissing3(error62) || error62 instanceof SyntaxError) return void 0;
+    throw error62;
+  }
+}
+async function runGuardsPlan({ root, inventory, lockHash }) {
+  const policyHash = lockHash ?? await readPolicyLockHash(root);
+  if (policyHash === void 0) return { command: "guards plan", outcome: "error", exitCode: EXIT_CODES.userDecisionRequired, message: POLICY_REQUIRED };
+  const nodeProject = await exists3(join22(root, "package.json"));
+  const plan = nodeProject ? buildPlan(inventory, policyHash) : unsupportedPlan(inventory, policyHash);
+  return { command: "guards plan", outcome: "pass", exitCode: EXIT_CODES.pass, message: "Guard toolchain plan ready.", data: { plan } };
+}
+function buildPlan(inventory, policyHash) {
+  const capabilities = buildCapabilities(inventory);
+  const impacts = capabilities.flatMap((capability2) => capability2.impact === void 0 ? [] : [capability2.impact]);
+  return {
+    planVersion: 1,
+    policyHash,
+    choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0),
+    capabilities,
+    installs: { packageManager: inventory.packageManager, dev: requiredInstalls(inventory) },
+    writes: plannedWrites(inventory),
+    impacts,
+    unsupported: []
+  };
+}
+function buildCapabilities(inventory) {
+  return [lintCapability(inventory), boundariesCapability(inventory), typecheckCapability(inventory), onChangeCapability(inventory), baselineCapability(inventory)];
+}
+function lintCapability(inventory) {
+  const conflictPath = inventory.eslint.legacyConfigPath ?? inventory.eslint.configPath;
+  if (inventory.eslint.present && (!inventory.eslint.supported || inventory.eslint.legacyConfigPath !== void 0)) {
+    const path2 = conflictPath ?? "detected configuration";
+    return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint", status: "conflict", impact: `Legacy ESLint configuration ${path2} ${LEGACY_SUFFIX}` };
+  }
+  if (inventory.eslint.present && inventory.eslint.flat) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint flat config", status: "compatible" };
+  if (inventory.eslint.present) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint", status: "present" };
+  if (inventory.biome.present) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "Biome", status: "compatible", existingOption: "biome", impact: "Biome stays for formatting; ESLint is added only for architecture rules." };
+  return { id: "lint", recommended: "ESLint >=9.24 flat config", status: "needs-install" };
+}
+function boundariesCapability(inventory) {
+  if (!inventory.depcruise.present) return { id: "boundaries", recommended: "dependency-cruiser", status: "needs-install" };
+  return { id: "boundaries", recommended: "dependency-cruiser", existing: "dependency-cruiser", status: inventory.depcruise.configPath === void 0 ? "present" : "compatible" };
+}
+function typecheckCapability(inventory) {
+  if (!inventory.typescript.present) return { id: "typecheck", recommended: "existing TypeScript configuration", status: "needs-install" };
+  const impact = inventory.typescript.strict === true ? void 0 : "TypeScript strict flags are recommended; the existing tsconfig is never changed.";
+  return { id: "typecheck", recommended: "existing TypeScript configuration", existing: inventory.typescript.tsconfigPath ?? "TypeScript", status: "present", ...impact === void 0 ? {} : { impact } };
+}
+function onChangeCapability(inventory) {
+  return inventory.eslintD.present ? { id: "on-change", recommended: "eslint_d single-file lint", existing: "eslint_d", status: "present" } : { id: "on-change", recommended: "eslint_d single-file lint", status: "needs-install" };
+}
+function baselineCapability(inventory) {
+  const paths = [inventory.eslint.suppressionsPath, inventory.depcruise.knownViolationsPath].filter((path2) => path2 !== void 0);
+  const impact = paths.map((path2) => `Existing baseline ${path2} is merged, never replaced.`).join(" ");
+  if (paths.length === 0) return { id: "baseline", recommended: "ESLint suppressions and dependency-cruiser known violations", status: "needs-install" };
+  return { id: "baseline", recommended: "ESLint suppressions and dependency-cruiser known violations", existing: paths.join(", "), status: "compatible", impact };
+}
+function requiredInstalls(inventory) {
+  const installs = [];
+  if (!inventory.eslint.present || !inventory.eslint.supported) installs.push("eslint@^9.24.0");
+  if (!inventory.eslintD.present) installs.push("eslint_d");
+  if (!inventory.depcruise.present) installs.push("dependency-cruiser");
+  return installs;
+}
+function plannedWrites(inventory) {
+  const eslintPath = inventory.eslint.configPath ?? "eslint.config.mjs";
+  const depcruisePath = inventory.depcruise.configPath ?? ".dependency-cruiser.cjs";
+  const suppressionsPath = inventory.eslint.suppressionsPath ?? ".shore/eslint-suppressions.json";
+  const knownViolationsPath = inventory.depcruise.knownViolationsPath ?? ".shore/dependency-cruiser-known-violations.json";
+  return [
+    { path: eslintPath, action: inventory.eslint.configPath === void 0 ? "create" : "backup-and-overlay" },
+    { path: depcruisePath, action: inventory.depcruise.configPath === void 0 ? "create" : "backup-and-overlay" },
+    { path: suppressionsPath, action: inventory.eslint.suppressionsPath === void 0 ? "create" : "backup-and-overlay" },
+    { path: knownViolationsPath, action: inventory.depcruise.knownViolationsPath === void 0 ? "create" : "backup-and-overlay" },
+    { path: ".shore/guard.json", action: "overlay" },
+    { path: "package.json", action: "overlay" }
+  ];
+}
+function unsupportedPlan(inventory, policyHash) {
+  const capabilities = buildCapabilities(inventory).map((capability2) => ({ ...capability2, status: "unsupported" }));
+  return { planVersion: 1, policyHash, choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0), capabilities, installs: { packageManager: inventory.packageManager, dev: [] }, writes: [], impacts: [], unsupported: ["Node project required"] };
+}
+function isRecord5(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isMissing3(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+async function exists3(path2) {
+  try {
+    await fs15.access(path2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// src/commands/guards-apply.ts
+import { spawn as spawn4 } from "node:child_process";
+import * as nodeFs2 from "node:fs/promises";
+import { dirname as dirname6, join as join23, relative as relative7 } from "node:path";
+
+// ../renderers/src/provenance.ts
+function provenanceHeader(pack, options = {}) {
+  const prefix = options.commentPrefix ?? "//";
+  const generator = options.generator ?? "@shore/guard-renderers";
+  return [
+    `${prefix} Generated by ${generator}. Do not edit managed content by hand.`,
+    `${prefix} Policy: ${pack.metadata.id}@${pack.metadata.revision}`,
+    `${prefix} Policy hash: ${hash2(pack)}`
+  ].join("\n");
+}
+
+// ../renderers/src/eslint/render.ts
+var UnknownEnforcingRuleKindError = class extends Error {
+  ruleId;
+  kind;
+  constructor(ruleId, kind) {
+    super(`Cannot render enforcing rule "${ruleId}": unknown rule kind "${kind}"`);
+    this.name = "UnknownEnforcingRuleKindError";
+    this.ruleId = ruleId;
+    this.kind = kind;
+  }
+};
+var severity = (stage) => stage === "observe" ? 0 : stage === "warn" ? 1 : 2;
+var message5 = (rule2) => `${rule2.diagnostic} Remediation: ${rule2.remediation} [${rule2.ruleId}]`;
+function restrictionPatterns(pack, rule2) {
+  const modules = rule2.scope.modules ?? [];
+  const destinationNames = modules.length > 1 ? modules.slice(1) : modules;
+  return [...new Set(destinationNames.flatMap((name) => pack.modules.pathMappings[name] ?? []))].sort();
+}
+function directImportRestriction(pack, rule2) {
+  const group = restrictionPatterns(pack, rule2);
+  if (group.length === 0) return void 0;
+  const files = rule2.scope.paths === void 0 ? void 0 : [...rule2.scope.paths];
+  return {
+    ruleId: rule2.ruleId,
+    ...files === void 0 ? {} : { files },
+    severity: severity(rule2.adoptionStage),
+    pattern: { group, message: message5(rule2) }
+  };
+}
+function renderEslint(pack) {
+  for (const rule2 of pack.rules) {
+    if (!isKnownRuleKind(rule2.kind) && rule2.adoptionStage === "enforce") {
+      throw new UnknownEnforcingRuleKindError(rule2.ruleId, rule2.kind);
+    }
+  }
+  const restrictions = [];
+  const notices = [];
+  for (const rule2 of pack.rules) {
+    if (!isKnownRuleKind(rule2.kind)) {
+      notices.push({ ruleId: rule2.ruleId, kind: rule2.kind, reason: "unknown non-enforcing rule kind was not rendered" });
+      continue;
+    }
+    if (rule2.kind === "import-boundary" || rule2.kind === "dependency-edge") {
+      const restriction = directImportRestriction(pack, rule2);
+      if (restriction === void 0) notices.push({ ruleId: rule2.ruleId, kind: rule2.kind, reason: "rule has no module path patterns to restrict" });
+      else restrictions.push(restriction);
+      continue;
+    }
+    notices.push({ ruleId: rule2.ruleId, kind: rule2.kind, reason: "graph-wide rule requires the dependency-cruiser renderer" });
+  }
+  const grouped = /* @__PURE__ */ new Map();
+  for (const restriction of restrictions) {
+    const key = JSON.stringify([restriction.files ?? null, restriction.severity]);
+    const current = grouped.get(key);
+    if (current === void 0) grouped.set(key, [restriction]);
+    else current.push(restriction);
+  }
+  const fragments = [...grouped.values()].map((group) => {
+    const first = group[0];
+    if (first === void 0) throw new Error("internal error: empty ESLint restriction group");
+    return {
+      name: `shore/${group.map((item) => item.ruleId).join("+")}`,
+      ...first.files === void 0 ? {} : { files: first.files },
+      rules: { "no-restricted-imports": [first.severity, { patterns: group.map((item) => item.pattern) }] }
+    };
+  });
+  return { fragments, notices };
+}
+function renderEslintSource(pack) {
+  const rendered = renderEslint(pack);
+  return `${provenanceHeader(pack)}
+
+const shoreConfig = ${JSON.stringify(rendered.fragments, null, 2)};
+
+export default shoreConfig;
+`;
+}
+
+// ../renderers/src/eslint/layered-writer.ts
+import * as fs17 from "node:fs/promises";
+import { basename as basename3, relative as relative6 } from "node:path";
+
+// ../renderers/src/managed-block.ts
+var MANAGED_BLOCK_START = "// shore-guard:start";
+var MANAGED_BLOCK_END = "// shore-guard:end";
+function managedBlock(content) {
+  return `${MANAGED_BLOCK_START}
+${content.trimEnd()}
+${MANAGED_BLOCK_END}`;
+}
+function replaceManagedBlock(source, content) {
+  const block = managedBlock(content);
+  const start = source.indexOf(MANAGED_BLOCK_START);
+  const end = source.indexOf(MANAGED_BLOCK_END);
+  if (start === -1 && end === -1) return `${source.trimEnd()}
+
+${block}
+`;
+  if (start === -1 || end === -1 || end < start) throw new Error("malformed Shore Guard managed block");
+  const after = end + MANAGED_BLOCK_END.length;
+  return `${source.slice(0, start)}${block}${source.slice(after)}`;
+}
+
+// ../renderers/src/non-destructive.ts
+import * as fs16 from "node:fs/promises";
+import { constants as constants2 } from "node:fs";
+import { isAbsolute as isAbsolute4, relative as relative5, resolve as resolve9, sep as sep4 } from "node:path";
+function isMissing4(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+async function confinedPath2(repoPath, relativePath) {
+  if (isAbsolute4(relativePath)) throw new Error(`managed path must be repository-relative: ${relativePath}`);
+  const repo = resolve9(repoPath);
+  const target = resolve9(repo, relativePath);
+  const fromRepo = relative5(repo, target);
+  if (fromRepo === ".." || fromRepo.startsWith(`..${sep4}`) || isAbsolute4(fromRepo)) {
+    throw new Error(`managed path escapes repository root: ${relativePath}`);
+  }
+  const parts = fromRepo.split(sep4).filter(Boolean);
+  let cursor = repo;
+  for (const part of parts) {
+    cursor = resolve9(cursor, part);
+    try {
+      if ((await fs16.lstat(cursor)).isSymbolicLink()) {
+        throw new Error(`managed path traverses a symbolic link: ${relativePath}`);
+      }
+    } catch (error62) {
+      if (isMissing4(error62)) break;
+      throw error62;
+    }
+  }
+  return target;
+}
+async function backupBeforeWrite(path2, backupPath = `${path2}.bak`) {
+  try {
+    await fs16.copyFile(path2, backupPath, constants2.COPYFILE_EXCL);
+    return true;
+  } catch (error62) {
+    if (error62 instanceof Error && "code" in error62 && error62.code === "EEXIST") return false;
+    throw error62;
+  }
+}
+async function writeFileIfChanged(path2, content) {
+  try {
+    if (await fs16.readFile(path2, "utf8") === content) return false;
+  } catch (error62) {
+    if (!isMissing4(error62)) throw error62;
+  }
+  await fs16.writeFile(path2, content, "utf8");
+  return true;
+}
+
+// ../renderers/src/eslint/layered-writer.ts
+var ESLINT_OVERLAY_NAME = "eslint.config.shore.mjs";
+var FLAT_NAMES = ["eslint.config.mjs", "eslint.config.js", "eslint.config.cjs", "eslint.config.ts"];
+var LEGACY_NAMES = [".eslintrc", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.yaml", ".eslintrc.yml"];
+async function exists4(path2) {
+  try {
+    await fs17.access(path2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function findEslintEntry(repoPath) {
+  for (const file2 of FLAT_NAMES) {
+    const full = await confinedPath2(repoPath, file2);
+    if (await exists4(full)) return { kind: "flat", file: file2, full };
+  }
+  for (const file2 of LEGACY_NAMES) {
+    const full = await confinedPath2(repoPath, file2);
+    if (await exists4(full)) return { kind: "legacy", file: file2, full };
+  }
+  return void 0;
+}
+function importPath(file2) {
+  return `./${file2.replaceAll("\\", "/")}`;
+}
+function preservedEntryName(file2) {
+  const extensionIndex = file2.lastIndexOf(".");
+  return `${file2.slice(0, extensionIndex)}.shore-original${file2.slice(extensionIndex)}`;
+}
+function buildLayeredSource(userEntryRelative, pack) {
+  const { fragments } = renderEslint(pack);
+  return `${provenanceHeader(pack)}
+// Layers Shore Guard policy after the user's existing ESLint flat config.
+
+import userConfig from ${JSON.stringify(importPath(userEntryRelative))};
+
+const shoreConfig = ${JSON.stringify(fragments, null, 2)};
+
+export default [
+  ...(Array.isArray(userConfig) ? userConfig : [userConfig]),
+  ...shoreConfig,
+];
+`;
+}
+function fencedSource(pack, fragments, identifier2) {
+  return managedBlock(`${provenanceHeader(pack)}
+const shoreGuardFragments = ${JSON.stringify(fragments, null, 2)};
+${identifier2}.push(...shoreGuardFragments);`);
+}
+async function writeFenced(entry2, pack) {
+  const original = await fs17.readFile(entry2.full, "utf8");
+  const defaultIdentifier = /export\s+default\s+([A-Za-z_$][\w$]*)\s*;/u.exec(original)?.[1];
+  if (defaultIdentifier === void 0) {
+    return { ok: false, mode: "fenced-unsupported", fallbackReason: `cannot append a safe managed block to ${entry2.file}; expected a default-exported config identifier` };
+  }
+  const fragments = renderEslint(pack).fragments;
+  const block = fencedSource(pack, fragments, defaultIdentifier);
+  const next = original.includes("// shore-guard:start") ? replaceManagedBlock(original, block.slice(block.indexOf("\n") + 1, block.lastIndexOf("\n"))) : `${original.trimEnd()}
+
+${block}
+`;
+  if (next === original) return { ok: true, mode: "fenced", path: entry2.full, changed: false, backupCreated: false, rewroteEntryPoint: false };
+  const backupCreated = await backupBeforeWrite(entry2.full);
+  const changed = await writeFileIfChanged(entry2.full, next);
+  return { ok: true, mode: "fenced", path: entry2.full, changed, backupCreated, rewroteEntryPoint: false };
+}
+async function writeLayeredEslintConfig(repoPath, pack, options = {}) {
+  renderEslint(pack);
+  const entry2 = await findEslintEntry(repoPath);
+  if (entry2?.kind === "legacy") {
+    return { ok: false, mode: "fallback-legacy", fallbackReason: `legacy ${entry2.file} detected; flat-config conversion is intentionally out of scope` };
+  }
+  if (entry2 !== void 0 && options.forceFencedFallback === true) return writeFenced(entry2, pack);
+  const overlay = await confinedPath2(repoPath, ESLINT_OVERLAY_NAME);
+  let backupCreated = false;
+  let layeredImport = entry2?.file;
+  if (entry2 !== void 0 && options.rewriteEntryPoint === true) {
+    backupCreated = await backupBeforeWrite(entry2.full);
+    layeredImport = preservedEntryName(entry2.file);
+    const preserved = await confinedPath2(repoPath, layeredImport);
+    await backupBeforeWrite(entry2.full, preserved);
+  }
+  const source = layeredImport === void 0 ? renderEslintSource(pack) : buildLayeredSource(layeredImport, pack);
+  if (await exists4(overlay) && await fs17.readFile(overlay, "utf8") !== source) {
+    const overlayBackupCreated = await backupBeforeWrite(overlay);
+    backupCreated = overlayBackupCreated || backupCreated;
+  }
+  const changed = await writeFileIfChanged(overlay, source);
+  let rewroteEntryPoint = false;
+  if (entry2 !== void 0 && options.rewriteEntryPoint === true) {
+    const proxy = `${provenanceHeader(pack)}
+// Backup at ${basename3(entry2.full)}.bak; importable original at ${preservedEntryName(entry2.file)}.
+export { default } from ${JSON.stringify(importPath(relative6(repoPath, overlay)))};
+`;
+    if (await fs17.readFile(entry2.full, "utf8") !== proxy) {
+      await writeFileIfChanged(entry2.full, proxy);
+    }
+    rewroteEntryPoint = true;
+  }
+  return { ok: true, mode: entry2 === void 0 ? "greenfield" : "flat", path: overlay, changed, backupCreated, rewroteEntryPoint };
+}
+
+// ../renderers/src/depcruise/render.ts
+var UnknownDepcruiseRuleKindError = class extends Error {
+  ruleId;
+  kind;
+  constructor(ruleId, kind) {
+    super(`Cannot render enforcing rule "${ruleId}": unknown rule kind "${kind}"`);
+    this.name = "UnknownDepcruiseRuleKindError";
+    this.ruleId = ruleId;
+    this.kind = kind;
+  }
+};
+var severity2 = (stage) => stage === "observe" ? "info" : stage === "warn" ? "warn" : "error";
+var comment = (rule2) => `${rule2.diagnostic} Remediation: ${rule2.remediation} [${rule2.ruleId}]`;
+var escapeRegex2 = (value) => value.replace(/[|\\{}()[\]^$+?.]/gu, "\\$&");
+function pathPatternToRegex(pattern) {
+  let result3 = "";
+  for (let index = 0; index < pattern.length; index += 1) {
+    const character = pattern[index];
+    if (character === "!" && pattern[index + 1] === "(") {
+      const end = pattern.indexOf(")", index + 2);
+      if (end === -1) result3 += "!\\(";
+      else {
+        const excluded = pattern.slice(index + 2, end).split("|").map(escapeRegex2).join("|");
+        result3 += `(?!(?:${excluded})(?:/|$))[^/]+`;
+        index = end;
+      }
+    } else if (character === "*" && pattern[index + 1] === "*" && pattern[index + 2] === "/") {
+      result3 += "(?:.*/)?";
+      index += 2;
+    } else if (character === "*" && pattern[index + 1] === "*") {
+      result3 += ".*";
+      index += 1;
+    } else if (character === "*") result3 += "[^/]*";
+    else if (character === "?") result3 += "[^/]";
+    else if (character === "{") {
+      const end = pattern.indexOf("}", index + 1);
+      if (end === -1) result3 += "\\{";
+      else {
+        result3 += `(?:${pattern.slice(index + 1, end).split(",").map(escapeRegex2).join("|")})`;
+        index = end;
+      }
+    } else result3 += escapeRegex2(character ?? "");
+  }
+  return `^${result3}$`;
+}
+function moduleSelectors(pack) {
+  const selectors = {};
+  const preceding = [];
+  for (const name of Object.keys(pack.modules.pathMappings).sort()) {
+    const own2 = (pack.modules.pathMappings[name] ?? []).map(pathPatternToRegex).map((item) => item.slice(1, -1));
+    const exclusion = preceding.length === 0 ? "" : `(?!${preceding.map((item) => `(?:${item})`).join("|")}$)`;
+    selectors[name] = `^${exclusion}(?:${own2.join("|")})$`;
+    preceding.push(...own2);
+  }
+  return selectors;
+}
+function scopedPath(rule2, selectors) {
+  const paths = [
+    ...(rule2.scope.paths ?? []).map(pathPatternToRegex),
+    ...(rule2.scope.modules ?? []).map((name) => selectors[name]).filter((item) => item !== void 0)
+  ];
+  return paths.length === 0 ? void 0 : paths.length === 1 ? paths[0] : paths;
+}
+function edgeInScope(rule2, from, to) {
+  const modules = rule2.scope.modules;
+  return modules === void 0 || modules.includes(from) && modules.includes(to);
+}
+function selector(selectors, moduleName2) {
+  const result3 = selectors[moduleName2];
+  if (result3 === void 0) throw new Error(`module edge references undefined module "${moduleName2}"`);
+  return result3;
+}
+function renderDepcruise(pack) {
+  for (const rule2 of pack.rules) {
+    if (!isKnownRuleKind(rule2.kind) && rule2.adoptionStage === "enforce") throw new UnknownDepcruiseRuleKindError(rule2.ruleId, rule2.kind);
+  }
+  const selectors = moduleSelectors(pack);
+  const forbidden2 = [];
+  const allowed = [];
+  const notices = [];
+  let allowedSeverity;
+  for (const rule2 of pack.rules) {
+    if (!isKnownRuleKind(rule2.kind)) {
+      notices.push({ ruleId: rule2.ruleId, kind: rule2.kind, reason: "unknown non-enforcing rule kind was not rendered" });
+      continue;
+    }
+    if (rule2.kind === "import-boundary") {
+      notices.push({ ruleId: rule2.ruleId, kind: rule2.kind, reason: "ESLint-expressible boundary rule is intentionally not rendered by dependency-cruiser" });
+      continue;
+    }
+    if (rule2.kind === "dependency-edge") {
+      const scopedModuleNames = (rule2.scope.modules ?? Object.keys(selectors)).slice().sort();
+      for (const edge2 of pack.modules.forbiddenEdges.filter((item) => edgeInScope(rule2, item.from, item.to))) {
+        forbidden2.push({ name: `${rule2.ruleId}.forbid.${edge2.from}.${edge2.to}`, severity: severity2(rule2.adoptionStage), comment: comment(rule2), from: { path: selector(selectors, edge2.from) }, to: { path: selector(selectors, edge2.to) } });
+      }
+      for (const edge2 of pack.modules.allowedEdges.filter((item) => edgeInScope(rule2, item.from, item.to))) {
+        allowed.push({ comment: comment(rule2), from: { path: selector(selectors, edge2.from) }, to: { path: selector(selectors, edge2.to) } });
+      }
+      if (pack.modules.allowedEdges.some((item) => edgeInScope(rule2, item.from, item.to))) {
+        const scopedSelectors = scopedModuleNames.map((name) => selector(selectors, name));
+        const structuralComment = `Unmapped and intra-module dependencies are outside the ${rule2.ruleId} cross-module allow-list.`;
+        allowed.push({ comment: structuralComment, from: { pathNot: scopedSelectors }, to: {} });
+        allowed.push({ comment: structuralComment, from: {}, to: { pathNot: scopedSelectors } });
+        for (const name of scopedModuleNames) {
+          const path3 = selector(selectors, name);
+          allowed.push({ comment: structuralComment, from: { path: path3 }, to: { path: path3 } });
+        }
+      }
+      const edgeSeverity = severity2(rule2.adoptionStage);
+      if (allowedSeverity !== void 0 && allowedSeverity !== edgeSeverity) {
+        throw new Error(`dependency-edge rules with allowed edges must share one adoption stage; ${rule2.ruleId} maps to ${edgeSeverity}, previously ${allowedSeverity}`);
+      }
+      if (pack.modules.allowedEdges.some((item) => edgeInScope(rule2, item.from, item.to))) allowedSeverity = edgeSeverity;
+      continue;
+    }
+    const path2 = scopedPath(rule2, selectors);
+    const from = path2 === void 0 ? {} : { path: path2 };
+    if (rule2.kind === "no-cycles") forbidden2.push({ name: rule2.ruleId, severity: severity2(rule2.adoptionStage), comment: comment(rule2), from, to: { circular: true } });
+    else if (rule2.kind === "no-orphans") forbidden2.push({ name: rule2.ruleId, severity: severity2(rule2.adoptionStage), comment: comment(rule2), from: { ...from, orphan: true }, to: {} });
+    else forbidden2.push({ name: rule2.ruleId, severity: severity2(rule2.adoptionStage), comment: comment(rule2), from, to: { ...path2 === void 0 ? {} : { path: path2 }, reachable: true } });
+  }
+  const config2 = {
+    forbidden: forbidden2,
+    allowed,
+    ...allowedSeverity === void 0 ? {} : { allowedSeverity },
+    options: { tsConfig: { fileName: "tsconfig.json" }, enhancedResolveOptions: { exportsFields: ["exports"], conditionNames: ["import", "require", "node", "default"] }, combinedDependencies: true }
+  };
+  return { config: config2, notices };
+}
+function renderDepcruiseSource(pack) {
+  const { config: config2 } = renderDepcruise(pack);
+  return `${provenanceHeader(pack)}
+
+const config = ${JSON.stringify(config2, null, 2)};
+
+export default config;
+`;
+}
+
+// ../renderers/src/depcruise/writer.ts
+import * as fs18 from "node:fs/promises";
+var DEPCRUISE_CONFIG_NAME = ".dependency-cruiser.shore.mjs";
+function isMissing5(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+async function writeDepcruiseConfig(repoPath, pack, relativePath = DEPCRUISE_CONFIG_NAME) {
+  renderDepcruise(pack);
+  const path2 = await confinedPath2(repoPath, relativePath);
+  const source = renderDepcruiseSource(pack);
+  let backupCreated = false;
+  try {
+    if (await fs18.readFile(path2, "utf8") !== source) backupCreated = await backupBeforeWrite(path2);
+  } catch (error62) {
+    if (!isMissing5(error62)) throw error62;
+  }
+  const changed = await writeFileIfChanged(path2, source);
+  return { path: path2, changed, backupCreated };
+}
+
+// src/commands/guards-apply.ts
+var STEP_IDS = ["plan", "install", "render-eslint", "render-depcruise", "baseline-eslint", "baseline-depcruise", "config", "hook", "state"];
+var EDIT_GATE = "shore-guard.edit";
+var COMMIT_GATE = "shore-guard.commit";
+var ESLINT_PATH = "eslint.config.shore.mjs";
+var DEPCRUISE_PATH = ".dependency-cruiser.shore.mjs";
+var DEFAULT_ESLINT_BASELINE = ".shore/eslint-suppressions.json";
+var DEFAULT_DEPCRUISE_BASELINE = ".shore/dependency-cruiser-known-violations.json";
+async function runGuardsApply(options) {
+  const steps = [];
+  const planResult = await runGuardsPlan({ root: options.root, inventory: options.inventory });
+  const plan = guardsPlan(planResult);
+  if (plan === void 0) {
+    steps.push({ id: "plan", status: "failed", detail: planResult.message });
+    return { ...planResult, command: "guards apply", data: { steps, unenforced: [] } };
+  }
+  if (plan.choiceRequired && options.choice === void 0) {
+    steps.push({ id: "plan", status: "failed", detail: "choice required: shore or existing" });
+    return failure4(EXIT_CODES.userDecisionRequired, "Choose --choice shore or --choice existing.", steps, []);
+  }
+  const choice = options.choice ?? "shore";
+  const pack = await readPack(options.root, options.fs ?? nodeFileSystem);
+  if (pack === void 0) return failure4(EXIT_CODES.config, "Cannot read a valid adopted policy at .shore/policy.json.", steps, []);
+  const existingState = await loadState(options.root, options.fs ?? nodeFileSystem);
+  const rerun = await checkRerun(options, plan, existingState);
+  if (rerun !== void 0) return rerun;
+  const decisions = decideCapabilities(plan, choice, pack);
+  if (options.dryRun === true) {
+    for (const id of STEP_IDS) steps.push({ id, status: "skipped", detail: `dry-run: ${dryRunDetail(id)}` });
+    return success3("Guard apply dry-run complete; no files were changed.", steps, decisions.unenforced);
+  }
+  steps.push({ id: "plan", status: "done", detail: planDetail(plan, choice) });
+  const runtime = runtimeOptions(options);
+  const install = await installDependencies(plan, decisions, options.inventory, runtime.process, options.root);
+  steps.push(install.step);
+  if (install.step.status === "failed") return failure4(EXIT_CODES.remoteUnavailable, install.step.detail, steps, decisions.unenforced);
+  const files = [];
+  try {
+    await renderSteps(options, pack, decisions, runtime.fs, runtime.operations, steps, files);
+    await baselineSteps(options, decisions, runtime.operations, steps, files);
+    await configStep(options, choice, runtime.fs, steps, files);
+    steps.push({ id: "hook", status: "done", detail: "edit hook reads lint.singleFileCommand from .shore/guard.json" });
+    await stateStep(options, plan, choice, runtime.fs, existingState, files, steps);
+  } catch (error62) {
+    const id = nextStepId(steps);
+    steps.push({ id, status: "failed", detail: message6(error62) });
+    return failure4(EXIT_CODES.config, `Guard apply failed during ${id}: ${message6(error62)}`, steps, decisions.unenforced);
+  }
+  return success3("Architecture guards applied.", steps, decisions.unenforced);
+}
+function runtimeOptions(options) {
+  return {
+    fs: options.fs ?? nodeFileSystem,
+    process: options.process ?? runProcess,
+    operations: {
+      renderEslint: options.operations?.renderEslint ?? writeLayeredEslintConfig,
+      renderDepcruise: options.operations?.renderDepcruise ?? writeDepcruiseConfig,
+      baselineEslint: options.operations?.baselineEslint ?? generateEslintBaseline,
+      baselineDepcruise: options.operations?.baselineDepcruise ?? generateKnownViolations
+    }
+  };
+}
+function guardsPlan(result3) {
+  if (result3.exitCode !== EXIT_CODES.pass || !isRecord6(result3.data) || !isRecord6(result3.data.plan)) return void 0;
+  return result3.data.plan;
+}
+async function readPack(root, fs19) {
+  try {
+    const input2 = JSON.parse((await fs19.readFile(join23(root, ".shore/policy.json"))).toString("utf8"));
+    const parsed = policyPackSchema.safeParse(input2);
+    return parsed.success ? parsed.data : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function decideCapabilities(plan, choice, pack) {
+  const lint = capability(plan, "lint");
+  const boundaries = capability(plan, "boundaries");
+  const eslint = choice === "shore" || lint?.existing === void 0 || lint.status === "compatible";
+  const depcruise = choice === "shore" || boundaries?.existing === void 0;
+  const eslintIds = new Set(renderEslint(pack).fragments.flatMap((fragment) => fragment.name.replace(/^shore\//u, "").split("+")));
+  const unenforced = pack.rules.filter((rule2) => !eslint && eslintIds.has(rule2.ruleId) || !depcruise && !eslintIds.has(rule2.ruleId)).map((rule2) => rule2.ruleId);
+  return { eslint, depcruise, unenforced };
+}
+function capability(plan, id) {
+  return plan.capabilities.find((item) => item.id === id);
+}
+function planDetail(plan, choice) {
+  const impacts = choice === "shore" ? plan.capabilities.filter((item) => item.status === "conflict").flatMap((item) => item.impact === void 0 ? [] : [item.impact]) : [];
+  return `choice ${choice}${impacts.length === 0 ? "" : `; ${impacts.join(" ")}`}`;
+}
+async function installDependencies(plan, decisions, inventory, processPort, root) {
+  const packages = plan.installs.dev.filter((name) => decisions.eslint || !name.startsWith("eslint") && name !== "eslint_d").filter((name) => decisions.depcruise || name !== "dependency-cruiser");
+  if (packages.length === 0) return { step: { id: "install", status: "skipped", detail: "no dependencies to install" } };
+  const command = installCommand(inventory.packageManager, packages);
+  if (command === void 0) return { step: { id: "install", status: "failed", detail: `Package manager was not detected; install manually: ${packages.join(" ")}` } };
+  const result3 = await processPort(command.binary, command.args, root);
+  const manual = [command.binary, ...command.args].join(" ");
+  return result3.code === 0 ? { step: { id: "install", status: "done", detail: manual } } : { step: { id: "install", status: "failed", detail: `Install failed; run manually: ${manual}` } };
+}
+function installCommand(manager, packages) {
+  if (manager === "pnpm") return { binary: "pnpm", args: ["add", "-D", ...packages] };
+  if (manager === "npm") return { binary: "npm", args: ["install", "-D", ...packages] };
+  if (manager === "yarn") return { binary: "yarn", args: ["add", "-D", ...packages] };
+  return void 0;
+}
+async function renderSteps(options, pack, decisions, fs19, operations, steps, files) {
+  if (decisions.eslint) {
+    if (options.inventory.eslint.legacyConfigPath !== void 0) {
+      await writeTextAtomic(join23(options.root, "eslint.config.mjs"), renderEslintSource(pack), fs19);
+      files.push("eslint.config.mjs");
+      steps.push({ id: "render-eslint", status: "done", detail: `rendered eslint.config.mjs; left ${options.inventory.eslint.legacyConfigPath} in place` });
+    } else {
+      const result3 = await operations.renderEslint(options.root, pack);
+      if (!result3.ok) throw new Error(result3.fallbackReason);
+      const renderedPath = relative7(options.root, result3.path);
+      files.push(renderedPath);
+      if (result3.mode === "greenfield") {
+        await writeTextAtomic(join23(options.root, "eslint.config.mjs"), `export { default } from './${renderedPath}';
+`, fs19);
+        files.push("eslint.config.mjs");
+      }
+      steps.push({ id: "render-eslint", status: "done", detail: `rendered ${renderedPath}` });
+    }
+  } else steps.push({ id: "render-eslint", status: "skipped", detail: "kept existing lint configuration" });
+  if (decisions.depcruise) {
+    const result3 = await operations.renderDepcruise(options.root, pack);
+    files.push(relative7(options.root, result3.path));
+    steps.push({ id: "render-depcruise", status: "done", detail: `rendered ${relative7(options.root, result3.path)}` });
+  } else steps.push({ id: "render-depcruise", status: "skipped", detail: "kept existing dependency configuration" });
+}
+async function baselineSteps(options, decisions, operations, steps, files) {
+  if (decisions.eslint) {
+    const path2 = options.inventory.eslint.suppressionsPath ?? DEFAULT_ESLINT_BASELINE;
+    const existing = await readJson(join23(options.root, path2));
+    await operations.baselineEslint({ repoPath: options.root, configPath: ESLINT_PATH, suppressionsPath: path2 });
+    const generated = await readJson(join23(options.root, path2));
+    const merged = mergeJson(generated, existing);
+    await writeJson(join23(options.root, path2), merged);
+    files.push(path2);
+    steps.push({ id: "baseline-eslint", status: "done", detail: `grandfathered ${String(countLeaves(merged))} ESLint violations` });
+  } else steps.push({ id: "baseline-eslint", status: "skipped", detail: "ESLint policy overlay was not written" });
+  if (decisions.depcruise) {
+    const path2 = options.inventory.depcruise.knownViolationsPath ?? DEFAULT_DEPCRUISE_BASELINE;
+    const existing = await readJson(join23(options.root, path2));
+    await operations.baselineDepcruise({ repoPath: options.root, configPath: DEPCRUISE_PATH, baselinePath: path2 });
+    const generated = await readJson(join23(options.root, path2));
+    const merged = mergeJson(generated, existing);
+    await writeJson(join23(options.root, path2), merged);
+    files.push(path2);
+    steps.push({ id: "baseline-depcruise", status: "done", detail: `grandfathered ${String(countLeaves(merged))} dependency violations` });
+  } else steps.push({ id: "baseline-depcruise", status: "skipped", detail: "dependency policy configuration was not written" });
+}
+async function configStep(options, choice, fs19, steps, files) {
+  const configPath = join23(options.root, ".shore/guard.json");
+  const packagePath = join23(options.root, "package.json");
+  const config2 = await requiredRecord(configPath, fs19);
+  const singleFileCommand = lintCommand(options.inventory, choice);
+  const gates = stringArray(config2.installedGates);
+  const nextConfig = { ...config2, schemaVersion: 1, installedGates: [.../* @__PURE__ */ new Set([...gates, EDIT_GATE, COMMIT_GATE])], lint: { tool: choice === "shore" ? "eslint" : "custom", singleFileCommand, checkCommand: choice === "shore" ? "eslint ." : singleFileCommand } };
+  await writeAtomic2(configPath, nextConfig, fs19);
+  const pkg = await requiredRecord(packagePath, fs19);
+  const scripts = isRecord6(pkg.scripts) ? pkg.scripts : {};
+  const nextScripts = { ...scripts, ..."guard:check" in scripts ? {} : { "guard:check": "shore-guard check" }, ..."lint:guard" in scripts ? {} : { "lint:guard": singleFileCommand } };
+  await writeAtomic2(packagePath, { ...pkg, scripts: nextScripts }, fs19);
+  files.push(".shore/guard.json", "package.json");
+  steps.push({ id: "config", status: "done", detail: "configured lint commands, edit gate, commit gate, and package scripts" });
+}
+function lintCommand(inventory, choice) {
+  if (choice === "shore") return "eslint_d --max-warnings=0 --cache --cache-location .eslintcache";
+  return inventory.scripts.lint ?? (inventory.biome.present ? "biome check" : "eslint");
+}
+async function stateStep(options, plan, choice, fs19, loaded, files, steps) {
+  if (loaded.status !== "ok") throw new Error("Shore state must be initialized before applying guards.");
+  const managedPaths = [.../* @__PURE__ */ new Set([...loaded.state.managedPaths, ...files])];
+  const fingerprint = await fingerprintManagedFiles(options.root, managedPaths, fs19);
+  if (fingerprint.status !== "ok") throw new Error(`${fingerprint.path}: ${fingerprint.reason}`);
+  const now = (options.now ?? (() => /* @__PURE__ */ new Date()))().toISOString();
+  const state = { ...loaded.state, updatedAt: now, managedPaths, fingerprint: fingerprint.fingerprint, guards: { policyHash: plan.policyHash, choice, appliedAt: now, files: [...new Set(files)] } };
+  const saved = await saveState(options.root, state, fs19);
+  if (saved.status === "error") throw new Error(saved.reason);
+  steps.push({ id: "state", status: "done", detail: `recorded ${String(files.length)} managed files` });
+}
+async function checkRerun(options, plan, loaded) {
+  if (loaded.status !== "ok" || loaded.state.guards?.policyHash !== plan.policyHash) return void 0;
+  const files = loaded.state.guards.files;
+  const current = await fingerprintManagedFiles(options.root, files, options.fs ?? nodeFileSystem);
+  if (current.status !== "ok") return failure4(EXIT_CODES.config, `${current.path}: ${current.reason}`, [], []);
+  const storedFiles = loaded.state.fingerprint.files.filter((item) => files.includes(item.path));
+  const drift = detectDrift({ sha256: "", files: storedFiles }, current.fingerprint);
+  if (drift.status === "clean") return success3("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), []);
+  if (options.force === true) return void 0;
+  return failure4(EXIT_CODES.userDecisionRequired, `Applied guard files have drifted: ${drift.files.map((item) => item.path).join(", ")}. Review them or pass --force.`, [], []);
+}
+async function requiredRecord(path2, fs19) {
+  const value = JSON.parse((await fs19.readFile(path2)).toString("utf8"));
+  if (!isRecord6(value)) throw new Error(`${path2} must contain a JSON object`);
+  return value;
+}
+async function writeAtomic2(path2, value, fs19) {
+  const temporary = `${path2}.shore-guard-tmp`;
+  await fs19.mkdir(dirname6(path2), { recursive: true });
+  await fs19.writeFile(temporary, `${JSON.stringify(value, null, 2)}
+`);
+  await fs19.rename(temporary, path2);
+}
+async function writeTextAtomic(path2, value, fs19) {
+  const temporary = `${path2}.shore-guard-tmp`;
+  await fs19.mkdir(dirname6(path2), { recursive: true });
+  await fs19.writeFile(temporary, value);
+  await fs19.rename(temporary, path2);
+}
+async function readJson(path2) {
+  try {
+    return JSON.parse(await nodeFs2.readFile(path2, "utf8"));
+  } catch (error62) {
+    if (isMissing6(error62)) return {};
+    throw error62;
+  }
+}
+async function writeJson(path2, value) {
+  await nodeFs2.mkdir(dirname6(path2), { recursive: true });
+  await nodeFs2.writeFile(path2, `${JSON.stringify(value, null, 2)}
+`);
+}
+function mergeJson(current, prior) {
+  if (Array.isArray(current) && Array.isArray(prior)) return [.../* @__PURE__ */ new Set([...current.map(stableJson), ...prior.map(stableJson)])].map((item) => JSON.parse(item));
+  if (isRecord6(current) && isRecord6(prior)) return Object.fromEntries([.../* @__PURE__ */ new Set([...Object.keys(current), ...Object.keys(prior)])].map((key) => [key, key in current && key in prior ? mergeJson(current[key], prior[key]) : current[key] ?? prior[key]]));
+  return current ?? prior;
+}
+function stableJson(value) {
+  return JSON.stringify(value);
+}
+function countLeaves(value) {
+  if (Array.isArray(value)) return value.length;
+  if (isRecord6(value)) return Object.values(value).reduce((total, item) => total + countLeaves(item), 0);
+  return value === void 0 || value === null ? 0 : 1;
+}
+function stringArray(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+}
+function dryRunDetail(id) {
+  return id === "install" ? "install planned dependencies" : id === "state" ? "record applied guard state" : `execute ${id}`;
+}
+function nextStepId(steps) {
+  return STEP_IDS[steps.length] ?? "state";
+}
+function success3(messageText, steps, unenforced) {
+  return { command: "guards apply", outcome: "pass", exitCode: EXIT_CODES.pass, message: messageText, data: { steps, unenforced } };
+}
+function failure4(exitCode3, messageText, steps, unenforced) {
+  return { command: "guards apply", outcome: "error", exitCode: exitCode3, message: messageText, data: { steps, unenforced } };
+}
+function message6(error62) {
+  return error62 instanceof Error ? error62.message : String(error62);
+}
+function isRecord6(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isMissing6(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+function runProcess(command, args, cwd) {
+  return new Promise((resolvePromise) => {
+    const child = spawn4(command, args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.once("error", (error62) => {
+      resolvePromise({ code: 1, stdout, stderr: error62.message });
+    });
+    child.once("close", (code) => {
+      resolvePromise({ code: code ?? 1, stdout, stderr });
+    });
+  });
+}
+
 // src/agents/claude-code.ts
-import { join as join20 } from "node:path";
+import { join as join24 } from "node:path";
 var PLUGIN = "shore-guard@shore-guard";
 var MARKETPLACE = "dcassil/shore-guard-plugin";
 function claudeCode(context) {
@@ -23864,18 +24911,18 @@ function claudeCode(context) {
 }
 async function readInstalledPlugin(context) {
   try {
-    const raw = await context.fs.readFile(join20(context.homeDir, ".claude/plugins/installed_plugins.json"));
+    const raw = await context.fs.readFile(join24(context.homeDir, ".claude/plugins/installed_plugins.json"));
     const parsed = JSON.parse(raw);
-    if (!isRecord4(parsed)) return { installed: false };
+    if (!isRecord7(parsed)) return { installed: false };
     const plugins = parsed["plugins"];
-    if (!isRecord4(plugins)) return { installed: false };
+    if (!isRecord7(plugins)) return { installed: false };
     const entries = plugins[PLUGIN];
     if (!Array.isArray(entries) || entries.length === 0) return { installed: false };
     const latest = entries.at(-1);
-    const version2 = isRecord4(latest) && typeof latest["version"] === "string" ? latest["version"] : void 0;
+    const version2 = isRecord7(latest) && typeof latest["version"] === "string" ? latest["version"] : void 0;
     return { installed: true, ...version2 === void 0 ? {} : { version: version2 } };
   } catch (error62) {
-    if (isMissing3(error62) || error62 instanceof SyntaxError) return { installed: false };
+    if (isMissing7(error62) || error62 instanceof SyntaxError) return { installed: false };
     throw error62;
   }
 }
@@ -23889,10 +24936,10 @@ ${result3.stderr}`);
 function commandError(action, stderr) {
   return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
 }
-function isRecord4(value) {
+function isRecord7(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function isMissing3(error62) {
+function isMissing7(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
 }
 
@@ -23947,7 +24994,7 @@ function findPlugin(value) {
     }
     return void 0;
   }
-  if (!isRecord5(value)) return void 0;
+  if (!isRecord8(value)) return void 0;
   const identity2 = [value["id"], value["name"], value["plugin"], value["selector"]].filter((candidate) => typeof candidate === "string");
   if (value["installed"] !== false && identity2.some((candidate) => candidate === "shore-guard" || candidate === PLUGIN2)) {
     return typeof value["version"] === "string" ? { version: value["version"] } : {};
@@ -23965,7 +25012,7 @@ ${result3.stderr}`);
 function commandError2(action, stderr) {
   return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
 }
-function isRecord5(value) {
+function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -23984,7 +25031,8 @@ var COMMANDS = {
   verify: "Run the completion verification gate",
   doctor: "Diagnose Shore Guard setup problems",
   adopt: "Approve, modify, or reject a discovery proposal",
-  blueprint: "Submit a scrubbed policy blueprint to the public catalog"
+  blueprint: "Submit a scrubbed policy blueprint to the public catalog",
+  guards: "Plan and apply architecture guard tooling"
 };
 var GLOBAL_FLAGS = [
   { flag: "--json", description: "Emit the stable JSON result envelope." },
@@ -24089,6 +25137,18 @@ var COMMAND_HELP = {
     ],
     exitCodes: [PASS, CONFIG, AUTH, REMOTE, DECISION],
     example: "shore-guard blueprint submit --file .shore/blueprints/my-blueprint.json --dry-run"
+  },
+  guards: {
+    command: "guards",
+    purpose: COMMANDS.guards,
+    usage: "shore-guard guards plan [--json]\n       shore-guard guards apply [options]",
+    flags: [
+      { flag: "--choice <shore|existing>", description: "Choose Shore overlays or compatible existing tooling." },
+      { flag: "--dry-run", description: "Show apply steps without changing files." },
+      { flag: "--force", description: "Reapply after managed guard files drift." }
+    ],
+    exitCodes: [PASS, CONFIG, REMOTE, DECISION],
+    example: "shore-guard guards apply --choice shore --json"
   }
 };
 function renderCommandHelp(name) {
@@ -24162,6 +25222,21 @@ async function route(argv, cwd, dependencies = {}) {
       ...dependencies.blueprint
     }) };
   }
+  if (command === "guards") {
+    if (args[1] !== "plan" && args[1] !== "apply") return { json: json2, result: fail3(command, "Unknown guards command. Usage: shore-guard guards plan|apply [options]") };
+    const inventory = await inventoryToolchain({ root: cwd, fs: nodeProbeFileSystem });
+    if (args[1] === "plan") return { json: json2, result: await runGuardsPlan({ root: cwd, inventory }) };
+    const choiceValue = readValueFlag(argv, "--choice");
+    if (choiceValue !== void 0 && choiceValue !== "shore" && choiceValue !== "existing") return { json: json2, result: fail3(command, "--choice must be shore or existing.") };
+    return { json: json2, result: await runGuardsApply({
+      root: cwd,
+      inventory,
+      choice: choiceValue,
+      dryRun: argv.includes("--dry-run"),
+      force: argv.includes("--force"),
+      ...dependencies.guards
+    }) };
+  }
   const apiKeyFlag = readValueFlag(argv, "--api-key");
   const configResult = await loadGuardConfig(cwd);
   if (configResult.status === "invalid" && command !== "doctor" && command !== "setup" && !(command === "init" && argv.includes("--plan"))) return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
@@ -24177,7 +25252,7 @@ async function route(argv, cwd, dependencies = {}) {
       homeDir: homedir2(),
       artifactRoot: artifactRoot(),
       pluginVersion: CLI_BUILD.version,
-      fs: { readFile: (path2) => readFile15(path2, "utf8") }
+      fs: { readFile: (path2) => readFile22(path2, "utf8") }
     };
     const agentsFlag = readValueFlag(argv, "--agents");
     const login = async () => {
@@ -24215,7 +25290,7 @@ async function route(argv, cwd, dependencies = {}) {
       device: {
         client: client2,
         openBrowser: dependencies.deviceLogin?.openBrowser ?? createBrowserOpener(dependencies.deviceLogin?.platform ?? process.platform),
-        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve8) => setTimeout(resolve8, ms))),
+        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve10) => setTimeout(resolve10, ms))),
         now: dependencies.deviceLogin?.now ?? Date.now,
         stderr: dependencies.deviceLogin?.stderr ?? ((line) => {
           process.stderr.write(`${line}
@@ -24244,7 +25319,7 @@ async function route(argv, cwd, dependencies = {}) {
     const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
     const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
     const warnings = [];
-    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store, onWarning: (message5) => warnings.push(message5) });
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store, onWarning: (message7) => warnings.push(message7) });
     const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
     return { json: json2, result: await runStatus({
       resolved: resolved2,
@@ -24308,11 +25383,11 @@ var NOOP_STORE = {
   set: () => Promise.reject(new Error("Credential store was not selected.")),
   delete: () => Promise.resolve(void 0)
 };
-function pass(command, message5, data) {
-  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message5, ...data === void 0 ? {} : { data } };
+function pass(command, message7, data) {
+  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message7, ...data === void 0 ? {} : { data } };
 }
-function fail3(command, message5) {
-  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message5 };
+function fail3(command, message7) {
+  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message7 };
 }
 function isCommandName(value) {
   return Object.hasOwn(COMMANDS, value);
@@ -24329,11 +25404,11 @@ function stripOptions(argv) {
     const value = argv[index];
     if (value === void 0) continue;
     if (value === "--json" || value === "--plan" || value === "--help" || value === "-h" || value === "--no-browser") continue;
-    if (["--api-key", "--proposal", "--approved-by", "--rationale", "--agents", "--file"].includes(value)) {
+    if (["--api-key", "--proposal", "--approved-by", "--rationale", "--agents", "--file", "--choice"].includes(value)) {
       index += 1;
       continue;
     }
-    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale=", "--agents=", "--file="].some((prefix) => value.startsWith(prefix))) continue;
+    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale=", "--agents=", "--file=", "--choice="].some((prefix) => value.startsWith(prefix))) continue;
     if (["--approve", "--modify", "--reject", "--replace-lock", "--skip-agents", "--dry-run", "--force"].includes(value)) continue;
     result3.push(value);
   }
@@ -24351,7 +25426,7 @@ function artifactRoot() {
   const executable2 = process.argv[1];
   if (executable2 === void 0) return void 0;
   try {
-    return dirname5(dirname5(realpathSync(executable2)));
+    return dirname7(dirname7(realpathSync(executable2)));
   } catch {
     return void 0;
   }

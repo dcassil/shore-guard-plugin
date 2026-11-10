@@ -4,7 +4,7 @@ description: Guided, approval-first Shore Guard setup for this repository.
 ---
 # Guided initialization
 
-Step ids: `cli, login, connection, write-config, update-gitignore, commit, discovery`
+Step ids: `cli, login, connection, write-config, update-gitignore, commit, discovery, guards`
 
 ## 0. Follow the safety rules
 
@@ -81,7 +81,7 @@ Manual:
 
 ## 10. Discover architecture policy
 
-After the configuration commit, follow the discovery skill; do not reinvent it here. Write the proposal to `.shore/proposals/<YYYY-MM-DD>-discovery.json`, then summarize its modules, edges, rules, and tradeoffs in no more than 10 lines. Ask exactly one question with exactly these options: approve / modify / reject / skip.
+After the configuration commit, follow the discovery skill; do not reinvent it here. Write the proposal to `.shore/proposals/<YYYY-MM-DD>-discovery.json`, then summarize its modules, edges, rules, and tradeoffs in no more than 10 lines. Ask exactly one question with exactly these options: approve / modify / reject / skip. When adopt succeeds, follow the guards skill for the final guards step.
 
 For approve, run `shore-guard adopt --proposal <file> --approve --json`. For modify, ask the user to edit the proposal JSON, then rerun adopt with `--approve`. For reject, run `shore-guard adopt --proposal <file> --reject --json`; rejection writes nothing. For skip, say discovery can be run later from the discovery skill and continue to finish.
 

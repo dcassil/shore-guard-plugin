@@ -100,7 +100,7 @@ Strip proposal support metadata and run `validate` on the resulting policy pack,
 
 ## Approval handoff
 
-Tell the user to review the JSON, edit it if desired, then run `shore-guard adopt --proposal <file> --approve`. Rejection (`--reject`) writes nothing. An existing lock requires `--replace-lock`. Approval is the only path that writes the pack, lock, and fenced Shore Guard section in `AGENTS.md`.
+Tell the user to review the JSON, edit it if desired, then run `shore-guard adopt --proposal <file> --approve`. Rejection (`--reject`) writes nothing. An existing lock requires `--replace-lock`. Approval is the only path that writes the pack, lock, and fenced Shore Guard section in `AGENTS.md`. After approval, follow the guards skill to install and configure the rule engines that enforce the adopted policy.
 
 ## 6. Offer catalog submission
 
