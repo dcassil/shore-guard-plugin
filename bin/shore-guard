@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "05691acd208259a02193d38941d4d9a3dd8ecde7", version: "0.4.0" };
+var define_SHORE_GUARD_BUILD_default = { sha: "724ec2919cea6bd359f0b6c9142f9552e1a98da5", version: "0.5.0" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -1179,8 +1179,8 @@ function prefixIssues(path2, issues) {
     return iss;
   });
 }
-function unwrapMessage(message7) {
-  return typeof message7 === "string" ? message7 : message7?.message;
+function unwrapMessage(message9) {
+  return typeof message9 === "string" ? message9 : message9?.message;
 }
 function attachSchema(issues, start, inst) {
   var _a3;
@@ -1198,7 +1198,7 @@ function finalizeIssue(iss, ctx, config2) {
       iss.schema = iss.inst;
   }
   const schemaError = iss.schema !== iss.inst ? iss.schema?._zod.def?.error : void 0;
-  const message7 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const message9 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
   const full = {};
   for (const k of Object.keys(iss)) {
     if (k === "inst" || k === "schema" || k === "continue" || k === "input" || k === "__proto__")
@@ -1206,7 +1206,7 @@ function finalizeIssue(iss, ctx, config2) {
     full[k] = iss[k];
   }
   full.path ?? (full.path = []);
-  full.message = message7;
+  full.message = message9;
   if (ctx?.reportInput) {
     full.input = iss.input;
   }
@@ -5038,7 +5038,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve10) {
+function isRecursive(inst, stack, resolve14) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -5048,7 +5048,7 @@ function isRecursive(inst, stack, resolve10) {
   let result3 = NONE;
   const check2 = (child) => {
     if (result3 !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve10);
+      const answer = isRecursive(child, stack, resolve14);
       if (answer > result3)
         result3 = answer;
     }
@@ -5059,7 +5059,7 @@ function isRecursive(inst, stack, resolve10) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve10) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve14) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -5123,7 +5123,7 @@ function isRecursive(inst, stack, resolve10) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve10 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve14 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -12917,8 +12917,8 @@ var globalRegistry = globalThis.__zod_globalRegistry;
 var INVALID = /* @__PURE__ */ Symbol.for("zod.compile.invalid");
 var FALLBACK_FLAG = /* @__PURE__ */ Symbol.for("zod.compile.fallback");
 var ZodCompileAsyncError = class extends Error {
-  constructor(message7 = "z.compile does not support async refinements, transforms, or checks") {
-    super(message7);
+  constructor(message9 = "z.compile does not support async refinements, transforms, or checks") {
+    super(message9);
     this.name = "ZodCompileAsyncError";
   }
 };
@@ -15610,12 +15610,12 @@ function initializeContext(params) {
     external: params?.external ?? void 0
   };
 }
-function handleUnrepresentable(schema, ctx, json2, params, message7) {
-  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message7 }) : ctx.unrepresentable;
+function handleUnrepresentable(schema, ctx, json2, params, message9) {
+  const result3 = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message: message9 }) : ctx.unrepresentable;
   if (result3 === "any")
     return false;
   if (result3 === void 0 || result3 === "throw")
-    throw new Error(message7);
+    throw new Error(message9);
   Object.assign(json2, result3);
   return true;
 }
@@ -19687,6 +19687,7 @@ var guardConfigSchema = external_exports.object({
   protectedBranches: external_exports.array(external_exports.string().min(1)).optional(),
   developBranch: external_exports.string().min(1).optional(),
   autoCreateTempBranch: external_exports.boolean().optional(),
+  feedbackReports: external_exports.enum(["always", "ask", "never"]).optional(),
   installedGates: external_exports.array(external_exports.string().min(1)).optional(),
   lint: external_exports.object({
     tool: external_exports.enum(["eslint", "custom"]),
@@ -19703,11 +19704,12 @@ var guardConfigSchema = external_exports.object({
     maxDelayMs: external_exports.number().int().positive().optional()
   }).strict().optional()
 }).strict();
-async function loadGuardConfig(cwd) {
+var nodeConfigFileSystem = { readFile: (path2) => readFile(path2) };
+async function loadGuardConfig(cwd, fs19 = nodeConfigFileSystem) {
   const configPath = join(cwd, ".shore", "guard.json");
   let contents;
   try {
-    contents = await readFile(configPath, "utf8");
+    contents = (await fs19.readFile(configPath)).toString("utf8");
   } catch (error62) {
     if (isNodeError(error62) && error62.code === "ENOENT") {
       return { status: "not-found" };
@@ -19741,9 +19743,9 @@ function errorMessage(error62) {
 // ../core/src/git/exec.ts
 import { execFile } from "node:child_process";
 function createGitRunner(execute = execFile) {
-  return (cwd, args) => new Promise((resolve10) => {
+  return (cwd, args) => new Promise((resolve14) => {
     execute("git", args, { cwd, encoding: "utf8", windowsHide: true }, (error62, stdout, stderr) => {
-      resolve10({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
+      resolve14({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
     });
   });
 }
@@ -19761,8 +19763,8 @@ var runGit = createGitRunner();
 var GitResolutionError = class extends Error {
   kind;
   remediation;
-  constructor(kind, message7, remediation) {
-    super(message7);
+  constructor(kind, message9, remediation) {
+    super(message9);
     this.name = "GitResolutionError";
     this.kind = kind;
     this.remediation = remediation;
@@ -19853,7 +19855,7 @@ function evaluateThresholds(comparison, thresholds) {
     const count = SEVERITIES.slice(0, boundary + 1).reduce((sum, item) => sum + (comparison.issues.newBySeverity[item] ?? 0), 0);
     if (count > 0) reasons.push({ code: "new-issues-threshold", message: `${String(count)} new ${severity3}-or-higher issue(s) violate failOnNewIssues.`, remediation: `Resolve the new ${severity3}-or-higher issues before merging.` });
   }
-  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message7) => ({ code: "remote-comparison-failed", message: message7, remediation: "Review and resolve the reported regression." })));
+  if (!comparison.pass && reasons.length === 0) reasons.push(...comparison.failures.map((message9) => ({ code: "remote-comparison-failed", message: message9, remediation: "Review and resolve the reported regression." })));
   return reasons;
 }
 
@@ -19921,8 +19923,8 @@ function result(verdict, reasons, scanIds, extras = {}) {
 var GateRegistrationError = class extends Error {
   code;
   gateId;
-  constructor(code, message7, gateId) {
-    super(message7);
+  constructor(code, message9, gateId) {
+    super(message9);
     this.name = "GateRegistrationError";
     this.code = code;
     this.gateId = gateId;
@@ -20131,8 +20133,8 @@ async function verify(options, dependencies = {}) {
   } catch (error62) {
     return { exitCode: EXIT_CODES.remoteUnavailable, verdict: "unavailable", preflightReason: errorMessage3(error62) };
   }
-  const now = dependencies.now ?? (() => /* @__PURE__ */ new Date());
-  const startedAt = now().toISOString();
+  const now2 = dependencies.now ?? (() => /* @__PURE__ */ new Date());
+  const startedAt = now2().toISOString();
   const registry2 = dependencies.registry ?? new GateRegistry();
   const context = { config: options.config, resolvedShas, ports: dependencies.ports ?? {} };
   const entries = [];
@@ -20163,7 +20165,7 @@ async function verify(options, dependencies = {}) {
     skippedGates,
     verdict: aggregate.verdict,
     startedAt,
-    completedAt: now().toISOString()
+    completedAt: now2().toISOString()
   });
   try {
     const written = await writeVerificationReceipt(options.cwd, receipt, dependencies.receiptFileSystem);
@@ -20336,7 +20338,7 @@ async function selectCredentialStore(options = {}) {
   };
 }
 function spawnWithInput(command, args, input2) {
-  return new Promise((resolve10, reject) => {
+  return new Promise((resolve14, reject) => {
     const child = spawn(command, args, { stdio: ["pipe", "ignore", "pipe"] });
     let stderr = "";
     child.stderr.on("data", (chunk) => {
@@ -20345,7 +20347,7 @@ function spawnWithInput(command, args, input2) {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {
-        resolve10();
+        resolve14();
       } else {
         reject(new Error(`${command} exited ${String(code)}: ${stderr.trim()}`));
       }
@@ -20460,6 +20462,14 @@ var guardsStateSchema = external_exports.object({
   appliedAt: external_exports.iso.datetime(),
   files: external_exports.array(external_exports.string())
 }).strict();
+var feedbackReportRecordSchema = external_exports.object({
+  stage: external_exports.enum(["init", "discovery", "adopt", "guards", "check", "verify", "other"]),
+  pluginVersion: external_exports.string().min(1),
+  submittedAt: external_exports.iso.datetime(),
+  id: external_exports.string().optional(),
+  pendingPath: external_exports.string().optional(),
+  policyHash: external_exports.string().optional()
+}).strict();
 var shoreStateSchema = external_exports.object({
   schemaVersion: external_exports.literal(STATE_SCHEMA_VERSION),
   updatedAt: external_exports.iso.datetime(),
@@ -20467,7 +20477,8 @@ var shoreStateSchema = external_exports.object({
   fingerprint: repositoryFingerprintSchema,
   run: runRecordSchema,
   submittedBlueprints: external_exports.array(submittedBlueprintSchema).optional(),
-  guards: guardsStateSchema.optional()
+  guards: guardsStateSchema.optional(),
+  reports: external_exports.array(feedbackReportRecordSchema).optional()
 }).strict();
 
 // ../core/src/state/store.ts
@@ -20870,9 +20881,114 @@ async function detectPackageManager(root, fs19, pkg) {
 
 // src/router.ts
 import { realpathSync } from "node:fs";
-import { readFile as readFile22 } from "node:fs/promises";
+import { readFile as readFile24 } from "node:fs/promises";
 import { homedir as homedir2, hostname as hostname3 } from "node:os";
-import { dirname as dirname7 } from "node:path";
+import { dirname as dirname11 } from "node:path";
+
+// ../api-client/src/architecture.ts
+var shaSchema2 = external_exports.string().regex(/^[0-9a-f]{40}$/);
+var nonemptyStringArraySchema = external_exports.array(external_exports.string().min(1)).min(1);
+var draftArchitectureProposalInputSchema = external_exports.object({
+  repoConnectionId: external_exports.uuid(),
+  commitSha: shaSchema2,
+  codebaseId: external_exports.uuid().optional()
+}).strict();
+var draftArchitectureProposalResponseSchema = external_exports.object({
+  draftId: external_exports.uuid().nullable(),
+  draftHash: external_exports.string(),
+  draftVersion: external_exports.literal(1),
+  profileVersion: external_exports.number().int().nonnegative(),
+  commitSha: shaSchema2,
+  scanRunId: external_exports.uuid(),
+  codebaseId: external_exports.uuid(),
+  proposal: external_exports.unknown(),
+  builtAt: external_exports.iso.datetime({ offset: true })
+}).strict();
+var architectureFactsSchema = external_exports.object({
+  appKind: external_exports.enum(["client", "server", "fullstack", "cli", "plugin", "library", "unknown"]),
+  frameworksAndTools: nonemptyStringArraySchema,
+  languages: nonemptyStringArraySchema,
+  repoShape: external_exports.enum(["single", "monorepo", "unknown"])
+}).strict();
+var recommendArchitecturePresetsInputSchema = external_exports.object({ facts: architectureFactsSchema }).strict();
+var recommendationCandidateSchema = external_exports.object({
+  presetId: external_exports.enum([
+    "nodeApiPreset",
+    "reactNextVercelWebappPreset",
+    "supabaseApiPreset",
+    "supabaseNodeRagPreset",
+    "viteClientSideWebappPreset"
+  ]),
+  policyPackId: external_exports.string().min(1),
+  name: external_exports.string().min(1),
+  score: external_exports.number().int().min(0).max(100),
+  fitReasons: external_exports.array(external_exports.string().min(1)),
+  avoidReasons: external_exports.array(external_exports.string().min(1)),
+  overview: external_exports.string().min(1),
+  whenToAvoid: external_exports.string().min(1),
+  layers: external_exports.string().min(1)
+}).strict();
+var recommendArchitecturePresetsResponseSchema = external_exports.object({
+  candidates: external_exports.array(recommendationCandidateSchema).length(5),
+  interviewRequired: external_exports.boolean(),
+  recommendationVersion: external_exports.literal(1)
+}).strict();
+var interviewAnswerSchema = external_exports.object({
+  value: external_exports.string().min(1),
+  source: external_exports.enum(["inferred", "asked"]),
+  evidence: external_exports.array(external_exports.string().min(1))
+}).strict();
+var assembleArchitectureBlueprintInputSchema = external_exports.object({
+  interview: external_exports.object({
+    languages: interviewAnswerSchema,
+    frameworksAndTools: interviewAnswerSchema,
+    repoShape: interviewAnswerSchema,
+    appKind: interviewAnswerSchema,
+    lintSystem: interviewAnswerSchema,
+    testFramework: interviewAnswerSchema
+  }).strict(),
+  slug: external_exports.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  projectName: external_exports.string().min(1)
+}).strict();
+var moduleNameSchema = external_exports.string().min(1).max(128).regex(/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/);
+var ruleSchema = external_exports.object({
+  ruleId: moduleNameSchema,
+  kind: external_exports.string().min(1).max(128).regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/),
+  scope: external_exports.object({ paths: nonemptyStringArraySchema.optional(), modules: external_exports.array(moduleNameSchema).min(1).optional() }).strict(),
+  severity: external_exports.enum(["info", "warning", "error"]),
+  diagnostic: external_exports.string().min(1).max(2e3),
+  remediation: external_exports.string().min(1).max(2e3),
+  adoptionStage: external_exports.enum(["observe", "warn", "enforce"])
+}).strict();
+var blueprintSchema = external_exports.object({
+  version: external_exports.literal(1),
+  metadata: external_exports.object({
+    id: moduleNameSchema,
+    name: external_exports.string().min(1).max(2e3),
+    description: external_exports.string().min(1).max(2e3),
+    revision: external_exports.string().min(1).max(128).regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/)
+  }).strict(),
+  modules: external_exports.object({
+    pathMappings: external_exports.record(external_exports.string(), nonemptyStringArraySchema),
+    allowedEdges: external_exports.array(external_exports.object({ from: moduleNameSchema, to: moduleNameSchema }).strict()),
+    forbiddenEdges: external_exports.array(external_exports.object({ from: moduleNameSchema, to: moduleNameSchema }).strict())
+  }).strict(),
+  rules: external_exports.array(ruleSchema)
+}).strict();
+var assembleArchitectureBlueprintResponseSchema = external_exports.object({
+  blueprintId: external_exports.string(),
+  blueprint: blueprintSchema,
+  proposal: external_exports.unknown(),
+  strength: external_exports.object({ strong: external_exports.boolean(), reasons: external_exports.array(external_exports.string()) }).strict(),
+  assemblyVersion: external_exports.literal(1)
+}).strict();
+var profileStaleIssuesSchema = external_exports.object({
+  storedCommitHash: external_exports.string().nullable(),
+  requestedCommitSha: shaSchema2
+}).loose();
+var codebaseRequiredIssuesSchema = external_exports.object({
+  codebases: external_exports.array(external_exports.object({ codebaseId: external_exports.uuid(), rootPath: external_exports.string(), displayName: external_exports.string() }).strict())
+}).loose();
 
 // ../api-client/src/compare.ts
 var severitySchema = external_exports.enum(["blocker", "critical", "high", "medium", "low", "info"]);
@@ -20934,8 +21050,8 @@ var deviceLoginPollResponseSchema = external_exports.discriminatedUnion("status"
 var ShoreApiError = class extends Error {
   status;
   code;
-  constructor(message7, options = {}) {
-    super(message7, options.cause === void 0 ? void 0 : { cause: options.cause });
+  constructor(message9, options = {}) {
+    super(message9, options.cause === void 0 ? void 0 : { cause: options.cause });
     this.name = new.target.name;
     if (options.status !== void 0) this.status = options.status;
     if (options.code !== void 0) this.code = options.code;
@@ -20952,14 +21068,14 @@ var ShoreApiError = class extends Error {
 };
 var AuthError = class extends ShoreApiError {
   kind = "auth";
-  constructor(message7 = "Authentication failed.", options = {}) {
-    super(message7, options);
+  constructor(message9 = "Authentication failed.", options = {}) {
+    super(message9, options);
   }
 };
 var UnavailableError = class extends ShoreApiError {
   kind = "unavailable";
-  constructor(message7 = "Shore API is unavailable.", options = {}) {
-    super(message7, options);
+  constructor(message9 = "Shore API is unavailable.", options = {}) {
+    super(message9, options);
   }
 };
 var DeviceLoginUnavailableError = class extends UnavailableError {
@@ -20969,10 +21085,25 @@ var DeviceLoginUnavailableError = class extends UnavailableError {
 };
 var QuotaError = class extends ShoreApiError {
   kind = "quota";
-  constructor(message7 = "Shore API allowance is exhausted.", options = {}) {
-    super(message7, options);
+  constructor(message9 = "Shore API allowance is exhausted.", options = {}) {
+    super(message9, options);
   }
 };
+function apiErrorExitCode(error62) {
+  switch (error62.kind) {
+    case "auth":
+      return EXIT_CODES.auth;
+    case "unavailable":
+      return EXIT_CODES.remoteUnavailable;
+    case "quota":
+      return EXIT_CODES.quota;
+    default:
+      return assertNever2(error62);
+  }
+}
+function assertNever2(value) {
+  throw new Error(`Unreachable API error kind: ${String(value)}`);
+}
 
 // ../api-client/src/envelope.ts
 var errorEnvelopeSchema = external_exports.object({
@@ -21003,6 +21134,36 @@ async function parseJson(response) {
     });
   }
 }
+
+// ../api-client/src/feedback.ts
+var guardFeedbackReportSchema = external_exports.object({
+  stage: external_exports.enum(["init", "discovery", "adopt", "guards", "check", "verify", "other"]),
+  pluginVersion: external_exports.string().min(1),
+  cliVersion: external_exports.string().min(1),
+  repoConnectionId: external_exports.uuid().optional(),
+  blueprintId: external_exports.string().optional(),
+  toolchain: external_exports.object({
+    languages: external_exports.array(external_exports.string()),
+    frameworks: external_exports.array(external_exports.string()),
+    packageManager: external_exports.string().optional(),
+    repoShape: external_exports.enum(["single", "monorepo"]).optional(),
+    lint: external_exports.string().optional(),
+    test: external_exports.string().optional()
+  }).strict(),
+  outcome: external_exports.enum(["success", "partial", "failed"]),
+  items: external_exports.array(external_exports.object({
+    kind: external_exports.enum(["issue", "gap", "manual-intervention", "unsupported", "suggestion"]),
+    summary: external_exports.string().max(200),
+    detail: external_exports.string().max(4e3),
+    evidence: external_exports.array(external_exports.string().max(500)).max(10).optional()
+  }).strict()).min(1).max(50),
+  agent: external_exports.object({ name: external_exports.string(), model: external_exports.string().optional() }).strict().optional(),
+  durationMs: external_exports.number().int().optional()
+}).strict();
+var guardFeedbackReportResultSchema = external_exports.object({
+  id: external_exports.uuid(),
+  receivedAt: external_exports.string()
+}).strict();
 
 // ../api-client/src/repos.ts
 var paginationSchema = external_exports.object({
@@ -21056,7 +21217,7 @@ var DEFAULT_RETRY_POLICY = {
 };
 var DEFAULT_RETRY_RUNTIME = {
   now: Date.now,
-  sleep: (milliseconds) => new Promise((resolve10) => setTimeout(resolve10, milliseconds)),
+  sleep: (milliseconds) => new Promise((resolve14) => setTimeout(resolve14, milliseconds)),
   random: Math.random
 };
 function parseRetryAfter(value, nowMs, ceilingMs) {
@@ -21125,6 +21286,15 @@ var usageSchema = external_exports.object({
 }).strict();
 
 // ../api-client/src/client.ts
+var PreservedResponseError = class extends Error {
+  constructor(classified, envelope) {
+    super(classified.message, { cause: classified });
+    this.classified = classified;
+    this.envelope = envelope;
+  }
+  classified;
+  envelope;
+};
 function createApiClient(options) {
   const baseUrl = options.baseUrl.replace(/\/$/, "");
   async function request2(method, path2, schema, body, requestOptions = {}) {
@@ -21153,8 +21323,8 @@ function createApiClient(options) {
           signal: controller.signal
         });
       } catch (cause) {
-        const message7 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
-        throw retryable(message7, void 0, new UnavailableError(message7, {
+        const message9 = controller.signal.aborted ? "Shore API request timed out." : "Could not reach the Shore API.";
+        throw retryable(message9, void 0, new UnavailableError(message9, {
           code: controller.signal.aborted ? "timeout" : "network_error",
           cause
         }));
@@ -21176,6 +21346,7 @@ function createApiClient(options) {
         const bodyHint = serverRetryHintMs(envelope);
         throw retryable(classified.message, headerHint ?? bodyHint, classified);
       }
+      if (requestOptions.preserveError === true) throw new PreservedResponseError(classified, envelope);
       throw classified;
     }, {
       policy,
@@ -21196,6 +21367,22 @@ function createApiClient(options) {
       throw error62;
     }
   }
+  async function draftArchitectureProposal(input2) {
+    const { repoConnectionId, commitSha, codebaseId } = input2;
+    const requestedCommitSha = commitSha.toLowerCase();
+    try {
+      const response = await request2(
+        "POST",
+        `/repos/${encodeURIComponent(repoConnectionId)}/architecture/proposals`,
+        draftArchitectureProposalResponseSchema,
+        { commitSha: requestedCommitSha, ...codebaseId === void 0 ? {} : { codebaseId } },
+        { preserveError: true }
+      );
+      return { status: "ok", ...response };
+    } catch (error62) {
+      return mapDraftArchitectureError(error62, requestedCommitSha);
+    }
+  }
   return {
     startDeviceLogin: (input2) => request2("POST", "/auth/device", deviceLoginStartResponseSchema, input2, { unauthenticated: true }),
     pollDeviceLogin: (deviceCode) => request2(
@@ -21207,12 +21394,35 @@ function createApiClient(options) {
     ),
     listRepos: (params = {}) => request2("GET", withQuery("/repos", params), listReposResponseSchema),
     triggerScan: (input2) => request2("POST", "/scans", triggerScanResponseSchema, input2),
+    submitGuardFeedbackReport: (report) => request2("POST", "/guard/feedback-reports", guardFeedbackReportResultSchema, report),
     getScanRun: (id) => request2("GET", `/scan-runs/${encodeURIComponent(id)}`, scanRunResponseSchema),
     lookupExactScan,
     compare: (id, params = {}) => request2("GET", withQuery(`/repos/${encodeURIComponent(id)}/compare`, params), compareResponseSchema),
     getAccount: () => request2("GET", "/account", accountSchema),
-    getUsage: () => request2("GET", "/account/usage", usageSchema)
+    getUsage: () => request2("GET", "/account/usage", usageSchema),
+    draftArchitectureProposal,
+    recommendArchitecturePresets: (input2) => request2("POST", "/architecture/recommendations", recommendArchitecturePresetsResponseSchema, input2),
+    assembleArchitectureBlueprint: (input2) => request2("POST", "/architecture/blueprints", assembleArchitectureBlueprintResponseSchema, input2)
   };
+}
+function mapDraftArchitectureError(error62, requestedCommitSha) {
+  if (!(error62 instanceof PreservedResponseError)) throw error62;
+  const code = error62.envelope?.error;
+  if (error62.classified.status === 404 && code === "scan_not_found_for_commit") return { status: "scan-not-found" };
+  if (error62.classified.status === 409 && code === "profile_not_available_for_commit") {
+    const parsed = profileStaleIssuesSchema.safeParse(error62.envelope?.issues);
+    if (parsed.success) return {
+      status: "profile-stale",
+      storedCommitHash: parsed.data.storedCommitHash,
+      requestedCommitSha: parsed.data.requestedCommitSha
+    };
+    return { status: "profile-stale", storedCommitHash: null, requestedCommitSha };
+  }
+  if (error62.classified.status === 400 && code === "codebase_required") {
+    const parsed = codebaseRequiredIssuesSchema.safeParse(error62.envelope?.issues);
+    if (parsed.success) return { status: "codebase-required", codebases: parsed.data.codebases };
+  }
+  throw error62.classified;
 }
 function retryAfterSeconds(value) {
   if (value === null) return 1;
@@ -21249,8 +21459,8 @@ function serverRetryHintMs(envelope) {
   const seconds = issues.retryAfterSeconds ?? issues.retryAfter;
   return typeof seconds === "number" && Number.isFinite(seconds) && seconds >= 0 ? seconds * 1e3 : void 0;
 }
-function retryable(message7, retryAfterMs, cause) {
-  return Object.assign(new Error(message7, { cause }), {
+function retryable(message9, retryAfterMs, cause) {
+  return Object.assign(new Error(message9, { cause }), {
     retryable: true,
     ...retryAfterMs === void 0 ? {} : { retryAfterMs }
   });
@@ -21318,14 +21528,20 @@ import * as fs3 from "node:fs/promises";
 import * as os from "node:os";
 import { execFile as execFile3 } from "node:child_process";
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { dirname as dirname4, join as join12, resolve as resolve2 } from "node:path";
+import { dirname as dirname4, join as join13, resolve as resolve3 } from "node:path";
 import { promisify as promisify2 } from "node:util";
 
 // ../enforcement/src/eslint/version-check.ts
 import * as fs2 from "node:fs/promises";
 import { createRequire } from "node:module";
+import { join as join12, resolve as resolve2 } from "node:path";
 var MINIMUM_VERSION = [9, 24, 0];
-var require2 = createRequire(import.meta.url);
+var EslintNotInstalledError = class extends Error {
+  constructor(repoPath, options) {
+    super(`ESLint is not installed in repository ${resolve2(repoPath)}. Install eslint@^9.24.0 as a dev dependency.`, options);
+    this.name = "EslintNotInstalledError";
+  }
+};
 var UnsupportedEslintVersionError = class extends Error {
   constructor(version2) {
     super(`ESLint ${version2} is unsupported. Upgrade to ESLint >=9.24.0: Shore Guard requires ESLint's bulk-suppressions support to baseline existing violations without weakening rules.`);
@@ -21348,23 +21564,33 @@ function assertEslintBulkSuppressionsVersion(version2) {
   }
   if (prerelease) throw new UnsupportedEslintVersionError(version2);
 }
+function resolveEslintPackageJson(repoPath) {
+  const root = resolve2(repoPath);
+  try {
+    return createRequire(join12(root, "package.json")).resolve("eslint/package.json");
+  } catch (error62) {
+    throw new EslintNotInstalledError(root, { cause: error62 });
+  }
+}
 function packageVersion(value, file2) {
   if (typeof value !== "object" || value === null || !("version" in value) || typeof value.version !== "string") {
     throw new Error(`Cannot read an ESLint version from ${file2}.`);
   }
   return value.version;
 }
-async function checkEslintInstallation(packageJsonPath = require2.resolve("eslint/package.json")) {
-  const source = await fs2.readFile(packageJsonPath, "utf8");
+async function checkEslintInstallation(packageJsonPath, repoPath) {
+  if (packageJsonPath === void 0 && repoPath === void 0) throw new EslintNotInstalledError(".");
+  const resolvedPackageJsonPath = packageJsonPath ?? resolveEslintPackageJson(repoPath ?? ".");
+  const source = await fs2.readFile(resolvedPackageJsonPath, "utf8");
   let parsed;
   try {
     parsed = JSON.parse(source);
   } catch (error62) {
-    throw new Error(`Cannot parse ESLint package metadata at ${packageJsonPath}.`, { cause: error62 });
+    throw new Error(`Cannot parse ESLint package metadata at ${resolvedPackageJsonPath}.`, { cause: error62 });
   }
-  const version2 = packageVersion(parsed, packageJsonPath);
+  const version2 = packageVersion(parsed, resolvedPackageJsonPath);
   assertEslintBulkSuppressionsVersion(version2);
-  return { version: version2, packageJsonPath };
+  return { version: version2, packageJsonPath: resolvedPackageJsonPath };
 }
 
 // ../enforcement/src/eslint/baseline.ts
@@ -21379,18 +21605,18 @@ async function sameContents(path2, source) {
   }
 }
 async function generateEslintBaseline(options) {
-  const installation = await checkEslintInstallation(options.eslintPackageJsonPath);
-  const eslintBin = join12(dirname4(installation.packageJsonPath), "bin/eslint.js");
-  const outputPath = resolve2(options.repoPath, options.suppressionsPath ?? DEFAULT_SUPPRESSIONS_FILE);
+  const installation = await checkEslintInstallation(options.eslintPackageJsonPath, options.repoPath);
+  const eslintBin = join13(dirname4(installation.packageJsonPath), "bin/eslint.js");
+  const outputPath = resolve3(options.repoPath, options.suppressionsPath ?? DEFAULT_SUPPRESSIONS_FILE);
   const publishPath = `${outputPath}.shore-tmp-${String(process.pid)}-${randomUUID2()}`;
-  const temporaryDirectory = await fs3.mkdtemp(join12(os.tmpdir(), "shore-eslint-baseline-"));
-  const temporaryBaseline = join12(temporaryDirectory, DEFAULT_SUPPRESSIONS_FILE);
+  const temporaryDirectory = await fs3.mkdtemp(join13(os.tmpdir(), "shore-eslint-baseline-"));
+  const temporaryBaseline = join13(temporaryDirectory, DEFAULT_SUPPRESSIONS_FILE);
   try {
     await runFile(process.execPath, [
       eslintBin,
       "--suppress-all",
       "--config",
-      resolve2(options.repoPath, options.configPath),
+      resolve3(options.repoPath, options.configPath),
       "--suppressions-location",
       temporaryBaseline,
       ...options.targets ?? ["."]
@@ -21474,26 +21700,50 @@ async function checkSuppressionBaselineFiles(committedPath, currentPath) {
     const current = parseSuppressionBaseline(await fs4.readFile(currentPath, "utf8"), currentPath);
     return compareSuppressionBaselines(committed, current);
   } catch (error62) {
-    const message7 = error62 instanceof Error ? error62.message : String(error62);
-    const file2 = message7.includes(currentPath) ? currentPath : committedPath;
-    return { ok: false, status: "parse-error", file: file2, message: message7 };
+    const message9 = error62 instanceof Error ? error62.message : String(error62);
+    const file2 = message9.includes(currentPath) ? currentPath : committedPath;
+    return { ok: false, status: "parse-error", file: file2, message: message9 };
   }
 }
 
 // ../enforcement/src/depcruise/baseline.ts
 import * as fs5 from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
 import { spawn as spawn2 } from "node:child_process";
-import { isAbsolute, relative as relative2, resolve as resolve3, sep as sep2 } from "node:path";
+import { createRequire as createRequire2 } from "node:module";
+import { dirname as dirname5, isAbsolute, join as join14, relative as relative2, resolve as resolve4, sep as sep2 } from "node:path";
 var DEPCRUISE_BASELINE_NAME = ".dependency-cruiser-known-violations.json";
 var DepcruiseConfigurationError = class extends Error {
-  constructor(message7) {
-    super(message7);
+  constructor(message9, options) {
+    super(message9, options);
     this.name = "DepcruiseConfigurationError";
   }
 };
+function locateDepcruisePackageJson(root) {
+  const lookupPaths = createRequire2(join14(root, "package.json")).resolve.paths("dependency-cruiser") ?? [];
+  for (const directory of lookupPaths) {
+    const owner = dirname5(directory);
+    if (root !== owner && !root.startsWith(owner.endsWith(sep2) ? owner : `${owner}${sep2}`)) continue;
+    const candidate = join14(directory, "dependency-cruiser", "package.json");
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error("dependency-cruiser was not found in any node_modules directory of the repository");
+}
+function resolveDepcruiseBinary(repoPath) {
+  const root = resolve4(repoPath);
+  try {
+    const packageJsonPath = locateDepcruisePackageJson(root);
+    const parsed = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+    const bin = typeof parsed.bin === "string" ? parsed.bin : parsed.bin?.depcruise ?? parsed.bin?.["dependency-cruise"];
+    if (bin === void 0) throw new Error("package metadata has no depcruise binary");
+    return { command: process.execPath, prefixArgs: [resolve4(dirname5(packageJsonPath), bin)] };
+  } catch (error62) {
+    throw new DepcruiseConfigurationError(`dependency-cruiser is not installed or configured in repository ${root}. Install dependency-cruiser as a dev dependency.`, { cause: error62 });
+  }
+}
 function repoRelative(repoPath, path2) {
-  const root = resolve3(repoPath);
-  const target = resolve3(root, path2);
+  const root = resolve4(repoPath);
+  const target = resolve4(root, path2);
   const fromRoot = relative2(root, target);
   if (isAbsolute(path2) || fromRoot === ".." || fromRoot.startsWith(`..${sep2}`) || isAbsolute(fromRoot)) {
     throw new DepcruiseConfigurationError(`dependency-cruiser path must stay within the repository: ${path2}`);
@@ -21501,16 +21751,17 @@ function repoRelative(repoPath, path2) {
   return fromRoot === "" ? "." : fromRoot.replaceAll("\\", "/");
 }
 function commandSettings(options) {
+  const invocation = options.binary === void 0 ? resolveDepcruiseBinary(options.repoPath) : { command: options.binary, prefixArgs: [] };
   return {
-    binary: options.binary ?? "depcruise",
+    ...invocation,
     config: repoRelative(options.repoPath, options.configPath ?? ".dependency-cruiser.shore.mjs"),
     baseline: repoRelative(options.repoPath, options.baselinePath ?? DEPCRUISE_BASELINE_NAME),
     sources: (options.sourcePaths ?? ["."]).map((item) => repoRelative(options.repoPath, item))
   };
 }
-async function run(repoPath, binary, args) {
+async function run(repoPath, command, prefixArgs, args) {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn2(binary, args, { cwd: repoPath, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn2(command, [...prefixArgs, ...args], { cwd: repoPath, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     child.stdout.setEncoding("utf8");
@@ -21522,7 +21773,7 @@ async function run(repoPath, binary, args) {
       stderr += chunk;
     });
     child.once("error", (error62) => {
-      reject(new DepcruiseConfigurationError(`could not start dependency-cruiser (${binary}): ${error62.message}`));
+      reject(new DepcruiseConfigurationError(`could not start dependency-cruiser (${command}): ${error62.message}`));
     });
     child.once("close", (code) => {
       resolvePromise({ exitCode: code ?? 1, stdout, stderr, args });
@@ -21570,7 +21821,7 @@ function stripJsonComments(source) {
   return out;
 }
 async function aliasPatterns(repoPath, fileName = "tsconfig.json", seen = /* @__PURE__ */ new Set()) {
-  const full = resolve3(repoPath, fileName);
+  const full = resolve4(repoPath, fileName);
   if (seen.has(full)) return [];
   seen.add(full);
   let parsed;
@@ -21582,7 +21833,7 @@ async function aliasPatterns(repoPath, fileName = "tsconfig.json", seen = /* @__
     }
     throw new DepcruiseConfigurationError(`cannot read TypeScript configuration ${fileName}: ${error62 instanceof Error ? error62.message : String(error62)}`);
   }
-  const inherited = parsed.extends === void 0 || !parsed.extends.startsWith(".") ? [] : await aliasPatterns(repoPath, resolve3(relative2(repoPath, resolve3(full, "..")), parsed.extends.endsWith(".json") ? parsed.extends : `${parsed.extends}.json`), seen);
+  const inherited = parsed.extends === void 0 || !parsed.extends.startsWith(".") ? [] : await aliasPatterns(repoPath, resolve4(relative2(repoPath, resolve4(full, "..")), parsed.extends.endsWith(".json") ? parsed.extends : `${parsed.extends}.json`), seen);
   return [...inherited, ...Object.keys(parsed.compilerOptions?.paths ?? {})];
 }
 function isRecord2(value) {
@@ -21596,7 +21847,7 @@ async function assertAliasesResolved(options, settings) {
   const aliases = await aliasPatterns(options.repoPath);
   if (aliases.length === 0) return;
   const auditArgs = ["--config", settings.config, "--no-ignore-known", "--output-type", "json", ...settings.sources];
-  const audit = await run(options.repoPath, settings.binary, auditArgs);
+  const audit = await run(options.repoPath, settings.command, settings.prefixArgs, auditArgs);
   let output2;
   try {
     output2 = JSON.parse(audit.stdout);
@@ -21618,14 +21869,14 @@ async function generateKnownViolations(options) {
   const settings = commandSettings(options);
   await assertAliasesResolved(options, settings);
   const args = ["--config", settings.config, "--no-ignore-known", "--baseline", settings.baseline, "--baseline-mode", options.baselineMode ?? "full", ...settings.sources];
-  const result3 = await run(options.repoPath, settings.binary, args);
+  const result3 = await run(options.repoPath, settings.command, settings.prefixArgs, args);
   if (result3.exitCode !== 0) throw new DepcruiseConfigurationError(`dependency-cruiser baseline generation failed: ${result3.stderr.trim() || result3.stdout.trim() || `exit ${String(result3.exitCode)}`}`);
   return result3;
 }
 async function runDepcruiseEnforcement(options) {
   const settings = commandSettings(options);
   await assertAliasesResolved(options, settings);
-  return run(options.repoPath, settings.binary, ["--config", settings.config, "--ignore-known", settings.baseline, "--output-type", "err-long", ...settings.sources]);
+  return run(options.repoPath, settings.command, settings.prefixArgs, ["--config", settings.config, "--ignore-known", settings.baseline, "--output-type", "err-long", ...settings.sources]);
 }
 
 // ../enforcement/src/depcruise/shrink-check.ts
@@ -21673,12 +21924,12 @@ async function checkKnownViolationsFiles(baselinePath, currentPath) {
 
 // ../enforcement/src/gates/chain.ts
 import * as fs8 from "node:fs/promises";
-import { join as join14 } from "node:path";
+import { join as join16 } from "node:path";
 
 // ../enforcement/src/gates/process.ts
 import { spawn as spawn3 } from "node:child_process";
 async function runCommand(binary, args, cwd, input2) {
-  return new Promise((resolve10, reject) => {
+  return new Promise((resolve14, reject) => {
     const child = spawn3(binary, args, { cwd, stdio: [input2 === void 0 ? "ignore" : "pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
@@ -21699,7 +21950,7 @@ async function runCommand(binary, args, cwd, input2) {
     });
     child.once("error", reject);
     child.once("close", (code) => {
-      resolve10({ exitCode: code ?? 1, stdout, stderr });
+      resolve14({ exitCode: code ?? 1, stdout, stderr });
     });
     if (input2 !== void 0) {
       if (standardInput === null) {
@@ -21713,7 +21964,7 @@ async function runCommand(binary, args, cwd, input2) {
 
 // ../enforcement/src/gates/policy.ts
 import * as fs7 from "node:fs/promises";
-import { join as join13 } from "node:path";
+import { join as join15 } from "node:path";
 
 // ../policy/src/hash.ts
 import { createHash as createHash2 } from "node:crypto";
@@ -22275,8 +22526,8 @@ var viteClientSideWebappPreset = {
 var PROPOSAL_VERSION = 1;
 
 // ../policy/src/proposal-validate.ts
-import { existsSync } from "node:fs";
-import { resolve as resolve4 } from "node:path";
+import { existsSync as existsSync2 } from "node:fs";
+import { resolve as resolve5 } from "node:path";
 var text2 = external_exports.string().trim().min(1);
 var path = text2.refine((value) => !value.includes("\0") && !value.includes("\n") && !value.includes("\r"), "must be a concrete path");
 var evidenceSchema2 = external_exports.discriminatedUnion("kind", [
@@ -22352,7 +22603,7 @@ function validateProposal(input2, options = {}) {
   if (parsed.success && options.root !== void 0 && options.checkEvidencePaths !== false) {
     const root = options.root;
     visitEvidence(parsed.data, (evidence, evidencePath) => {
-      for (const cited of citedPaths(evidence)) if (!existsSync(resolve4(root, cited))) issues.push({ path: evidencePath, message: `cites non-existent path "${cited}"` });
+      for (const cited of citedPaths(evidence)) if (!existsSync2(resolve5(root, cited))) issues.push({ path: evidencePath, message: `cites non-existent path "${cited}"` });
     });
   }
   if (!parsed.success || issues.length > 0) throw new ProposalValidationError(issues);
@@ -22499,7 +22750,7 @@ function record2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 async function loadActivePack(repoPath) {
-  const candidates = [join13(repoPath, ".shore/policy.json"), join13(repoPath, ".shore/guard.json")];
+  const candidates = [join15(repoPath, ".shore/policy.json"), join15(repoPath, ".shore/guard.json")];
   for (const file2 of candidates) {
     let value;
     try {
@@ -22548,8 +22799,8 @@ async function runPolicyChain(options) {
     }
   }
   if (options.runTsc === true) {
-    if (!await exists(join14(options.repoPath, "tsconfig.json"))) return { ok: false, tool: "tsc", exitCode: 2, message: "tsc is required by policy, but tsconfig.json is missing. Add a TypeScript configuration or disable the policy requirement explicitly." };
-    const binary = options.tscBinary ?? join14(options.repoPath, "node_modules/.bin/tsc");
+    if (!await exists(join16(options.repoPath, "tsconfig.json"))) return { ok: false, tool: "tsc", exitCode: 2, message: "tsc is required by policy, but tsconfig.json is missing. Add a TypeScript configuration or disable the policy requirement explicitly." };
+    const binary = options.tscBinary ?? join16(options.repoPath, "node_modules/.bin/tsc");
     let result3;
     try {
       result3 = await runCommand(binary, ["--noEmit", "-p", "tsconfig.json"], options.repoPath);
@@ -22564,13 +22815,13 @@ async function runPolicyChain(options) {
 
 // ../enforcement/src/gates/commit-gate.ts
 import * as fs11 from "node:fs/promises";
-import { basename, join as join17 } from "node:path";
+import { basename, join as join19 } from "node:path";
 import { pathToFileURL } from "node:url";
 
 // ../enforcement/src/gates/eslint-runner.ts
 import * as fs9 from "node:fs/promises";
 import * as os2 from "node:os";
-import { join as join15, resolve as resolve5 } from "node:path";
+import { join as join17, resolve as resolve6 } from "node:path";
 async function executable(path2) {
   try {
     await fs9.access(path2, fs9.constants.X_OK);
@@ -22582,8 +22833,8 @@ async function executable(path2) {
 async function runWithSuppressions(options, suppressions) {
   const config2 = options.configPath ?? "eslint.config.shore.mjs";
   const args = ["--max-warnings=0", "--config", config2, "--suppressions-location", suppressions, ...options.files];
-  const daemon = options.eslintDBinary ?? join15(options.repoPath, "node_modules/.bin/eslint_d");
-  const plain = options.eslintBinary ?? join15(options.repoPath, "node_modules/.bin/eslint");
+  const daemon = options.eslintDBinary ?? join17(options.repoPath, "node_modules/.bin/eslint_d");
+  const plain = options.eslintBinary ?? join17(options.repoPath, "node_modules/.bin/eslint");
   if (await executable(daemon)) {
     try {
       const result4 = await runCommand(daemon, args, options.repoPath);
@@ -22601,9 +22852,9 @@ ${result4.stderr}`);
 async function runEslint(options) {
   const suppressions = options.suppressionsPath ?? "eslint-suppressions.json";
   if (options.enforceTouched !== true) return runWithSuppressions(options, suppressions);
-  const sourcePath = resolve5(options.repoPath, suppressions);
-  const temporaryDirectory = await fs9.mkdtemp(join15(os2.tmpdir(), "shore-edit-suppressions-"));
-  const temporaryPath = join15(temporaryDirectory, "eslint-suppressions.json");
+  const sourcePath = resolve6(options.repoPath, suppressions);
+  const temporaryDirectory = await fs9.mkdtemp(join17(os2.tmpdir(), "shore-edit-suppressions-"));
+  const temporaryPath = join17(temporaryDirectory, "eslint-suppressions.json");
   try {
     const value = JSON.parse(await fs9.readFile(sourcePath, "utf8"));
     if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`Malformed ESLint suppressions file ${sourcePath}: expected an object.`);
@@ -22626,7 +22877,7 @@ async function assertGateBaselines(repoPath, requireDepcruise) {
   const required2 = ["eslint-suppressions.json", ...requireDepcruise ? [".dependency-cruiser-known-violations.json"] : []];
   for (const file2 of required2) {
     try {
-      await fs9.access(resolve5(repoPath, file2));
+      await fs9.access(resolve6(repoPath, file2));
     } catch {
       throw new Error(`Missing committed baseline ${file2}. Run Shore Guard install before using the gate.`);
     }
@@ -22635,11 +22886,11 @@ async function assertGateBaselines(repoPath, requireDepcruise) {
 
 // ../enforcement/src/gates/paths.ts
 import * as fs10 from "node:fs/promises";
-import { isAbsolute as isAbsolute2, relative as relative3, resolve as resolve6, sep as sep3 } from "node:path";
+import { isAbsolute as isAbsolute2, relative as relative3, resolve as resolve7, sep as sep3 } from "node:path";
 var SOURCE_EXTENSION = /\.(?:[cm]?[jt]sx?)$/u;
 function confinedRelativePath(repoPath, candidate) {
-  const root = resolve6(repoPath);
-  const target = resolve6(root, candidate);
+  const root = resolve7(repoPath);
+  const target = resolve7(root, candidate);
   const fromRoot = relative3(root, target);
   if (fromRoot === ".." || fromRoot.startsWith(`..${sep3}`) || isAbsolute2(fromRoot) && target !== root) {
     throw new Error(`Changed file is outside the repository root and was rejected: ${candidate}`);
@@ -22656,7 +22907,7 @@ async function existingSourcePaths(repoPath, paths) {
       continue;
     }
     try {
-      const stat2 = await fs10.stat(resolve6(repoPath, relativePath));
+      const stat2 = await fs10.stat(resolve7(repoPath, relativePath));
       if (!stat2.isFile()) skipped2.push(`${relativePath}: no longer a regular file (deleted or renamed)`);
       else files.push(relativePath);
     } catch (error62) {
@@ -22668,12 +22919,12 @@ async function existingSourcePaths(repoPath, paths) {
 }
 
 // ../enforcement/src/gates/growth-check.ts
-import { join as join16 } from "node:path";
+import { join as join18 } from "node:path";
 async function checkBaselineGrowth(options) {
   const messages = [];
   let ok = true;
   let shrunk = false;
-  const eslint = await checkSuppressionBaselineFiles(join16(options.repoPath, "eslint-suppressions.json"), options.currentSuppressionsPath);
+  const eslint = await checkSuppressionBaselineFiles(join18(options.repoPath, "eslint-suppressions.json"), options.currentSuppressionsPath);
   if (!eslint.ok) {
     ok = false;
     messages.push(eslint.status === "grown" ? `ESLint suppression growth: ${eslint.growth.map((item) => `${item.file}/${item.ruleId} ${String(item.baselineCount)}\u2192${String(item.currentCount)}`).join(", ")}. Fix the violations or run an approved re-baseline.` : eslint.message);
@@ -22682,7 +22933,7 @@ async function checkBaselineGrowth(options) {
     messages.push("ESLint baseline can shrink; regenerate the ledger.");
   }
   if (options.currentKnownViolationsPath !== void 0) {
-    const graph = await checkKnownViolationsFiles(join16(options.repoPath, ".dependency-cruiser-known-violations.json"), options.currentKnownViolationsPath);
+    const graph = await checkKnownViolationsFiles(join18(options.repoPath, ".dependency-cruiser-known-violations.json"), options.currentKnownViolationsPath);
     if (graph.status === "growth") {
       ok = false;
       messages.push(`Dependency boundary growth: ${String(graph.entries.filter((entry2) => entry2.kind === "added").length)} new violation(s). Fix them or run an approved re-baseline.`);
@@ -22725,7 +22976,7 @@ async function runCommitGate(options) {
     if (lint.exitCode !== 0) return { exitCode: lint.exitCode, message: formatEslintFailure(lint), files: selected.files };
     let hasTsconfig = true;
     try {
-      await fs11.access(join17(options.repoPath, "tsconfig.json"));
+      await fs11.access(join19(options.repoPath, "tsconfig.json"));
     } catch {
       hasTsconfig = false;
     }
@@ -22846,25 +23097,25 @@ var commitGateRegistration = {
 function registeredGates() {
   return { gates: [editGateRegistration, commitGateRegistration] };
 }
-function fromExit(kind, exitCode3, message7, files) {
+function fromExit(kind, exitCode3, message9, files) {
   const evidence = { files };
   if (exitCode3 === 0) return { outcome: "pass", reasons: [], evidence };
   if (exitCode3 === 70) {
     return {
       outcome: "unavailable",
-      reasons: [{ code: `${kind}-gate-unavailable`, message: message7, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
+      reasons: [{ code: `${kind}-gate-unavailable`, message: message9, remediation: "Enforcement tooling was unavailable \u2014 this is NOT a pass. Restore the tooling and re-run." }],
       evidence,
       failureKind: "unavailable"
     };
   }
   return {
     outcome: "fail",
-    reasons: [{ code: `${kind}-gate-failed`, message: message7, remediation: "Fix the reported violations and re-run the gate." }],
+    reasons: [{ code: `${kind}-gate-failed`, message: message9, remediation: "Fix the reported violations and re-run the gate." }],
     evidence
   };
 }
-function skipped(code, message7, remediation) {
-  return { outcome: "skipped", reasons: [{ code, message: message7, remediation }], evidence: {} };
+function skipped(code, message9, remediation) {
+  return { outcome: "skipped", reasons: [{ code, message: message9, remediation }], evidence: {} };
 }
 
 // src/commands/doctor-dependencies.ts
@@ -22968,11 +23219,11 @@ function parseGitHubRepository(url2) {
 // src/commands/init.ts
 import { randomUUID as randomUUID3 } from "node:crypto";
 import * as fs14 from "node:fs/promises";
-import { join as join20 } from "node:path";
+import { join as join22 } from "node:path";
 
 // src/migrate/shoreguard-json.ts
 import * as fs12 from "node:fs/promises";
-import { join as join18 } from "node:path";
+import { join as join20 } from "node:path";
 var known = /* @__PURE__ */ new Set(["repo", "ref", "thresholds", "timeoutMinutes", "pollSeconds", "apiUrl"]);
 function record4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -23008,8 +23259,8 @@ function translateLegacyConfig(legacy) {
   return { config: config2, settings };
 }
 async function migrateLegacyConfig(root) {
-  const source = join18(root, ".shoreguard.json");
-  const destination = join18(root, ".shore", "guard.json");
+  const source = join20(root, ".shoreguard.json");
+  const destination = join20(root, ".shore", "guard.json");
   if (!await exists2(source)) return { status: "not-found" };
   if (await exists2(destination)) return { status: "conflict", source, destination };
   let parsed;
@@ -23020,7 +23271,7 @@ async function migrateLegacyConfig(root) {
   }
   if (!record4(parsed)) return { status: "invalid", source, reason: "expected a JSON object" };
   const translated = translateLegacyConfig(parsed);
-  await fs12.mkdir(join18(root, ".shore"), { recursive: true });
+  await fs12.mkdir(join20(root, ".shore"), { recursive: true });
   await fs12.writeFile(destination, `${JSON.stringify(translated.config, null, 2)}
 `);
   return { status: "migrated", source, destination, settings: translated.settings };
@@ -23028,8 +23279,8 @@ async function migrateLegacyConfig(root) {
 
 // src/commands/init-plan.ts
 import * as fs13 from "node:fs/promises";
-import { join as join19 } from "node:path";
-var INIT_IGNORE_LINES = [".shore/state.json", ".shore/cache/", ".shore/receipts/"];
+import { join as join21 } from "node:path";
+var INIT_IGNORE_LINES = [".shore/state.json", ".shore/cache/", ".shore/receipts/", ".shore/reports/"];
 async function buildInitPlan(root, deps) {
   const config2 = await loadGuardConfig(root);
   const auth = await deps.auth();
@@ -23066,8 +23317,20 @@ async function buildInitPlan(root, deps) {
   const commit = await buildCommitPlanStep(root, deps.git);
   const discovery = await buildDiscoveryPlanStep(root, commit);
   const guards = await buildGuardsPlanStep(root, discovery);
-  const steps = [cli, login, connection, writeConfig2, updateGitignore2, commit, discovery, guards];
+  const report = await buildReportPlanStep(root, deps.cliVersion);
+  const steps = [cli, login, connection, writeConfig2, updateGitignore2, commit, discovery, guards, report];
   return { steps, nextStep: steps.find((step) => step.status !== "done")?.id ?? null };
+}
+async function buildReportPlanStep(root, pluginVersion) {
+  const manual = "shore-guard report submit --stage init --file .shore/reports/draft-init.json";
+  const config2 = await loadGuardConfig(root);
+  if (config2.status === "ok" && config2.config.feedbackReports === "never") {
+    return { id: "report", status: "done", title: "File setup report", detail: "Reports are disabled for this repository", manual };
+  }
+  const state = await loadState(root);
+  const submitted = state.status === "ok" && state.state.reports?.some((report) => report.stage === "init" && report.pluginVersion === pluginVersion) === true;
+  if (submitted) return { id: "report", status: "done", title: "File setup report", detail: `Setup report filed for ${pluginVersion}`, manual };
+  return { id: "report", status: "pending", title: "File setup report", detail: "File setup feedback after initialization", manual, changes: [".shore/guard.json", ".shore/state.json"] };
 }
 async function buildGuardsPlanStep(root, discovery) {
   const manual = "shore-guard guards plan --json then shore-guard guards apply --choice shore";
@@ -23079,7 +23342,7 @@ async function buildGuardsPlanStep(root, discovery) {
 }
 async function currentPolicyHash(root) {
   try {
-    const lock = JSON.parse(await fs13.readFile(join19(root, ".shore", "policy.lock.json"), "utf8"));
+    const lock = JSON.parse(await fs13.readFile(join21(root, ".shore", "policy.lock.json"), "utf8"));
     return typeof lock === "object" && lock !== null && "contentHash" in lock && typeof lock.contentHash === "string" ? lock.contentHash : void 0;
   } catch (error62) {
     if (isMissing(error62) || error62 instanceof SyntaxError) return void 0;
@@ -23094,7 +23357,7 @@ async function configuredOrigin(root, git = runGit) {
 }
 async function buildDiscoveryPlanStep(root, commit) {
   const manual = "Run the discovery skill, review the proposal, then: shore-guard adopt --proposal <file> --approve";
-  const lockPath = join19(root, ".shore", "policy.lock.json");
+  const lockPath = join21(root, ".shore", "policy.lock.json");
   try {
     const lock = JSON.parse(await fs13.readFile(lockPath, "utf8"));
     const contentHash = typeof lock === "object" && lock !== null && "contentHash" in lock && typeof lock.contentHash === "string" ? lock.contentHash : "policy lock present";
@@ -23119,7 +23382,7 @@ async function buildCommitPlanStep(root, git = runGit) {
 async function findMissingIgnoreLines(root) {
   let text3 = "";
   try {
-    text3 = await fs13.readFile(join19(root, ".gitignore"), "utf8");
+    text3 = await fs13.readFile(join21(root, ".gitignore"), "utf8");
   } catch (error62) {
     if (!isMissing(error62)) throw error62;
   }
@@ -23206,16 +23469,16 @@ async function writeConfig(root, repoConnectionId) {
   if (existing.status === "ok" && existing.config.repoConnectionId !== void 0) return;
   if (existing.status === "invalid") throw new Error(`existing config is invalid: ${existing.reason}`);
   const config2 = existing.status === "ok" ? { ...existing.config, ...repoConnectionId === void 0 ? {} : { repoConnectionId } } : { schemaVersion: 1, ...repoConnectionId === void 0 ? {} : { repoConnectionId } };
-  await fs14.mkdir(join20(root, ".shore"), { recursive: true });
-  await fs14.writeFile(join20(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
+  await fs14.mkdir(join22(root, ".shore"), { recursive: true });
+  await fs14.writeFile(join22(root, ".shore", "guard.json"), JSON.stringify(config2, null, 2) + "\n");
 }
 async function replaceRepositoryConnection(root, repoConnectionId) {
   const existing = await loadGuardConfig(root);
   if (existing.status !== "ok") throw new Error("existing config is not valid");
-  await fs14.writeFile(join20(root, ".shore", "guard.json"), JSON.stringify({ ...existing.config, repoConnectionId }, null, 2) + "\n");
+  await fs14.writeFile(join22(root, ".shore", "guard.json"), JSON.stringify({ ...existing.config, repoConnectionId }, null, 2) + "\n");
 }
 async function updateGitignore(root) {
-  const path2 = join20(root, ".gitignore");
+  const path2 = join22(root, ".gitignore");
   let text3 = "";
   try {
     text3 = await fs14.readFile(path2, "utf8");
@@ -23241,8 +23504,8 @@ function summary(prefix, findings) {
   return `${prefix}
 ${findings.map((f) => `[${f.severity}] ${f.problem} Remediation: ${f.remediation}`).join("\n")}`;
 }
-function result2(exitCode3, outcome, message7) {
-  return { command: "init", outcome, exitCode: exitCode3, message: message7 };
+function result2(exitCode3, outcome, message9) {
+  return { command: "init", outcome, exitCode: exitCode3, message: message9 };
 }
 function formatStateFailure(value) {
   return value.status === "corrupt" ? `${value.reason} ${value.remediation}` : `Unsupported state schema ${String(value.version)}. ${value.remediation}`;
@@ -23261,11 +23524,11 @@ function formatPlanStep(step) {
   if (step.status === "blocked") return `\u2717 ${step.title} \u2014 ${step.reason ?? step.detail}`;
   return `\u2022 ${step.title} \u2014 ${step.detail} (manual: ${step.manual})`;
 }
-async function withCommitReminder(root, message7) {
+async function withCommitReminder(root, message9) {
   const commit = await buildCommitPlanStep(root);
   const discovery = await buildDiscoveryPlanStep(root, commit);
   const reminders = [commit.status === "pending" ? `commit .shore/guard.json and .gitignore (${commit.manual})` : void 0, discovery.status !== "done" ? "run discovery and adopt an architecture policy" : void 0].filter((value) => value !== void 0);
-  return `${message7}${reminders.length > 0 ? `
+  return `${message9}${reminders.length > 0 ? `
 Remaining: ${reminders.join("; ")}.` : ""}`;
 }
 
@@ -23339,8 +23602,8 @@ function formatUserCode(code) {
   if (code.includes("-")) return code;
   return `${code.slice(0, 4)}-${code.slice(4)}`;
 }
-function fail(exitCode3, message7) {
-  return { command: "login", outcome: "error", exitCode: exitCode3, message: message7 };
+function fail(exitCode3, message9) {
+  return { command: "login", outcome: "error", exitCode: exitCode3, message: message9 };
 }
 
 // src/commands/status.ts
@@ -23371,8 +23634,8 @@ async function runStatus(options) {
     throw error62;
   }
 }
-function fail2(exitCode3, message7) {
-  return { command: "status", outcome: "error", exitCode: exitCode3, message: message7 };
+function fail2(exitCode3, message9) {
+  return { command: "status", outcome: "error", exitCode: exitCode3, message: message9 };
 }
 
 // src/commands/verify.ts
@@ -23419,8 +23682,8 @@ function createHealthApiPort(client, repoConnectionId) {
 var SYSTEM_CLOCK = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve10) => {
-    setTimeout(resolve10, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve14) => {
+    setTimeout(resolve14, milliseconds);
   })
 };
 function humanMessage(result3) {
@@ -23458,8 +23721,8 @@ function defaultPorts(options) {
 var SYSTEM_CLOCK2 = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve10) => {
-    setTimeout(resolve10, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve14) => {
+    setTimeout(resolve14, milliseconds);
   })
 };
 function exitCode(result3) {
@@ -23474,19 +23737,309 @@ function humanMessage2(result3) {
   return [heading, ...result3.reasons.flatMap((reason) => [`- ${reason.message}`, `  Remediation: ${reason.remediation}`])].join("\n");
 }
 
+// src/commands/discover-io.ts
+import { access as access6, mkdir as mkdir6, rename as rename3, writeFile as writeFile8 } from "node:fs/promises";
+import { dirname as dirname6, resolve as resolve8 } from "node:path";
+async function writeDiscoveryProposal(root, proposal, output2, clock = { now: () => /* @__PURE__ */ new Date() }) {
+  const path2 = output2 === void 0 ? await availableDefaultPath(root, clock.now()) : resolve8(root, output2);
+  await writeAtomic(path2, `${JSON.stringify(proposal, null, 2)}
+`);
+  return output2 === void 0 ? relativeProposalPath(root, path2) : output2;
+}
+async function availableDefaultPath(root, now2) {
+  const date5 = now2.toISOString().slice(0, 10);
+  const base = resolve8(root, ".shore", "proposals", `${date5}-discovery.json`);
+  if (!await exists3(base)) return base;
+  for (let suffix = 2; ; suffix += 1) {
+    const candidate = resolve8(root, ".shore", "proposals", `${date5}-discovery-${String(suffix)}.json`);
+    if (!await exists3(candidate)) return candidate;
+  }
+}
+async function exists3(path2) {
+  try {
+    await access6(path2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function writeAtomic(path2, contents) {
+  await mkdir6(dirname6(path2), { recursive: true });
+  const temporary = `${path2}.shore-guard-tmp`;
+  await writeFile8(temporary, contents);
+  await rename3(temporary, path2);
+}
+function relativeProposalPath(root, path2) {
+  return path2.slice(resolve8(root).length + 1);
+}
+
+// src/commands/discover-verify.ts
+function verifyDiscoveryProposal(input2, root) {
+  let proposal;
+  try {
+    proposal = validateProposal(input2, { checkEvidencePaths: false });
+  } catch (error62) {
+    return invalid(error62);
+  }
+  const evidenceIssues = validateAtRoot(proposal, root);
+  if (evidenceIssues.length === 0) return { status: "ok", proposal, dropped: [] };
+  const missing = evidenceIssues.filter((issue2) => issue2.message.includes("cites non-existent path"));
+  if (missing.length !== evidenceIssues.length) return { status: "invalid", issues: evidenceIssues };
+  const modulePaths = missing.filter((issue2) => issue2.path.startsWith("modules.moduleEvidence.")).map(citedPath);
+  if (modulePaths.length > 0) return { status: "unverifiable-module", paths: [...new Set(modulePaths)] };
+  const dropped = droppedItems(proposal, missing);
+  const cleaned = dropItems(proposal, missing);
+  const remaining = validateAtRoot(cleaned, root);
+  return remaining.length === 0 ? { status: "ok", proposal: cleaned, dropped } : { status: "invalid", issues: remaining };
+}
+function validateAtRoot(proposal, root) {
+  try {
+    validateProposal(proposal, { root });
+    return [];
+  } catch (error62) {
+    return error62 instanceof ProposalValidationError ? error62.issues : [{ path: "$", message: message3(error62) }];
+  }
+}
+function invalid(error62) {
+  return { status: "invalid", issues: error62 instanceof ProposalValidationError ? error62.issues : [{ path: "$", message: message3(error62) }] };
+}
+function dropItems(proposal, issues) {
+  const allowed = indexes(issues, "modules.allowedEdges.");
+  const forbidden2 = indexes(issues, "modules.forbiddenEdges.");
+  const rules = indexes(issues, "rules.");
+  return {
+    ...proposal,
+    modules: {
+      ...proposal.modules,
+      allowedEdges: proposal.modules.allowedEdges.filter((_, index) => !allowed.has(index)),
+      forbiddenEdges: proposal.modules.forbiddenEdges.filter((_, index) => !forbidden2.has(index))
+    },
+    rules: proposal.rules.filter((_, index) => !rules.has(index))
+  };
+}
+function droppedItems(proposal, issues) {
+  const result3 = [];
+  for (const index of indexes(issues, "modules.allowedEdges.")) {
+    const edge2 = proposal.modules.allowedEdges[index];
+    if (edge2 !== void 0) result3.push({ kind: "allowed_edge", id: `${edge2.from}->${edge2.to}`, path: issuePath(issues, `modules.allowedEdges.${String(index)}.`) });
+  }
+  for (const index of indexes(issues, "modules.forbiddenEdges.")) {
+    const edge2 = proposal.modules.forbiddenEdges[index];
+    if (edge2 !== void 0) result3.push({ kind: "forbidden_edge", id: `${edge2.from}->${edge2.to}`, path: issuePath(issues, `modules.forbiddenEdges.${String(index)}.`) });
+  }
+  for (const index of indexes(issues, "rules.")) {
+    const rule2 = proposal.rules[index];
+    if (rule2 !== void 0) result3.push({ kind: "rule", id: rule2.ruleId, path: issuePath(issues, `rules.${String(index)}.`) });
+  }
+  return result3;
+}
+function indexes(issues, prefix) {
+  const values = issues.flatMap((issue2) => issue2.path.startsWith(prefix) ? [Number(issue2.path.slice(prefix.length).split(".")[0])] : []);
+  return new Set(values.filter(Number.isInteger));
+}
+function issuePath(issues, prefix) {
+  const issue2 = issues.find((candidate) => candidate.path.startsWith(prefix));
+  return issue2 === void 0 ? "" : citedPath(issue2);
+}
+function citedPath(issue2) {
+  return /cites non-existent path "([^"]+)"/u.exec(issue2.message)?.[1] ?? "";
+}
+function message3(error62) {
+  return error62 instanceof Error ? error62.message : String(error62);
+}
+
+// src/commands/discover-brownfield.ts
+var CLOCK = {
+  now: () => Date.now(),
+  random: () => Math.random(),
+  sleep: (milliseconds) => new Promise((resolve14) => {
+    setTimeout(resolve14, milliseconds);
+  })
+};
+async function runBrownfieldDiscover(options) {
+  if (options.commit !== void 0 && !/^[0-9a-f]{40}$/iu.test(options.commit)) return failure2(EXIT_CODES.config, "--commit must be a 40-character hexadecimal SHA.");
+  const repoConnectionId = options.config.repoConnectionId;
+  if (repoConnectionId === void 0) return failure2(EXIT_CODES.config, 'No repoConnectionId is configured. Run "shore-guard init" to connect this repository.');
+  const safety = await (options.dependencies?.preflight ?? preflightGit)(options.root);
+  if (safety.status === "unsafe") return failure2(EXIT_CODES.unsafeGitState, `Git state is unsafe (${safety.reason}). ${safety.remediation}`);
+  const commitSha = (options.commit ?? await (options.dependencies?.resolveHead ?? resolveHeadSha)({ cwd: options.root })).toLowerCase();
+  try {
+    const mapping = await (options.dependencies?.map === void 0 ? mapScan(createHealthApiPort(options.api, repoConnectionId), CLOCK, repoConnectionId, commitSha) : options.dependencies.map(repoConnectionId, commitSha));
+    if (mapping.status === "unmappable") return decision("scan_not_found", `A completed scan was not found for ${commitSha}. ${mapping.explanation}`);
+    const request2 = { repoConnectionId, commitSha, ...options.codebaseId === void 0 ? {} : { codebaseId: options.codebaseId } };
+    const draft = await options.api.draftArchitectureProposal(request2);
+    if (draft.status !== "ok") return draftFailure(draft);
+    const verified = verifyDiscoveryProposal(draft.proposal, options.root);
+    if (verified.status === "unverifiable-module") return failure2(EXIT_CODES.userDecisionRequired, "The draft cites unverifiable module evidence.", { reason: "unverifiable_module", paths: verified.paths });
+    if (verified.status === "invalid") return failure2(EXIT_CODES.config, "The server returned an invalid proposal.", { issues: verified.issues });
+    if (options.dryRun === true) return success2("Discovery dry run completed; no proposal was written.", { request: request2, proposal: verified.proposal, dropped: verified.dropped });
+    const proposalPath = await writeDiscoveryProposal(options.root, verified.proposal, options.output);
+    return success2(`Discovery proposal written to ${proposalPath}.`, {
+      proposalPath,
+      draftId: draft.draftId,
+      draftHash: draft.draftHash,
+      commitSha,
+      codebaseId: draft.codebaseId,
+      summary: summary2(verified.proposal),
+      dropped: verified.dropped
+    });
+  } catch (error62) {
+    if (error62 instanceof AuthError || error62 instanceof UnavailableError || error62 instanceof QuotaError) return failure2(apiErrorExitCode(error62), error62.message);
+    if (error62 instanceof PollTimeoutError || error62 instanceof ScanFailedError) return failure2(EXIT_CODES.remoteUnavailable, error62.message);
+    return failure2(EXIT_CODES.config, error62 instanceof Error ? error62.message : String(error62));
+  }
+}
+function draftFailure(result3) {
+  if (result3.status === "codebase-required") return failure2(EXIT_CODES.userDecisionRequired, "Multiple codebases were found; rerun with --codebase <id>.", { reason: "codebase_required", codebases: result3.codebases });
+  if (result3.status === "profile-stale") return failure2(EXIT_CODES.userDecisionRequired, `The architecture profile is stale; run discovery from the latest scanned commit ${result3.storedCommitHash ?? "unknown"}.`, { reason: "profile_stale", storedCommitHash: result3.storedCommitHash });
+  return decision("scan_not_found", "The mapped scan was not found while drafting the proposal.");
+}
+function decision(reason, message9) {
+  return failure2(EXIT_CODES.userDecisionRequired, message9, { reason });
+}
+function summary2(proposal) {
+  return { modules: Object.keys(proposal.modules.pathMappings).length, allowedEdges: proposal.modules.allowedEdges.length, forbiddenEdges: proposal.modules.forbiddenEdges.length, rules: proposal.rules.length };
+}
+function success2(message9, data) {
+  return { command: "discover", outcome: "pass", exitCode: EXIT_CODES.pass, message: message9, data };
+}
+function failure2(exitCode3, message9, data) {
+  return { command: "discover", outcome: "error", exitCode: exitCode3, message: message9, ...data === void 0 ? {} : { data } };
+}
+
+// src/commands/discover-greenfield.ts
+import { access as access7, mkdir as mkdir7, readFile as readFile15, rename as rename4, writeFile as writeFile9 } from "node:fs/promises";
+import { dirname as dirname7, resolve as resolve9 } from "node:path";
+async function runRecommend(options) {
+  const input2 = await readJson(resolve9(options.root, options.factsPath), "facts");
+  if (input2.status === "error") return failure3(input2.message);
+  const parsed = architectureFactsSchema.safeParse(input2.value);
+  if (!parsed.success) return failure3("Facts JSON is invalid.", { issues: parsed.error.issues });
+  try {
+    const result3 = await options.api.recommendArchitecturePresets({ facts: parsed.data });
+    return success3("Architecture preset recommendations received.", {
+      candidates: result3.candidates,
+      interviewRequired: result3.interviewRequired,
+      recommendationVersion: result3.recommendationVersion
+    });
+  } catch (error62) {
+    return apiFailure(error62);
+  }
+}
+async function runAssemble(options) {
+  const input2 = await readJson(resolve9(options.root, options.interviewPath), "interview");
+  if (input2.status === "error") return failure3(input2.message);
+  const interview = unwrapInterview(input2.value);
+  const parsed = assembleArchitectureBlueprintInputSchema.safeParse({
+    interview,
+    slug: options.slug,
+    projectName: options.name
+  });
+  if (!parsed.success) return failure3("Interview JSON, slug, or name is invalid.", { issues: parsed.error.issues });
+  const blueprintPath = `.shore/blueprints/${options.slug}.json`;
+  const proposalPath = `.shore/proposals/${(options.now ?? (() => /* @__PURE__ */ new Date()))().toISOString().slice(0, 10)}-authored.json`;
+  if (options.replace !== true && await exists4(resolve9(options.root, blueprintPath))) {
+    return failure3(EXIT_CODES.userDecisionRequired, `Blueprint already exists at ${blueprintPath}. Use --replace to overwrite it.`, { reason: "blueprint_exists", blueprintPath });
+  }
+  try {
+    const assembled = await options.api.assembleArchitectureBlueprint(parsed.data);
+    const blueprint = validate2(assembled.blueprint).pack;
+    const proposal = validateProposal(assembled.proposal);
+    const data = { blueprintPath, proposalPath, blueprintId: assembled.blueprintId, strength: assembled.strength };
+    if (options.dryRun === true) return success3("Architecture blueprint assembly dry run completed; no files were written.", data);
+    await writeAtomic2(resolve9(options.root, blueprintPath), `${JSON.stringify(blueprint, null, 2)}
+`);
+    await writeAtomic2(resolve9(options.root, proposalPath), `${JSON.stringify(proposal, null, 2)}
+`);
+    return success3(`Architecture blueprint written to ${blueprintPath} and proposal written to ${proposalPath}.`, data);
+  } catch (error62) {
+    if (isApiError(error62)) return apiFailure(error62);
+    return failure3(error62 instanceof Error ? error62.message : String(error62));
+  }
+}
+function unwrapInterview(value) {
+  if (typeof value === "object" && value !== null && "interview" in value) return value.interview;
+  return value;
+}
+async function readJson(path2, label) {
+  try {
+    return { status: "ok", value: JSON.parse(await readFile15(path2, "utf8")) };
+  } catch {
+    return { status: "error", message: `Could not read valid ${label} JSON at ${path2}.` };
+  }
+}
+async function exists4(path2) {
+  try {
+    await access7(path2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function writeAtomic2(path2, contents) {
+  await mkdir7(dirname7(path2), { recursive: true });
+  const temporary = `${path2}.shore-guard-tmp`;
+  await writeFile9(temporary, contents);
+  await rename4(temporary, path2);
+}
+function isApiError(error62) {
+  return error62 instanceof AuthError || error62 instanceof QuotaError || error62 instanceof UnavailableError;
+}
+function apiFailure(error62) {
+  if (isApiError(error62)) return failure3(apiErrorExitCode(error62), error62.message);
+  return failure3(error62 instanceof Error ? error62.message : String(error62));
+}
+function success3(message9, data) {
+  return { command: "discover", outcome: "pass", exitCode: EXIT_CODES.pass, message: message9, data };
+}
+function failure3(first, second, third) {
+  const exitCode3 = typeof first === "number" ? first : EXIT_CODES.config;
+  const message9 = typeof first === "string" ? first : String(second);
+  const data = typeof first === "string" ? second : third;
+  return { command: "discover", outcome: "error", exitCode: exitCode3, message: message9, ...data === void 0 ? {} : { data } };
+}
+
+// src/commands/discover.ts
+async function runDiscover(options) {
+  if (options.interview !== void 0) {
+    if (options.slug === void 0 || options.name === void 0) return configFailure("--interview requires --slug <slug> and --name <name>.");
+    return runAssemble({
+      root: options.root,
+      api: options.api,
+      interviewPath: options.interview,
+      slug: options.slug,
+      name: options.name,
+      replace: options.replace,
+      dryRun: options.dryRun
+    });
+  }
+  if (options.greenfield === true || options.facts !== void 0) {
+    if (options.greenfield !== true || options.facts === void 0) return configFailure("Greenfield recommendations require --greenfield --facts <path>.");
+    return runRecommend({ root: options.root, api: options.api, factsPath: options.facts });
+  }
+  if (usesInterviewOnlyOption(options)) return configFailure("--slug, --name, and --replace require --interview <path>.");
+  return runBrownfieldDiscover(options);
+}
+function usesInterviewOnlyOption(options) {
+  return options.slug !== void 0 || options.name !== void 0 || options.replace === true;
+}
+function configFailure(message9) {
+  return { command: "discover", outcome: "error", exitCode: 2, message: message9 };
+}
+
 // src/commands/adopt.ts
-import { mkdir as mkdir7, readFile as readFile15, realpath, rename as rename3, rm as rm3, writeFile as writeFile9 } from "node:fs/promises";
-import { dirname as dirname5, isAbsolute as isAbsolute3, relative as relative4, resolve as resolve7 } from "node:path";
+import { mkdir as mkdir9, readFile as readFile16, realpath, rename as rename5, rm as rm3, writeFile as writeFile11 } from "node:fs/promises";
+import { dirname as dirname8, isAbsolute as isAbsolute3, relative as relative4, resolve as resolve10 } from "node:path";
 
 // src/commands/decision-record.ts
-import { mkdir as mkdir6, writeFile as writeFile8 } from "node:fs/promises";
-import { join as join21 } from "node:path";
+import { mkdir as mkdir8, writeFile as writeFile10 } from "node:fs/promises";
+import { join as join23 } from "node:path";
 var LockFileDecisionRecorder = class {
-  async record(decision) {
-    await mkdir6(join21(decision.root, ".shore"), { recursive: true });
-    await writeFile8(join21(decision.root, ".shore", "policy.lock.json"), `${JSON.stringify(decision.lock, null, 2)}
+  async record(decision2) {
+    await mkdir8(join23(decision2.root, ".shore"), { recursive: true });
+    await writeFile10(join23(decision2.root, ".shore", "policy.lock.json"), `${JSON.stringify(decision2.lock, null, 2)}
 `, { flag: "wx" });
-    return { recorded: true, note: "Decision recorded in .shore/policy.lock.json; remote submission is deferred until SCA-634." };
+    return { recorded: true, note: "Decision recorded in .shore/policy.lock.json." };
   }
 };
 var ShoreSightDecisionRecorder = class {
@@ -23494,10 +24047,10 @@ var ShoreSightDecisionRecorder = class {
     this.submit = submit;
   }
   submit;
-  async record(decision) {
-    if (this.submit === void 0) return { recorded: false, note: "Shore Sight decision submission is unavailable (SCA-634); the local lock remains authoritative." };
+  async record(decision2) {
+    if (this.submit === void 0) return { recorded: false, note: "It was not sent to Shore; the local lock is the record of this decision." };
     try {
-      await this.submit(decision);
+      await this.submit(decision2);
       return { recorded: true, note: "Decision also submitted to Shore Sight." };
     } catch {
       return { recorded: false, note: "Shore Sight submission failed once; the local lock remains authoritative. No retry was attempted." };
@@ -23525,19 +24078,19 @@ This applies to (non-exhaustive):
 If a rule appears wrong for one case, STOP and obtain explicit human approval for that exact change. Approval does not generalize. Reporting the error and asking is acceptable; silently weakening a rule is not.
 ${END}`;
 async function runAdopt(options) {
-  if (options.proposalPath === void 0) return failure2(EXIT_CODES.config, "Pass --proposal <file>.");
-  const proposalPath = resolve7(options.root, options.proposalPath);
+  if (options.proposalPath === void 0) return failure4(EXIT_CODES.config, "Pass --proposal <file>.");
+  const proposalPath = resolve10(options.root, options.proposalPath);
   let raw;
   try {
-    raw = await readFile15(proposalPath, "utf8");
+    raw = await readFile16(proposalPath, "utf8");
   } catch {
-    return failure2(EXIT_CODES.config, `Cannot read proposal at ${options.proposalPath}.`);
+    return failure4(EXIT_CODES.config, `Cannot read proposal at ${options.proposalPath}.`);
   }
   let input2;
   try {
     input2 = JSON.parse(raw);
   } catch {
-    return failure2(EXIT_CODES.config, `Proposal at ${options.proposalPath} is not valid JSON.`);
+    return failure4(EXIT_CODES.config, `Proposal at ${options.proposalPath} is not valid JSON.`);
   }
   const choice = options.choice ?? await options.prompt?.();
   if (choice === "reject") return { command: "adopt", outcome: "pass", exitCode: EXIT_CODES.pass, message: "Proposal rejected. No files were changed." };
@@ -23547,12 +24100,12 @@ async function runAdopt(options) {
     } catch (error62) {
       return validationFailure(error62);
     }
-    return failure2(EXIT_CODES.userDecisionRequired, `Edit ${options.proposalPath}, then rerun adopt and explicitly approve or reject it.`);
+    return failure4(EXIT_CODES.userDecisionRequired, `Edit ${options.proposalPath}, then rerun adopt and explicitly approve or reject it.`);
   }
-  if (choice !== "approve") return failure2(EXIT_CODES.userDecisionRequired, "Approval is required. Choose approve, modify, or reject; no files were changed.");
+  if (choice !== "approve") return failure4(EXIT_CODES.userDecisionRequired, "Approval is required. Choose approve, modify, or reject; no files were changed.");
   const lockPath = confinedPath(options.root, ".shore/policy.lock.json");
   const existingLock = await readIfPresent(lockPath);
-  if (existingLock !== void 0 && !options.replaceLock) return failure2(EXIT_CODES.userDecisionRequired, `An existing decision is recorded at .shore/policy.lock.json:
+  if (existingLock !== void 0 && !options.replaceLock) return failure4(EXIT_CODES.userDecisionRequired, `An existing decision is recorded at .shore/policy.lock.json:
 ${existingLock}
 Pass --replace-lock to explicitly replace it.`);
   let artifacts;
@@ -23572,35 +24125,52 @@ Pass --replace-lock to explicitly replace it.`);
   } catch (error62) {
     return validationFailure(error62);
   }
-  if (blueprint !== void 0 && await readIfPresent(blueprint.path) !== void 0 && !options.replaceLock) {
-    return failure2(EXIT_CODES.userDecisionRequired, `A blueprint already exists at ${blueprint.relativePath}. Pass --replace-lock to explicitly replace it.`);
+  const blueprintExisting = blueprint === void 0 ? void 0 : await readIfPresent(blueprint.path);
+  if (blueprint !== void 0 && blueprintExisting !== void 0 && !options.replaceLock) {
+    return failure4(EXIT_CODES.userDecisionRequired, `A blueprint already exists at ${blueprint.relativePath}. Pass --replace-lock to explicitly replace it.`);
   }
   try {
     await options.beforeCommit?.(artifacts);
   } catch {
-    return failure2(EXIT_CODES.userDecisionRequired, "Adoption aborted before commit. No files were changed.");
+    return failure4(EXIT_CODES.userDecisionRequired, "Adoption aborted before commit. No files were changed.");
   }
   const agentsPath = confinedPath(options.root, "AGENTS.md");
-  const agents = mergeAgents(await readIfPresent(agentsPath));
-  await mkdir7(confinedPath(options.root, ".shore"), { recursive: true });
-  if (blueprint !== void 0) await writeAtomic(blueprint.path, blueprint.contents);
-  await writeAtomic(confinedPath(options.root, ".shore/policy.json"), `${JSON.stringify(artifacts.pack, null, 2)}
-`);
-  await writeAtomic(agentsPath, agents);
+  const packPath = confinedPath(options.root, ".shore/policy.json");
+  const agentsExisting = await readIfPresent(agentsPath);
+  const packExisting = await readIfPresent(packPath);
+  const agents = mergeAgents(agentsExisting);
+  const pack = `${JSON.stringify(artifacts.pack, null, 2)}
+`;
+  const packOutcome = fileOutcome(packExisting, pack);
+  const agentsOutcome = fileOutcome(agentsExisting, agents);
+  const blueprintOutcome = blueprint === void 0 ? void 0 : fileOutcome(blueprintExisting, blueprint.contents);
+  await mkdir9(confinedPath(options.root, ".shore"), { recursive: true });
+  if (blueprint !== void 0 && blueprintOutcome !== "unchanged") await writeAtomic3(blueprint.path, blueprint.contents);
+  if (packOutcome !== "unchanged") await writeAtomic3(packPath, pack);
+  if (agentsOutcome !== "unchanged") await writeAtomic3(agentsPath, agents);
   if (existingLock !== void 0) await rm3(lockPath);
   const local = await (options.recorder ?? new LockFileDecisionRecorder()).record({ root: options.root, ...artifacts });
+  const lockOutcome = fileOutcome(existingLock, await readIfPresent(lockPath));
   const remote = await (options.remoteRecorder ?? new ShoreSightDecisionRecorder()).record({ root: options.root, ...artifacts });
   const blueprintNote = blueprint === void 0 ? "" : ` Blueprint saved at ${blueprint.relativePath}.`;
+  const agentsNote = agentsOutcome === "created" ? "AGENTS.md policy section added." : agentsOutcome === "updated" ? "AGENTS.md policy section updated." : "AGENTS.md policy section already up to date.";
+  const files = [
+    { path: ".shore/policy.json", outcome: packOutcome },
+    { path: ".shore/policy.lock.json", outcome: lockOutcome },
+    { path: "AGENTS.md", outcome: agentsOutcome },
+    ...blueprint === void 0 || blueprintOutcome === void 0 ? [] : [{ path: blueprint.relativePath, outcome: blueprintOutcome }]
+  ];
   return {
     command: "adopt",
     outcome: "pass",
     exitCode: EXIT_CODES.pass,
-    message: `Policy adopted.${blueprintNote} ${local.note} ${remote.note}`,
+    message: `Policy adopted.${blueprintNote} ${agentsNote} ${local.note} ${remote.note}`,
     data: {
       pack: ".shore/policy.json",
       lock: ".shore/policy.lock.json",
       contentHash: artifacts.lock.contentHash,
-      ...blueprint === void 0 ? {} : { blueprint: blueprint.relativePath }
+      ...blueprint === void 0 ? {} : { blueprint: blueprint.relativePath },
+      files
     }
   };
 }
@@ -23611,13 +24181,13 @@ function serializeForRoot(input2, options) {
   const proposal = validateProposal(input2, { root: options.root });
   return serializeProposal(proposal, approval(options));
 }
-function failure2(exitCode3, message7) {
-  return { command: "adopt", outcome: "error", exitCode: exitCode3, message: message7 };
+function failure4(exitCode3, message9) {
+  return { command: "adopt", outcome: "error", exitCode: exitCode3, message: message9 };
 }
 function validationFailure(error62) {
-  if (error62 instanceof ProposalValidationError) return failure2(EXIT_CODES.config, `Proposal validation failed:
+  if (error62 instanceof ProposalValidationError) return failure4(EXIT_CODES.config, `Proposal validation failed:
 ${error62.issues.map((issue2) => `- ${issue2.path}: ${issue2.message}`).join("\n")}`);
-  return failure2(EXIT_CODES.config, error62 instanceof Error ? error62.message : String(error62));
+  return failure4(EXIT_CODES.config, error62 instanceof Error ? error62.message : String(error62));
 }
 function blueprintWrite(root, artifacts) {
   if (artifacts.blueprint === void 0) return void 0;
@@ -23628,8 +24198,8 @@ function blueprintWrite(root, artifacts) {
 ` };
 }
 function confinedPath(root, repositoryPath) {
-  const resolvedRoot = resolve7(root);
-  const candidate = resolve7(resolvedRoot, repositoryPath);
+  const resolvedRoot = resolve10(root);
+  const candidate = resolve10(resolvedRoot, repositoryPath);
   const fromRoot = relative4(resolvedRoot, candidate);
   if (fromRoot === ".." || fromRoot.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) || isAbsolute3(fromRoot)) {
     throw new Error(`Refusing to write outside the repository root: ${repositoryPath}`);
@@ -23644,13 +24214,13 @@ async function assertWriteTargets(root, paths) {
   }
 }
 async function resolveThroughExistingParent(path2) {
-  let ancestor = dirname5(path2);
+  let ancestor = dirname8(path2);
   for (; ; ) {
     try {
-      return resolve7(await realpath(ancestor), relative4(ancestor, path2));
+      return resolve10(await realpath(ancestor), relative4(ancestor, path2));
     } catch (error62) {
       if (!isNotFound(error62)) throw error62;
-      const parent = dirname5(ancestor);
+      const parent = dirname8(ancestor);
       if (parent === ancestor) throw error62;
       ancestor = parent;
     }
@@ -23662,11 +24232,15 @@ function isOutside(root, path2) {
 }
 async function readIfPresent(path2) {
   try {
-    return await readFile15(path2, "utf8");
+    return await readFile16(path2, "utf8");
   } catch (error62) {
     if (isNotFound(error62)) return void 0;
     throw error62;
   }
+}
+function fileOutcome(before, after) {
+  if (before === void 0) return after === void 0 ? "unchanged" : "created";
+  return before === after ? "unchanged" : "updated";
 }
 function isNotFound(error62) {
   return typeof error62 === "object" && error62 !== null && "code" in error62 && error62.code === "ENOENT";
@@ -23682,11 +24256,11 @@ function mergeAgents(existing) {
 ${SHORE_GUARD_AGENTS_SECTION}
 `;
 }
-async function writeAtomic(path2, contents) {
+async function writeAtomic3(path2, contents) {
   const temporary = `${path2}.shore-guard-tmp`;
-  await mkdir7(dirname5(path2), { recursive: true });
-  await writeFile9(temporary, contents);
-  await rename3(temporary, path2);
+  await mkdir9(dirname8(path2), { recursive: true });
+  await writeFile11(temporary, contents);
+  await rename5(temporary, path2);
 }
 
 // src/commands/setup.ts
@@ -23712,7 +24286,7 @@ async function runSetup(options) {
       if (!installed.found) throw new Error("shore-guard was not found on PATH after installation");
       addStep(steps, emit, "cli", "installed", installed.version ?? "installed on PATH");
     } catch (error62) {
-      const detail = `${message3(error62)} Manual: npm install -g shore-guard (fallback: npm install -g github:dcassil/shore-guard-plugin)`;
+      const detail = `${message4(error62)} Manual: npm install -g shore-guard (fallback: npm install -g github:dcassil/shore-guard-plugin)`;
       addStep(steps, emit, "cli", "manual", detail);
       exitCode3 = EXIT_CODES.config;
     }
@@ -23788,7 +24362,7 @@ async function runSetup(options) {
           pluginInstalled: false,
           action: "failed"
         });
-        emit(`[3/4] ${adapter.displayName} \u2026 failed (${message3(error62)}; ${adapter.manualInstructions().join("; ")})`);
+        emit(`[3/4] ${adapter.displayName} \u2026 failed (${message4(error62)}; ${adapter.manualInstructions().join("; ")})`);
         exitCode3 = EXIT_CODES.config;
       }
     }
@@ -23832,25 +24406,25 @@ function addStep(steps, emit, id, status, detail) {
 function requireSuccess(result3) {
   if (result3.code !== 0) throw new Error(result3.stderr.trim() || `command exited with code ${String(result3.code)}`);
 }
-function message3(error62) {
+function message4(error62) {
   return error62 instanceof Error ? error62.message : String(error62);
 }
 
 // src/commands/blueprint-submit.ts
-import { readFile as readFile16 } from "node:fs/promises";
-import { resolve as resolve8 } from "node:path";
+import { readFile as readFile17 } from "node:fs/promises";
+import { resolve as resolve11 } from "node:path";
 
 // src/agents/exec.ts
 import { execFile as execFile4 } from "node:child_process";
 function createCommandRunner(execute = execFile4) {
-  return (file2, args, options) => new Promise((resolve10) => {
+  return (file2, args, options) => new Promise((resolve14) => {
     execute(file2, args, {
       cwd: options?.cwd ?? process.cwd(),
       detached: options?.detached ?? false,
       encoding: "utf8",
       windowsHide: true
     }, (error62, stdout, stderr) => {
-      resolve10({
+      resolve14({
         code: exitCode2(error62),
         stdout: stdout || errorText(error62?.stdout),
         stderr: stderr || errorText(error62?.stderr)
@@ -23875,72 +24449,72 @@ var NEW_ISSUE_URL = "https://github.com/dcassil/shore-guard-blueprints/issues/ne
 var BODY_LIMIT = 65 * 1024;
 var PREFILLED_LIMIT = 8 * 1024;
 async function runBlueprintSubmit(options) {
-  if (options.file === void 0 || options.file === "") return failure3(EXIT_CODES.config, "Missing required --file <path>.");
-  const read = await readBlueprint(resolve8(options.cwd, options.file));
-  if (read.status === "error") return failure3(EXIT_CODES.config, read.message);
+  if (options.file === void 0 || options.file === "") return failure5(EXIT_CODES.config, "Missing required --file <path>.");
+  const read = await readBlueprint(resolve11(options.cwd, options.file));
+  if (read.status === "error") return failure5(EXIT_CODES.config, read.message);
   const parsed = read.value;
   let pack;
   try {
     pack = validate2(parsed).pack;
   } catch (error62) {
-    return failure3(EXIT_CODES.config, message4(error62));
+    return failure5(EXIT_CODES.config, message5(error62));
   }
   const stateResult = await loadState(options.cwd);
-  if (stateResult.status !== "ok") return failure3(EXIT_CODES.config, stateGuidance(stateResult.status));
+  if (stateResult.status !== "ok") return failure5(EXIT_CODES.config, stateGuidance(stateResult.status));
   const prior = stateResult.state.submittedBlueprints?.find((entry2) => entry2.id === pack.metadata.id);
-  if (prior !== void 0 && options.force !== true) return failure3(EXIT_CODES.userDecisionRequired, `Blueprint already submitted at ${prior.issueUrl}. Use --force to submit it again.`);
+  if (prior !== void 0 && options.force !== true) return failure5(EXIT_CODES.userDecisionRequired, `Blueprint already submitted at ${prior.issueUrl}. Use --force to submit it again.`);
   const assessment2 = assessBlueprint(pack);
-  if (!assessment2.strong && options.force !== true) return failure3(EXIT_CODES.userDecisionRequired, `Blueprint is not strong enough to submit:
+  if (!assessment2.strong && options.force !== true) return failure5(EXIT_CODES.userDecisionRequired, `Blueprint is not strong enough to submit:
 ${assessment2.reasons.map((reason) => `- ${reason}`).join("\n")}`);
   const remote = await readRemote(options);
   let scrubbed;
   try {
     scrubbed = scrubBlueprint(pack, { repoIdentifiers: identifiersFromRemote(remote) });
   } catch (error62) {
-    return failure3(EXIT_CODES.userDecisionRequired, message4(error62));
+    return failure5(EXIT_CODES.userDecisionRequired, message5(error62));
   }
   const title = `Blueprint submission: ${scrubbed.metadata.name}`;
   const body = issueBody(scrubbed);
-  if (Buffer.byteLength(body, "utf8") > BODY_LIMIT) return failure3(EXIT_CODES.config, "Blueprint issue body exceeds 65 KB. Submit the blueprint by pull request instead.");
+  if (Buffer.byteLength(body, "utf8") > BODY_LIMIT) return failure5(EXIT_CODES.config, "Blueprint issue body exceeds 65 KB. Submit the blueprint by pull request instead.");
   const payload = { title, body, labels: ["blueprint"] };
   const warning = remote === void 0 ? "No origin remote was found; repository identifier checks were limited." : void 0;
-  if (options.dryRun === true) return success2(`${warningText(warning)}Dry run; no issue was created.
+  if (options.dryRun === true) return success4(`${warningText(warning)}Dry run; no issue was created.
 ${JSON.stringify(payload, null, 2)}`, { payload, ...warning === void 0 ? {} : { warning } });
   const token = await resolveToken(options);
   if (token === void 0) {
     const prefilledUrl = prefilledIssueUrl(title, body);
-    return failure3(EXIT_CODES.userDecisionRequired, `${warningText(warning)}No GitHub credential was found. Open this prefilled issue URL to submit manually:
+    return failure5(EXIT_CODES.userDecisionRequired, `${warningText(warning)}No GitHub credential was found. Open this prefilled issue URL to submit manually:
 ${prefilledUrl}`, { prefilledUrl, ...warning === void 0 ? {} : { warning } });
   }
   let response;
   try {
     response = await (options.http ?? defaultHttp)(ISSUES_URL, request(token, payload));
   } catch (error62) {
-    return failure3(EXIT_CODES.remoteUnavailable, `GitHub issue submission was unavailable: ${message4(error62)}`);
+    return failure5(EXIT_CODES.remoteUnavailable, `GitHub issue submission was unavailable: ${message5(error62)}`);
   }
-  if (response.status === 401) return failure3(EXIT_CODES.auth, "GitHub rejected the credential. Refresh gh authentication or GITHUB_TOKEN.");
+  if (response.status === 401) return failure5(EXIT_CODES.auth, "GitHub rejected the credential. Refresh gh authentication or GITHUB_TOKEN.");
   if (response.status === 403) return forbidden(response.headers);
-  if (response.status >= 500) return failure3(EXIT_CODES.remoteUnavailable, `GitHub issue submission was unavailable (HTTP ${String(response.status)}).`);
-  if (response.status < 200 || response.status >= 300) return failure3(EXIT_CODES.config, `GitHub issue submission failed (HTTP ${String(response.status)}).`);
+  if (response.status >= 500) return failure5(EXIT_CODES.remoteUnavailable, `GitHub issue submission was unavailable (HTTP ${String(response.status)}).`);
+  if (response.status < 200 || response.status >= 300) return failure5(EXIT_CODES.config, `GitHub issue submission failed (HTTP ${String(response.status)}).`);
   let issue2;
   try {
     issue2 = await response.json();
   } catch (error62) {
-    return failure3(EXIT_CODES.config, `GitHub returned an invalid issue response: ${message4(error62)}`);
+    return failure5(EXIT_CODES.config, `GitHub returned an invalid issue response: ${message5(error62)}`);
   }
   const created = issueRecord(issue2);
-  if (created === void 0) return failure3(EXIT_CODES.config, "GitHub returned an invalid issue response.");
+  if (created === void 0) return failure5(EXIT_CODES.config, "GitHub returned an invalid issue response.");
   const at = (options.clock ?? { now: () => /* @__PURE__ */ new Date() }).now().toISOString();
   const updated = { ...stateResult.state, updatedAt: at, submittedBlueprints: [...stateResult.state.submittedBlueprints ?? [], { id: pack.metadata.id, issueUrl: created.issueUrl, at }] };
   const saved = await saveState(options.cwd, updated);
-  if (saved.status === "error") return failure3(EXIT_CODES.config, `Issue created at ${created.issueUrl}, but state could not be updated: ${saved.reason}`);
-  return success2(`${warningText(warning)}Blueprint submitted: ${created.issueUrl}`, { issueUrl: created.issueUrl, ...warning === void 0 ? {} : { warning } });
+  if (saved.status === "error") return failure5(EXIT_CODES.config, `Issue created at ${created.issueUrl}, but state could not be updated: ${saved.reason}`);
+  return success4(`${warningText(warning)}Blueprint submitted: ${created.issueUrl}`, { issueUrl: created.issueUrl, ...warning === void 0 ? {} : { warning } });
 }
 async function readBlueprint(path2) {
   try {
-    return { status: "ok", value: JSON.parse(await readFile16(path2, "utf8")) };
+    return { status: "ok", value: JSON.parse(await readFile17(path2, "utf8")) };
   } catch (error62) {
-    return { status: "error", message: `Could not read blueprint file: ${message4(error62)}` };
+    return { status: "error", message: `Could not read blueprint file: ${message5(error62)}` };
   }
 }
 async function readRemote(options) {
@@ -24027,9 +24601,9 @@ var defaultHttp = async (input2, init) => {
 function forbidden(headers) {
   if (headers["x-ratelimit-remaining"] === "0") {
     const retry = headers["retry-after"];
-    return failure3(EXIT_CODES.remoteUnavailable, `GitHub rate limit exceeded.${retry === void 0 ? "" : ` Retry after ${retry} seconds.`}`);
+    return failure5(EXIT_CODES.remoteUnavailable, `GitHub rate limit exceeded.${retry === void 0 ? "" : ` Retry after ${retry} seconds.`}`);
   }
-  return failure3(EXIT_CODES.auth, "GitHub denied issue creation. Check the credential permissions.");
+  return failure5(EXIT_CODES.auth, "GitHub denied issue creation. Check the credential permissions.");
 }
 function issueRecord(value) {
   if (typeof value !== "object" || value === null || !("html_url" in value)) return void 0;
@@ -24046,107 +24620,270 @@ function warningText(warning) {
   return warning === void 0 ? "" : `Warning: ${warning}
 `;
 }
-function success2(messageText, data) {
+function success4(messageText, data) {
   return { command: "blueprint submit", outcome: "pass", exitCode: EXIT_CODES.pass, message: messageText, data };
 }
-function failure3(exitCode3, messageText, data) {
+function failure5(exitCode3, messageText, data) {
   return { command: "blueprint submit", outcome: "error", exitCode: exitCode3, message: messageText, ...data === void 0 ? {} : { data } };
 }
-function message4(error62) {
+function message5(error62) {
   return error62 instanceof Error ? error62.message : String(error62);
 }
 
-// src/commands/guards-plan.ts
-import * as fs15 from "node:fs/promises";
-import { join as join22 } from "node:path";
-var POLICY_REQUIRED = "Adopt an architecture policy first (run discovery, then shore-guard adopt).";
-var LEGACY_SUFFIX = "will be ignored by flat config; Shore baselines require ESLint 9.24 or newer.";
-async function readPolicyLockHash(root) {
+// src/commands/report-submit.ts
+import * as nodeFs2 from "node:fs/promises";
+import { randomUUID as randomUUID4 } from "node:crypto";
+import { basename as basename3, dirname as dirname9, join as join24, resolve as resolve12, sep as sep4 } from "node:path";
+var STAGES = ["init", "discovery", "adopt", "guards", "check", "verify", "other"];
+var defaultFs = {
+  readFile: (path2) => nodeFs2.readFile(path2),
+  writeFile: (path2, data) => nodeFs2.writeFile(path2, data),
+  mkdir: (path2, options) => nodeFs2.mkdir(path2, options),
+  rename: (from, to) => nodeFs2.rename(from, to),
+  unlink: (path2) => nodeFs2.unlink(path2),
+  lstat: (path2) => nodeFs2.lstat(path2),
+  readdir: (path2) => nodeFs2.readdir(path2)
+};
+async function runReportSubmit(options) {
+  if (options.setConsent !== void 0) return setConsent(options);
+  if (options.pending === true) return submitPending(options);
+  if (options.stage === void 0 || options.file === void 0) return failure6(EXIT_CODES.config, "Missing required --stage <stage> and --file <path>.");
+  if (!isStage(options.stage)) return failure6(EXIT_CODES.config, `stage: Invalid value ${options.stage}.`);
+  let reportPath;
   try {
-    const value = JSON.parse(await fs15.readFile(join22(root, ".shore", "policy.lock.json"), "utf8"));
-    return isRecord5(value) && typeof value.contentHash === "string" ? value.contentHash : void 0;
+    reportPath = confined(options.cwd, options.file);
   } catch (error62) {
-    if (isMissing3(error62) || error62 instanceof SyntaxError) return void 0;
-    throw error62;
+    return failure6(EXIT_CODES.config, message6(error62));
+  }
+  const loaded = await readJson2(reportPath, options.fs ?? defaultFs);
+  if (!loaded.ok) return failure6(EXIT_CODES.config, loaded.message);
+  const enriched = await enrichReport(loaded.value, options.stage, options);
+  const parsed = guardFeedbackReportSchema.safeParse(enriched);
+  if (!parsed.success) return failure6(EXIT_CODES.config, formatIssues(parsed.error));
+  const unsafe2 = scrubIssues(parsed.data);
+  if (unsafe2.length > 0) return failure6(EXIT_CODES.config, `Report contains unsafe content in item indexes: ${unsafe2.join(", ")}.`);
+  return submitOne(parsed.data, options);
+}
+async function setConsent(options) {
+  const consent = options.setConsent;
+  if (consent !== "always" && consent !== "ask" && consent !== "never") return failure6(EXIT_CODES.config, "--set-consent must be always, ask, or never.");
+  const fs19 = options.fs ?? defaultFs;
+  const path2 = confined(options.cwd, ".shore/guard.json");
+  const current = await readOptionalJson(path2, fs19);
+  if (!current.ok) return failure6(EXIT_CODES.config, current.message);
+  if (!isRecord5(current.value)) return failure6(EXIT_CODES.config, "Configuration must be a JSON object.");
+  const config2 = { ...current.value, schemaVersion: 1, feedbackReports: consent };
+  const confinement = await assertConfinedWrite(options.cwd, path2, fs19);
+  if (confinement !== void 0) return failure6(EXIT_CODES.config, confinement);
+  const checked = await writeAtomic4(path2, `${JSON.stringify(config2, null, 2)}
+`, fs19);
+  return checked === void 0 ? success5("Feedback report consent updated.", { feedbackReports: consent }) : failure6(EXIT_CODES.config, checked);
+}
+async function submitOne(report, options) {
+  const fs19 = options.fs ?? defaultFs;
+  const config2 = await loadGuardConfig(options.cwd, fs19);
+  if (config2.status === "invalid") return failure6(EXIT_CODES.config, `Invalid configuration at ${config2.field}: ${config2.reason}`);
+  if (config2.status === "ok" && config2.config.feedbackReports === "never") return success5("reports disabled for this repository");
+  try {
+    const result3 = await options.apiClientFactory().submitGuardFeedbackReport(report);
+    const saved = await appendReportState(options, report, { id: result3.id });
+    return saved ?? success5("Feedback report submitted.", { id: result3.id });
+  } catch (error62) {
+    if (error62 instanceof AuthError) return failure6(EXIT_CODES.auth, error62.message);
+    if (error62 instanceof UnavailableError || error62 instanceof Error) return queueReport(report, options);
+    return failure6(EXIT_CODES.remoteUnavailable, "Feedback report submission was unavailable.");
   }
 }
-async function runGuardsPlan({ root, inventory, lockHash }) {
-  const policyHash = lockHash ?? await readPolicyLockHash(root);
-  if (policyHash === void 0) return { command: "guards plan", outcome: "error", exitCode: EXIT_CODES.userDecisionRequired, message: POLICY_REQUIRED };
-  const nodeProject = await exists3(join22(root, "package.json"));
-  const plan = nodeProject ? buildPlan(inventory, policyHash) : unsupportedPlan(inventory, policyHash);
-  return { command: "guards plan", outcome: "pass", exitCode: EXIT_CODES.pass, message: "Guard toolchain plan ready.", data: { plan } };
+async function queueReport(report, options) {
+  const fs19 = options.fs ?? defaultFs;
+  const timestamp = now(options).toISOString();
+  const relative8 = `.shore/reports/${timestamp.replaceAll(":", "-")}-${report.stage}.json`;
+  const path2 = confined(options.cwd, relative8);
+  const confinement = await assertConfinedWrite(options.cwd, path2, fs19);
+  if (confinement !== void 0) return failure6(EXIT_CODES.config, confinement);
+  try {
+    await fs19.mkdir(dirname9(path2), { recursive: true });
+    await fs19.writeFile(path2, `${JSON.stringify(report, null, 2)}
+`);
+  } catch (error62) {
+    return failure6(EXIT_CODES.config, `Could not queue report: ${message6(error62)}`);
+  }
+  const saved = await appendReportState(options, report, { pendingPath: relative8 });
+  return saved ?? failure6(EXIT_CODES.remoteUnavailable, "queued; run shore-guard report submit --pending", { pendingPath: relative8 });
 }
-function buildPlan(inventory, policyHash) {
-  const capabilities = buildCapabilities(inventory);
-  const impacts = capabilities.flatMap((capability2) => capability2.impact === void 0 ? [] : [capability2.impact]);
+async function submitPending(options) {
+  const fs19 = options.fs ?? defaultFs;
+  const config2 = await loadGuardConfig(options.cwd, fs19);
+  if (config2.status === "invalid") return failure6(EXIT_CODES.config, `Invalid configuration at ${config2.field}: ${config2.reason}`);
+  if (config2.status === "ok" && config2.config.feedbackReports === "never") return success5("reports disabled for this repository");
+  const directory = confined(options.cwd, ".shore/reports");
+  let names;
+  try {
+    names = (await fs19.readdir(directory)).filter((name) => name.endsWith(".json")).sort();
+  } catch (error62) {
+    return isMissing3(error62) ? success5("No pending feedback reports.", { submitted: 0 }) : failure6(EXIT_CODES.config, message6(error62));
+  }
+  let submitted = 0;
+  for (const name of names) {
+    const relative8 = `.shore/reports/${basename3(name)}`;
+    const loaded = await readJson2(confined(options.cwd, relative8), fs19);
+    if (!loaded.ok) return failure6(EXIT_CODES.config, loaded.message);
+    const parsed = guardFeedbackReportSchema.safeParse(loaded.value);
+    if (!parsed.success) return failure6(EXIT_CODES.config, formatIssues(parsed.error));
+    const unsafe2 = scrubIssues(parsed.data);
+    if (unsafe2.length > 0) return failure6(EXIT_CODES.config, `Report contains unsafe content in item indexes: ${unsafe2.join(", ")}.`);
+    try {
+      const result3 = await options.apiClientFactory().submitGuardFeedbackReport(parsed.data);
+      const stateFailure = await completePendingState(options, relative8, result3.id);
+      if (stateFailure !== void 0) return stateFailure;
+      await fs19.unlink(confined(options.cwd, relative8));
+      submitted += 1;
+    } catch (error62) {
+      if (error62 instanceof AuthError) return failure6(EXIT_CODES.auth, error62.message);
+      return failure6(EXIT_CODES.remoteUnavailable, error62 instanceof Error ? error62.message : "Feedback report submission was unavailable.");
+    }
+  }
+  return success5("Pending feedback reports submitted.", { submitted });
+}
+async function appendReportState(options, report, value) {
+  const fs19 = options.fs ?? defaultFs;
+  const loaded = await loadState(options.cwd, fs19);
+  if (loaded.status !== "ok") return failure6(EXIT_CODES.config, "Shore Guard state is required to record feedback reports.");
+  const entry2 = {
+    stage: report.stage,
+    pluginVersion: report.pluginVersion,
+    submittedAt: now(options).toISOString(),
+    ...value,
+    ...loaded.state.guards?.policyHash === void 0 ? {} : { policyHash: loaded.state.guards.policyHash }
+  };
+  return persistState(options.cwd, { ...loaded.state, updatedAt: entry2.submittedAt, reports: [...loaded.state.reports ?? [], entry2] }, fs19);
+}
+async function completePendingState(options, pendingPath, id) {
+  const fs19 = options.fs ?? defaultFs;
+  const loaded = await loadState(options.cwd, fs19);
+  if (loaded.status !== "ok") return failure6(EXIT_CODES.config, "Shore Guard state is required to update pending feedback reports.");
+  const submittedAt = now(options).toISOString();
+  const reports = (loaded.state.reports ?? []).map((entry2) => entry2.pendingPath === pendingPath ? { stage: entry2.stage, pluginVersion: entry2.pluginVersion, submittedAt, id, ...entry2.policyHash === void 0 ? {} : { policyHash: entry2.policyHash } } : entry2);
+  return persistState(options.cwd, { ...loaded.state, updatedAt: submittedAt, reports }, fs19);
+}
+async function persistState(root, state, fs19) {
+  const saved = await saveState(root, state, fs19);
+  return saved.status === "ok" ? void 0 : failure6(EXIT_CODES.config, `Could not update state: ${saved.reason}`);
+}
+async function enrichReport(value, stage, options) {
+  const source = isRecord5(value) ? value : {};
+  const fs19 = options.fs ?? defaultFs;
+  const inventory = await (options.inventory ?? (() => inventoryToolchain({ root: options.cwd, fs: probeFileSystem(fs19) })))();
+  const config2 = await loadGuardConfig(options.cwd, fs19);
+  const connection = config2.status === "ok" ? config2.config.repoConnectionId : void 0;
+  const blueprintId = await findBlueprintId(options.cwd, fs19);
   return {
-    planVersion: 1,
-    policyHash,
-    choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0),
-    capabilities,
-    installs: { packageManager: inventory.packageManager, dev: requiredInstalls(inventory) },
-    writes: plannedWrites(inventory),
-    impacts,
-    unsupported: []
+    ...source,
+    stage,
+    pluginVersion: options.buildInfo.pluginVersion,
+    cliVersion: options.buildInfo.cliVersion,
+    ...connection === void 0 ? {} : { repoConnectionId: connection },
+    ...blueprintId === void 0 ? {} : { blueprintId },
+    toolchain: source["toolchain"] ?? toolchainReport(inventory)
   };
 }
-function buildCapabilities(inventory) {
-  return [lintCapability(inventory), boundariesCapability(inventory), typecheckCapability(inventory), onChangeCapability(inventory), baselineCapability(inventory)];
+function toolchainReport(inventory) {
+  const languages = inventory.typescript.present ? ["typescript"] : ["javascript"];
+  const lint = inventory.eslint.present ? "eslint" : inventory.biome.present ? "biome" : void 0;
+  const test = inventory.scripts["test"];
+  return { languages, frameworks: [], ...inventory.packageManager === void 0 ? {} : { packageManager: inventory.packageManager }, ...lint === void 0 ? {} : { lint }, ...test === void 0 ? {} : { test } };
 }
-function lintCapability(inventory) {
-  const conflictPath = inventory.eslint.legacyConfigPath ?? inventory.eslint.configPath;
-  if (inventory.eslint.present && (!inventory.eslint.supported || inventory.eslint.legacyConfigPath !== void 0)) {
-    const path2 = conflictPath ?? "detected configuration";
-    return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint", status: "conflict", impact: `Legacy ESLint configuration ${path2} ${LEGACY_SUFFIX}` };
+async function findBlueprintId(root, fs19) {
+  const directory = confined(root, ".shore/blueprints");
+  let names;
+  try {
+    names = (await fs19.readdir(directory)).filter((name) => name.endsWith(".json")).sort();
+  } catch {
+    return void 0;
   }
-  if (inventory.eslint.present && inventory.eslint.flat) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint flat config", status: "compatible" };
-  if (inventory.eslint.present) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint", status: "present" };
-  if (inventory.biome.present) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "Biome", status: "compatible", existingOption: "biome", impact: "Biome stays for formatting; ESLint is added only for architecture rules." };
-  return { id: "lint", recommended: "ESLint >=9.24 flat config", status: "needs-install" };
+  const first = names[0];
+  if (first === void 0) return void 0;
+  const loaded = await readJson2(join24(directory, basename3(first)), fs19);
+  if (!loaded.ok || !isRecord5(loaded.value)) return void 0;
+  const metadata = loaded.value["metadata"];
+  if (isRecord5(metadata) && typeof metadata["id"] === "string") return metadata["id"];
+  return typeof loaded.value["blueprintId"] === "string" ? loaded.value["blueprintId"] : void 0;
 }
-function boundariesCapability(inventory) {
-  if (!inventory.depcruise.present) return { id: "boundaries", recommended: "dependency-cruiser", status: "needs-install" };
-  return { id: "boundaries", recommended: "dependency-cruiser", existing: "dependency-cruiser", status: inventory.depcruise.configPath === void 0 ? "present" : "compatible" };
+function scrubIssues(report) {
+  const unsafe2 = [];
+  report.items.forEach((item, index) => {
+    if ([item.detail, ...item.evidence ?? []].some(isUnsafe)) unsafe2.push(index);
+  });
+  return unsafe2;
 }
-function typecheckCapability(inventory) {
-  if (!inventory.typescript.present) return { id: "typecheck", recommended: "existing TypeScript configuration", status: "needs-install" };
-  const impact = inventory.typescript.strict === true ? void 0 : "TypeScript strict flags are recommended; the existing tsconfig is never changed.";
-  return { id: "typecheck", recommended: "existing TypeScript configuration", existing: inventory.typescript.tsconfigPath ?? "TypeScript", status: "present", ...impact === void 0 ? {} : { impact } };
+function isUnsafe(value) {
+  return /(?:^|\n)(?:\/|[A-Za-z]:\\|~\/)/u.test(value) || /(?:sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|AKIA[A-Z0-9]{12,}|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|(?:password|secret|token)\s*[=:])/iu.test(value);
 }
-function onChangeCapability(inventory) {
-  return inventory.eslintD.present ? { id: "on-change", recommended: "eslint_d single-file lint", existing: "eslint_d", status: "present" } : { id: "on-change", recommended: "eslint_d single-file lint", status: "needs-install" };
+function confined(root, path2) {
+  const base = resolve12(root);
+  const target = resolve12(base, path2);
+  if (target !== base && !target.startsWith(`${base}${sep4}`)) throw new Error(`Path escapes repository: ${path2}`);
+  return target;
 }
-function baselineCapability(inventory) {
-  const paths = [inventory.eslint.suppressionsPath, inventory.depcruise.knownViolationsPath].filter((path2) => path2 !== void 0);
-  const impact = paths.map((path2) => `Existing baseline ${path2} is merged, never replaced.`).join(" ");
-  if (paths.length === 0) return { id: "baseline", recommended: "ESLint suppressions and dependency-cruiser known violations", status: "needs-install" };
-  return { id: "baseline", recommended: "ESLint suppressions and dependency-cruiser known violations", existing: paths.join(", "), status: "compatible", impact };
+async function writeAtomic4(path2, data, fs19) {
+  const temporary = `${path2}.${randomUUID4()}.tmp`;
+  try {
+    await fs19.mkdir(dirname9(path2), { recursive: true });
+    await fs19.writeFile(temporary, data);
+    await fs19.rename(temporary, path2);
+    return void 0;
+  } catch (error62) {
+    try {
+      await fs19.unlink(temporary);
+    } catch {
+    }
+    return message6(error62);
+  }
 }
-function requiredInstalls(inventory) {
-  const installs = [];
-  if (!inventory.eslint.present || !inventory.eslint.supported) installs.push("eslint@^9.24.0");
-  if (!inventory.eslintD.present) installs.push("eslint_d");
-  if (!inventory.depcruise.present) installs.push("dependency-cruiser");
-  return installs;
+async function readJson2(path2, fs19) {
+  try {
+    return { ok: true, value: JSON.parse((await fs19.readFile(path2)).toString("utf8")) };
+  } catch (error62) {
+    return { ok: false, message: `Could not read valid report JSON: ${message6(error62)}` };
+  }
 }
-function plannedWrites(inventory) {
-  const eslintPath = inventory.eslint.configPath ?? "eslint.config.mjs";
-  const depcruisePath = inventory.depcruise.configPath ?? ".dependency-cruiser.cjs";
-  const suppressionsPath = inventory.eslint.suppressionsPath ?? ".shore/eslint-suppressions.json";
-  const knownViolationsPath = inventory.depcruise.knownViolationsPath ?? ".shore/dependency-cruiser-known-violations.json";
-  return [
-    { path: eslintPath, action: inventory.eslint.configPath === void 0 ? "create" : "backup-and-overlay" },
-    { path: depcruisePath, action: inventory.depcruise.configPath === void 0 ? "create" : "backup-and-overlay" },
-    { path: suppressionsPath, action: inventory.eslint.suppressionsPath === void 0 ? "create" : "backup-and-overlay" },
-    { path: knownViolationsPath, action: inventory.depcruise.knownViolationsPath === void 0 ? "create" : "backup-and-overlay" },
-    { path: ".shore/guard.json", action: "overlay" },
-    { path: "package.json", action: "overlay" }
-  ];
+async function readOptionalJson(path2, fs19) {
+  try {
+    return { ok: true, value: JSON.parse((await fs19.readFile(path2)).toString("utf8")) };
+  } catch (error62) {
+    return isMissing3(error62) ? { ok: true, value: {} } : { ok: false, message: `Could not read configuration: ${message6(error62)}` };
+  }
 }
-function unsupportedPlan(inventory, policyHash) {
-  const capabilities = buildCapabilities(inventory).map((capability2) => ({ ...capability2, status: "unsupported" }));
-  return { planVersion: 1, policyHash, choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0), capabilities, installs: { packageManager: inventory.packageManager, dev: [] }, writes: [], impacts: [], unsupported: ["Node project required"] };
+function now(options) {
+  return (options.now ?? (() => /* @__PURE__ */ new Date()))();
+}
+function probeFileSystem(fs19) {
+  return {
+    readText: async (path2) => (await fs19.readFile(path2)).toString("utf8"),
+    exists: async (path2) => {
+      try {
+        await fs19.lstat(path2);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    list: (path2) => fs19.readdir(path2)
+  };
+}
+async function assertConfinedWrite(root, target, fs19) {
+  const base = resolve12(root);
+  const relative8 = target.slice(base.length + 1);
+  let current = base;
+  for (const part of relative8.split(sep4)) {
+    current = join24(current, part);
+    try {
+      if ((await fs19.lstat(current)).isSymbolicLink()) return `Refusing to write through symbolic link: ${current}`;
+    } catch (error62) {
+      if (!isMissing3(error62)) return message6(error62);
+    }
+  }
+  return void 0;
 }
 function isRecord5(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -24154,19 +24891,25 @@ function isRecord5(value) {
 function isMissing3(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
 }
-async function exists3(path2) {
-  try {
-    await fs15.access(path2);
-    return true;
-  } catch {
-    return false;
-  }
+function isStage(value) {
+  return STAGES.includes(value);
+}
+function formatIssues(error62) {
+  return error62.issues.map((issue2) => `${issue2.path.join(".") || "$"}: ${issue2.message}`).join("; ");
+}
+function message6(error62) {
+  return error62 instanceof Error ? error62.message : String(error62);
+}
+function success5(messageText, data) {
+  return { command: "report submit", outcome: "pass", exitCode: EXIT_CODES.pass, message: messageText, ...data === void 0 ? {} : { data } };
+}
+function failure6(exitCode3, messageText, data) {
+  return { command: "report submit", outcome: "error", exitCode: exitCode3, message: messageText, ...data === void 0 ? {} : { data } };
 }
 
-// src/commands/guards-apply.ts
-import { spawn as spawn4 } from "node:child_process";
-import * as nodeFs2 from "node:fs/promises";
-import { dirname as dirname6, join as join23, relative as relative7 } from "node:path";
+// src/commands/guards-plan.ts
+import * as fs18 from "node:fs/promises";
+import { join as join25 } from "node:path";
 
 // ../renderers/src/provenance.ts
 function provenanceHeader(pack, options = {}) {
@@ -24180,6 +24923,7 @@ function provenanceHeader(pack, options = {}) {
 }
 
 // ../renderers/src/eslint/render.ts
+var TYPESCRIPT_ESLINT_PARSER_PACKAGE = "@typescript-eslint/parser";
 var UnknownEnforcingRuleKindError = class extends Error {
   ruleId;
   kind;
@@ -24191,7 +24935,7 @@ var UnknownEnforcingRuleKindError = class extends Error {
   }
 };
 var severity = (stage) => stage === "observe" ? 0 : stage === "warn" ? 1 : 2;
-var message5 = (rule2) => `${rule2.diagnostic} Remediation: ${rule2.remediation} [${rule2.ruleId}]`;
+var message7 = (rule2) => `${rule2.diagnostic} Remediation: ${rule2.remediation} [${rule2.ruleId}]`;
 function restrictionPatterns(pack, rule2) {
   const modules = rule2.scope.modules ?? [];
   const destinationNames = modules.length > 1 ? modules.slice(1) : modules;
@@ -24205,7 +24949,7 @@ function directImportRestriction(pack, rule2) {
     ruleId: rule2.ruleId,
     ...files === void 0 ? {} : { files },
     severity: severity(rule2.adoptionStage),
-    pattern: { group, message: message5(rule2) }
+    pattern: { group, message: message7(rule2) }
   };
 }
 function renderEslint(pack) {
@@ -24247,8 +24991,29 @@ function renderEslint(pack) {
   });
   return { fragments, notices };
 }
-function renderEslintSource(pack) {
+function renderEslintSource(pack, options = {}) {
   const rendered = renderEslint(pack);
+  if (options.typescriptParser === true) {
+    const fragments = JSON.stringify(rendered.fragments, null, 2);
+    return `${provenanceHeader(pack)}
+
+import tsParser from '${TYPESCRIPT_ESLINT_PARSER_PACKAGE}';
+
+const shoreConfig = [
+  {
+    name: 'shore/typescript-parser',
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+    },
+  },
+  ...${fragments},
+];
+
+export default shoreConfig;
+`;
+  }
   return `${provenanceHeader(pack)}
 
 const shoreConfig = ${JSON.stringify(rendered.fragments, null, 2)};
@@ -24258,8 +25023,8 @@ export default shoreConfig;
 }
 
 // ../renderers/src/eslint/layered-writer.ts
-import * as fs17 from "node:fs/promises";
-import { basename as basename3, relative as relative6 } from "node:path";
+import * as fs16 from "node:fs/promises";
+import { basename as basename4, relative as relative6 } from "node:path";
 
 // ../renderers/src/managed-block.ts
 var MANAGED_BLOCK_START = "// shore-guard:start";
@@ -24283,26 +25048,26 @@ ${block}
 }
 
 // ../renderers/src/non-destructive.ts
-import * as fs16 from "node:fs/promises";
+import * as fs15 from "node:fs/promises";
 import { constants as constants2 } from "node:fs";
-import { isAbsolute as isAbsolute4, relative as relative5, resolve as resolve9, sep as sep4 } from "node:path";
+import { isAbsolute as isAbsolute4, relative as relative5, resolve as resolve13, sep as sep5 } from "node:path";
 function isMissing4(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
 }
 async function confinedPath2(repoPath, relativePath) {
   if (isAbsolute4(relativePath)) throw new Error(`managed path must be repository-relative: ${relativePath}`);
-  const repo = resolve9(repoPath);
-  const target = resolve9(repo, relativePath);
+  const repo = resolve13(repoPath);
+  const target = resolve13(repo, relativePath);
   const fromRepo = relative5(repo, target);
-  if (fromRepo === ".." || fromRepo.startsWith(`..${sep4}`) || isAbsolute4(fromRepo)) {
+  if (fromRepo === ".." || fromRepo.startsWith(`..${sep5}`) || isAbsolute4(fromRepo)) {
     throw new Error(`managed path escapes repository root: ${relativePath}`);
   }
-  const parts = fromRepo.split(sep4).filter(Boolean);
+  const parts = fromRepo.split(sep5).filter(Boolean);
   let cursor = repo;
   for (const part of parts) {
-    cursor = resolve9(cursor, part);
+    cursor = resolve13(cursor, part);
     try {
-      if ((await fs16.lstat(cursor)).isSymbolicLink()) {
+      if ((await fs15.lstat(cursor)).isSymbolicLink()) {
         throw new Error(`managed path traverses a symbolic link: ${relativePath}`);
       }
     } catch (error62) {
@@ -24314,7 +25079,7 @@ async function confinedPath2(repoPath, relativePath) {
 }
 async function backupBeforeWrite(path2, backupPath = `${path2}.bak`) {
   try {
-    await fs16.copyFile(path2, backupPath, constants2.COPYFILE_EXCL);
+    await fs15.copyFile(path2, backupPath, constants2.COPYFILE_EXCL);
     return true;
   } catch (error62) {
     if (error62 instanceof Error && "code" in error62 && error62.code === "EEXIST") return false;
@@ -24323,21 +25088,22 @@ async function backupBeforeWrite(path2, backupPath = `${path2}.bak`) {
 }
 async function writeFileIfChanged(path2, content) {
   try {
-    if (await fs16.readFile(path2, "utf8") === content) return false;
+    if (await fs15.readFile(path2, "utf8") === content) return false;
   } catch (error62) {
     if (!isMissing4(error62)) throw error62;
   }
-  await fs16.writeFile(path2, content, "utf8");
+  await fs15.writeFile(path2, content, "utf8");
   return true;
 }
 
 // ../renderers/src/eslint/layered-writer.ts
 var ESLINT_OVERLAY_NAME = "eslint.config.shore.mjs";
+var PROVENANCE_PREFIX = "// Generated by @shore/guard-renderers. Do not edit managed content by hand.\n// Policy: ";
 var FLAT_NAMES = ["eslint.config.mjs", "eslint.config.js", "eslint.config.cjs", "eslint.config.ts"];
 var LEGACY_NAMES = [".eslintrc", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.yaml", ".eslintrc.yml"];
-async function exists4(path2) {
+async function exists5(path2) {
   try {
-    await fs17.access(path2);
+    await fs16.access(path2);
     return true;
   } catch {
     return false;
@@ -24346,13 +25112,18 @@ async function exists4(path2) {
 async function findEslintEntry(repoPath) {
   for (const file2 of FLAT_NAMES) {
     const full = await confinedPath2(repoPath, file2);
-    if (await exists4(full)) return { kind: "flat", file: file2, full };
+    if (await exists5(full) && !isShoreGeneratedEslintEntry(await fs16.readFile(full, "utf8"))) return { kind: "flat", file: file2, full };
   }
   for (const file2 of LEGACY_NAMES) {
     const full = await confinedPath2(repoPath, file2);
-    if (await exists4(full)) return { kind: "legacy", file: file2, full };
+    if (await exists5(full)) return { kind: "legacy", file: file2, full };
   }
   return void 0;
+}
+function isShoreGeneratedEslintEntry(source) {
+  const provenance = source.startsWith(PROVENANCE_PREFIX) && /^\/\/ Generated by @shore\/guard-renderers\. Do not edit managed content by hand\.\n\/\/ Policy: [^\n]+\n\/\/ Policy hash: [^\n]+(?:\n|$)/u.test(source);
+  if (provenance) return true;
+  return /^\s*export\s*\{\s*default\s*\}\s*from\s*(['"])\.\/eslint\.config\.shore\.mjs\1\s*;\s*$/u.test(source);
 }
 function importPath(file2) {
   return `./${file2.replaceAll("\\", "/")}`;
@@ -24382,7 +25153,7 @@ const shoreGuardFragments = ${JSON.stringify(fragments, null, 2)};
 ${identifier2}.push(...shoreGuardFragments);`);
 }
 async function writeFenced(entry2, pack) {
-  const original = await fs17.readFile(entry2.full, "utf8");
+  const original = await fs16.readFile(entry2.full, "utf8");
   const defaultIdentifier = /export\s+default\s+([A-Za-z_$][\w$]*)\s*;/u.exec(original)?.[1];
   if (defaultIdentifier === void 0) {
     return { ok: false, mode: "fenced-unsupported", fallbackReason: `cannot append a safe managed block to ${entry2.file}; expected a default-exported config identifier` };
@@ -24414,19 +25185,15 @@ async function writeLayeredEslintConfig(repoPath, pack, options = {}) {
     const preserved = await confinedPath2(repoPath, layeredImport);
     await backupBeforeWrite(entry2.full, preserved);
   }
-  const source = layeredImport === void 0 ? renderEslintSource(pack) : buildLayeredSource(layeredImport, pack);
-  if (await exists4(overlay) && await fs17.readFile(overlay, "utf8") !== source) {
-    const overlayBackupCreated = await backupBeforeWrite(overlay);
-    backupCreated = overlayBackupCreated || backupCreated;
-  }
+  const source = layeredImport === void 0 ? renderEslintSource(pack, { typescriptParser: options.typescriptParser }) : buildLayeredSource(layeredImport, pack);
   const changed = await writeFileIfChanged(overlay, source);
   let rewroteEntryPoint = false;
   if (entry2 !== void 0 && options.rewriteEntryPoint === true) {
     const proxy = `${provenanceHeader(pack)}
-// Backup at ${basename3(entry2.full)}.bak; importable original at ${preservedEntryName(entry2.file)}.
+// Backup at ${basename4(entry2.full)}.bak; importable original at ${preservedEntryName(entry2.file)}.
 export { default } from ${JSON.stringify(importPath(relative6(repoPath, overlay)))};
 `;
-    if (await fs17.readFile(entry2.full, "utf8") !== proxy) {
+    if (await fs16.readFile(entry2.full, "utf8") !== proxy) {
       await writeFileIfChanged(entry2.full, proxy);
     }
     rewroteEntryPoint = true;
@@ -24457,11 +25224,14 @@ function pathPatternToRegex(pattern) {
       if (end === -1) result3 += "!\\(";
       else {
         const excluded = pattern.slice(index + 2, end).split("|").map(escapeRegex2).join("|");
-        result3 += `(?!(?:${excluded})(?:/|$))[^/]+`;
+        const slash = pattern.indexOf("/", end + 1);
+        const segmentSuffix = pattern.slice(end + 1, slash === -1 ? pattern.length : slash);
+        const suffixRegex = pathPatternToRegex(segmentSuffix).slice(1, -1);
+        result3 += `(?!(?:${excluded})${suffixRegex}(?:/|$))[^/]+`;
         index = end;
       }
     } else if (character === "*" && pattern[index + 1] === "*" && pattern[index + 2] === "/") {
-      result3 += "(?:.*/)?";
+      result3 += "(?:|.*/)";
       index += 2;
     } else if (character === "*" && pattern[index + 1] === "*") {
       result3 += ".*";
@@ -24484,7 +25254,7 @@ function moduleSelectors(pack) {
   const preceding = [];
   for (const name of Object.keys(pack.modules.pathMappings).sort()) {
     const own2 = (pack.modules.pathMappings[name] ?? []).map(pathPatternToRegex).map((item) => item.slice(1, -1));
-    const exclusion = preceding.length === 0 ? "" : `(?!${preceding.map((item) => `(?:${item})`).join("|")}$)`;
+    const exclusion = preceding.length === 0 ? "" : `(?!(?:${preceding.map((item) => `(?:${item})`).join("|")})$)`;
     selectors[name] = `^${exclusion}(?:${own2.join("|")})$`;
     preceding.push(...own2);
   }
@@ -24559,7 +25329,7 @@ function renderDepcruise(pack) {
     forbidden: forbidden2,
     allowed,
     ...allowedSeverity === void 0 ? {} : { allowedSeverity },
-    options: { tsConfig: { fileName: "tsconfig.json" }, enhancedResolveOptions: { exportsFields: ["exports"], conditionNames: ["import", "require", "node", "default"] }, combinedDependencies: true }
+    options: { tsConfig: { fileName: "tsconfig.json" }, enhancedResolveOptions: { exportsFields: ["exports"], conditionNames: ["import", "require", "node", "default"] }, combinedDependencies: true, doNotFollow: { path: "node_modules" } }
   };
   return { config: config2, notices };
 }
@@ -24574,7 +25344,7 @@ export default config;
 }
 
 // ../renderers/src/depcruise/writer.ts
-import * as fs18 from "node:fs/promises";
+import * as fs17 from "node:fs/promises";
 var DEPCRUISE_CONFIG_NAME = ".dependency-cruiser.shore.mjs";
 function isMissing5(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
@@ -24585,7 +25355,7 @@ async function writeDepcruiseConfig(repoPath, pack, relativePath = DEPCRUISE_CON
   const source = renderDepcruiseSource(pack);
   let backupCreated = false;
   try {
-    if (await fs18.readFile(path2, "utf8") !== source) backupCreated = await backupBeforeWrite(path2);
+    if (await fs17.readFile(path2, "utf8") !== source) backupCreated = await backupBeforeWrite(path2);
   } catch (error62) {
     if (!isMissing5(error62)) throw error62;
   }
@@ -24593,42 +25363,172 @@ async function writeDepcruiseConfig(repoPath, pack, relativePath = DEPCRUISE_CON
   return { path: path2, changed, backupCreated };
 }
 
-// src/commands/guards-apply.ts
-var STEP_IDS = ["plan", "install", "render-eslint", "render-depcruise", "baseline-eslint", "baseline-depcruise", "config", "hook", "state"];
-var EDIT_GATE = "shore-guard.edit";
-var COMMIT_GATE = "shore-guard.commit";
+// src/commands/guards-types.ts
+var GUARD_INSTALL_SPECIFIERS = {
+  eslint: "eslint@^9.24.0",
+  eslintD: "eslint_d@^14.3.0",
+  dependencyCruiser: "dependency-cruiser@^18.5.0",
+  typescriptEslintParser: `${TYPESCRIPT_ESLINT_PARSER_PACKAGE}@^8.44.0`
+};
 var ESLINT_PATH = "eslint.config.shore.mjs";
+var ESLINT_ENTRY_PATH = "eslint.config.mjs";
 var DEPCRUISE_PATH = ".dependency-cruiser.shore.mjs";
 var DEFAULT_ESLINT_BASELINE = ".shore/eslint-suppressions.json";
 var DEFAULT_DEPCRUISE_BASELINE = ".shore/dependency-cruiser-known-violations.json";
+
+// src/commands/guards-plan.ts
+var POLICY_REQUIRED = "Adopt an architecture policy first (run discovery, then shore-guard adopt).";
+var LEGACY_SUFFIX = "will be ignored by flat config; Shore baselines require ESLint 9.24 or newer.";
+async function readPolicyLockHash(root) {
+  try {
+    const value = JSON.parse(await fs18.readFile(join25(root, ".shore", "policy.lock.json"), "utf8"));
+    return isRecord6(value) && typeof value.contentHash === "string" ? value.contentHash : void 0;
+  } catch (error62) {
+    if (isMissing6(error62) || error62 instanceof SyntaxError) return void 0;
+    throw error62;
+  }
+}
+async function runGuardsPlan({ root, inventory, lockHash }) {
+  const policyHash = lockHash ?? await readPolicyLockHash(root);
+  if (policyHash === void 0) return { command: "guards plan", outcome: "error", exitCode: EXIT_CODES.userDecisionRequired, message: POLICY_REQUIRED };
+  const nodeProject = await exists6(join25(root, "package.json"));
+  const parserInstalled = await exists6(join25(root, "node_modules", "@typescript-eslint", "parser", "package.json"));
+  const shoreGeneratedEntry = await hasShoreGeneratedEntry(root, inventory);
+  const plan = nodeProject ? buildPlan(inventory, policyHash, parserInstalled, shoreGeneratedEntry) : unsupportedPlan(inventory, policyHash);
+  return { command: "guards plan", outcome: "pass", exitCode: EXIT_CODES.pass, message: "Guard toolchain plan ready.", data: { plan } };
+}
+function buildPlan(inventory, policyHash, parserInstalled, shoreGeneratedEntry) {
+  const capabilities = buildCapabilities(inventory, shoreGeneratedEntry);
+  const impacts = capabilities.flatMap((capability2) => capability2.impact === void 0 ? [] : [capability2.impact]);
+  return {
+    planVersion: 1,
+    policyHash,
+    choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0),
+    capabilities,
+    installs: { packageManager: inventory.packageManager, dev: requiredInstalls(inventory, parserInstalled) },
+    writes: plannedWrites(inventory, shoreGeneratedEntry),
+    impacts,
+    unsupported: []
+  };
+}
+function buildCapabilities(inventory, shoreGeneratedEntry = false) {
+  return [lintCapability(inventory, shoreGeneratedEntry), boundariesCapability(inventory), typecheckCapability(inventory), onChangeCapability(inventory), baselineCapability(inventory)];
+}
+function lintCapability(inventory, shoreGeneratedEntry) {
+  if (shoreGeneratedEntry) return { id: "lint", recommended: "ESLint >=9.24 flat config", status: inventory.eslint.supported ? "compatible" : "needs-install" };
+  const conflictPath = inventory.eslint.legacyConfigPath ?? inventory.eslint.configPath;
+  if (inventory.eslint.present && (!inventory.eslint.supported || inventory.eslint.legacyConfigPath !== void 0)) {
+    const path2 = conflictPath ?? "detected configuration";
+    return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint", status: "conflict", impact: `Legacy ESLint configuration ${path2} ${LEGACY_SUFFIX}` };
+  }
+  if (inventory.eslint.present && inventory.eslint.flat) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint flat config", status: "compatible" };
+  if (inventory.eslint.present) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "ESLint", status: "present" };
+  if (inventory.biome.present) return { id: "lint", recommended: "ESLint >=9.24 flat config", existing: "Biome", status: "compatible", existingOption: "biome", impact: "Biome stays for formatting; ESLint is added only for architecture rules." };
+  return { id: "lint", recommended: "ESLint >=9.24 flat config", status: "needs-install" };
+}
+function boundariesCapability(inventory) {
+  if (!inventory.depcruise.present) return { id: "boundaries", recommended: "dependency-cruiser", status: "needs-install" };
+  return { id: "boundaries", recommended: "dependency-cruiser", existing: "dependency-cruiser", status: inventory.depcruise.configPath === void 0 ? "present" : "compatible" };
+}
+function typecheckCapability(inventory) {
+  if (!inventory.typescript.present) return { id: "typecheck", recommended: "existing TypeScript configuration", status: "needs-install" };
+  const impact = inventory.typescript.strict === true ? void 0 : "TypeScript strict flags are recommended; the existing tsconfig is never changed.";
+  return { id: "typecheck", recommended: "existing TypeScript configuration", existing: inventory.typescript.tsconfigPath ?? "TypeScript", status: "present", ...impact === void 0 ? {} : { impact } };
+}
+function onChangeCapability(inventory) {
+  return inventory.eslintD.present ? { id: "on-change", recommended: "eslint_d single-file lint", existing: "eslint_d", status: "present" } : { id: "on-change", recommended: "eslint_d single-file lint", status: "needs-install" };
+}
+function baselineCapability(inventory) {
+  const paths = [inventory.eslint.suppressionsPath, inventory.depcruise.knownViolationsPath].filter((path2) => path2 !== void 0);
+  const impact = paths.map((path2) => `Existing baseline ${path2} is merged, never replaced.`).join(" ");
+  if (paths.length === 0) return { id: "baseline", recommended: "ESLint suppressions and dependency-cruiser known violations", status: "needs-install" };
+  return { id: "baseline", recommended: "ESLint suppressions and dependency-cruiser known violations", existing: paths.join(", "), status: "compatible", impact };
+}
+function requiredInstalls(inventory, parserInstalled) {
+  const installs = [];
+  if (!inventory.eslint.present || !inventory.eslint.supported) installs.push(GUARD_INSTALL_SPECIFIERS.eslint);
+  if (!inventory.eslintD.present) installs.push(GUARD_INSTALL_SPECIFIERS.eslintD);
+  if (!inventory.depcruise.present) installs.push(GUARD_INSTALL_SPECIFIERS.dependencyCruiser);
+  if (inventory.typescript.present && !inventory.eslint.flat && !parserInstalled) installs.push(GUARD_INSTALL_SPECIFIERS.typescriptEslintParser);
+  return installs;
+}
+function plannedWrites(inventory, shoreGeneratedEntry) {
+  const suppressionsPath = inventory.eslint.suppressionsPath ?? DEFAULT_ESLINT_BASELINE;
+  const knownViolationsPath = inventory.depcruise.knownViolationsPath ?? DEFAULT_DEPCRUISE_BASELINE;
+  return [
+    { path: ESLINT_PATH, action: "create" },
+    ...!inventory.eslint.flat || shoreGeneratedEntry ? [{ path: ESLINT_ENTRY_PATH, action: "create" }] : [],
+    { path: DEPCRUISE_PATH, action: "create" },
+    { path: suppressionsPath, action: inventory.eslint.suppressionsPath === void 0 ? "create" : "backup-and-overlay" },
+    { path: knownViolationsPath, action: inventory.depcruise.knownViolationsPath === void 0 ? "create" : "backup-and-overlay" },
+    { path: ".shore/guard.json", action: "overlay" },
+    { path: "package.json", action: "overlay" }
+  ];
+}
+function unsupportedPlan(inventory, policyHash) {
+  const capabilities = buildCapabilities(inventory).map((capability2) => ({ ...capability2, status: "unsupported" }));
+  return { planVersion: 1, policyHash, choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0), capabilities, installs: { packageManager: inventory.packageManager, dev: [] }, writes: [], impacts: [], unsupported: ["Node project required"] };
+}
+async function hasShoreGeneratedEntry(root, inventory) {
+  const path2 = inventory.eslint.configPath;
+  if (!inventory.eslint.flat || path2 === void 0) return false;
+  try {
+    return isShoreGeneratedEslintEntry(await fs18.readFile(join25(root, path2), "utf8"));
+  } catch (error62) {
+    if (isMissing6(error62)) return false;
+    throw error62;
+  }
+}
+function isRecord6(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isMissing6(error62) {
+  return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+async function exists6(path2) {
+  try {
+    await fs18.access(path2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// src/commands/guards-apply.ts
+import { spawn as spawn4 } from "node:child_process";
+import * as nodeFs3 from "node:fs/promises";
+import { dirname as dirname10, join as join26, relative as relative7 } from "node:path";
+var STEP_IDS = ["plan", "install", "render-eslint", "render-depcruise", "baseline-eslint", "baseline-depcruise", "config", "hook", "state"];
+var EDIT_GATE = "shore-guard.edit";
+var COMMIT_GATE = "shore-guard.commit";
 async function runGuardsApply(options) {
   const steps = [];
   const planResult = await runGuardsPlan({ root: options.root, inventory: options.inventory });
   const plan = guardsPlan(planResult);
   if (plan === void 0) {
     steps.push({ id: "plan", status: "failed", detail: planResult.message });
-    return { ...planResult, command: "guards apply", data: { steps, unenforced: [] } };
+    return { ...planResult, command: "guards apply", data: { steps: completeFailedSteps(steps), unenforced: [] } };
   }
   if (plan.choiceRequired && options.choice === void 0) {
     steps.push({ id: "plan", status: "failed", detail: "choice required: shore or existing" });
-    return failure4(EXIT_CODES.userDecisionRequired, "Choose --choice shore or --choice existing.", steps, []);
+    return failure7(EXIT_CODES.userDecisionRequired, "Choose --choice shore or --choice existing.", steps, []);
   }
   const choice = options.choice ?? "shore";
   const pack = await readPack(options.root, options.fs ?? nodeFileSystem);
-  if (pack === void 0) return failure4(EXIT_CODES.config, "Cannot read a valid adopted policy at .shore/policy.json.", steps, []);
+  if (pack === void 0) return failure7(EXIT_CODES.config, "Cannot read a valid adopted policy at .shore/policy.json.", steps, []);
   const existingState = await loadState(options.root, options.fs ?? nodeFileSystem);
   const rerun = await checkRerun(options, plan, existingState);
   if (rerun !== void 0) return rerun;
   const decisions = decideCapabilities(plan, choice, pack);
   if (options.dryRun === true) {
     for (const id of STEP_IDS) steps.push({ id, status: "skipped", detail: `dry-run: ${dryRunDetail(id)}` });
-    return success3("Guard apply dry-run complete; no files were changed.", steps, decisions.unenforced);
+    return success6("Guard apply dry-run complete; no files were changed.", steps, decisions.unenforced);
   }
   steps.push({ id: "plan", status: "done", detail: planDetail(plan, choice) });
   const runtime = runtimeOptions(options);
   const install = await installDependencies(plan, decisions, options.inventory, runtime.process, options.root);
   steps.push(install.step);
-  if (install.step.status === "failed") return failure4(EXIT_CODES.remoteUnavailable, install.step.detail, steps, decisions.unenforced);
+  if (install.step.status === "failed") return failure7(EXIT_CODES.remoteUnavailable, install.step.detail, steps, decisions.unenforced);
   const files = [];
   try {
     await renderSteps(options, pack, decisions, runtime.fs, runtime.operations, steps, files);
@@ -24638,10 +25538,10 @@ async function runGuardsApply(options) {
     await stateStep(options, plan, choice, runtime.fs, existingState, files, steps);
   } catch (error62) {
     const id = nextStepId(steps);
-    steps.push({ id, status: "failed", detail: message6(error62) });
-    return failure4(EXIT_CODES.config, `Guard apply failed during ${id}: ${message6(error62)}`, steps, decisions.unenforced);
+    steps.push({ id, status: "failed", detail: message8(error62) });
+    return failure7(EXIT_CODES.config, `Guard apply failed during ${id}: ${message8(error62)}`, steps, decisions.unenforced);
   }
-  return success3("Architecture guards applied.", steps, decisions.unenforced);
+  return success6("Architecture guards applied.", steps, decisions.unenforced);
 }
 function runtimeOptions(options) {
   return {
@@ -24656,12 +25556,12 @@ function runtimeOptions(options) {
   };
 }
 function guardsPlan(result3) {
-  if (result3.exitCode !== EXIT_CODES.pass || !isRecord6(result3.data) || !isRecord6(result3.data.plan)) return void 0;
+  if (result3.exitCode !== EXIT_CODES.pass || !isRecord7(result3.data) || !isRecord7(result3.data.plan)) return void 0;
   return result3.data.plan;
 }
 async function readPack(root, fs19) {
   try {
-    const input2 = JSON.parse((await fs19.readFile(join23(root, ".shore/policy.json"))).toString("utf8"));
+    const input2 = JSON.parse((await fs19.readFile(join26(root, ".shore/policy.json"))).toString("utf8"));
     const parsed = policyPackSchema.safeParse(input2);
     return parsed.success ? parsed.data : void 0;
   } catch {
@@ -24685,7 +25585,8 @@ function planDetail(plan, choice) {
   return `choice ${choice}${impacts.length === 0 ? "" : `; ${impacts.join(" ")}`}`;
 }
 async function installDependencies(plan, decisions, inventory, processPort, root) {
-  const packages = plan.installs.dev.filter((name) => decisions.eslint || !name.startsWith("eslint") && name !== "eslint_d").filter((name) => decisions.depcruise || name !== "dependency-cruiser");
+  const eslintPackages = /* @__PURE__ */ new Set([GUARD_INSTALL_SPECIFIERS.eslint, GUARD_INSTALL_SPECIFIERS.eslintD, GUARD_INSTALL_SPECIFIERS.typescriptEslintParser]);
+  const packages = plan.installs.dev.filter((name) => decisions.eslint || !eslintPackages.has(name)).filter((name) => decisions.depcruise || name !== GUARD_INSTALL_SPECIFIERS.dependencyCruiser);
   if (packages.length === 0) return { step: { id: "install", status: "skipped", detail: "no dependencies to install" } };
   const command = installCommand(inventory.packageManager, packages);
   if (command === void 0) return { step: { id: "install", status: "failed", detail: `Package manager was not detected; install manually: ${packages.join(" ")}` } };
@@ -24702,18 +25603,19 @@ function installCommand(manager, packages) {
 async function renderSteps(options, pack, decisions, fs19, operations, steps, files) {
   if (decisions.eslint) {
     if (options.inventory.eslint.legacyConfigPath !== void 0) {
-      await writeTextAtomic(join23(options.root, "eslint.config.mjs"), renderEslintSource(pack), fs19);
-      files.push("eslint.config.mjs");
-      steps.push({ id: "render-eslint", status: "done", detail: `rendered eslint.config.mjs; left ${options.inventory.eslint.legacyConfigPath} in place` });
+      await writeTextAtomic(join26(options.root, ESLINT_ENTRY_PATH), renderEslintSource(pack, { typescriptParser: options.inventory.typescript.present }), fs19);
+      files.push(ESLINT_ENTRY_PATH);
+      steps.push({ id: "render-eslint", status: "done", detail: `rendered ${ESLINT_ENTRY_PATH}; left ${options.inventory.eslint.legacyConfigPath} in place` });
     } else {
-      const result3 = await operations.renderEslint(options.root, pack);
+      const result3 = await operations.renderEslint(options.root, pack, { typescriptParser: options.inventory.typescript.present });
       if (!result3.ok) throw new Error(result3.fallbackReason);
       const renderedPath = relative7(options.root, result3.path);
       files.push(renderedPath);
       if (result3.mode === "greenfield") {
-        await writeTextAtomic(join23(options.root, "eslint.config.mjs"), `export { default } from './${renderedPath}';
+        await writeTextAtomic(join26(options.root, ESLINT_ENTRY_PATH), `${provenanceHeader(pack)}
+export { default } from './${renderedPath}';
 `, fs19);
-        files.push("eslint.config.mjs");
+        files.push(ESLINT_ENTRY_PATH);
       }
       steps.push({ id: "render-eslint", status: "done", detail: `rendered ${renderedPath}` });
     }
@@ -24727,37 +25629,37 @@ async function renderSteps(options, pack, decisions, fs19, operations, steps, fi
 async function baselineSteps(options, decisions, operations, steps, files) {
   if (decisions.eslint) {
     const path2 = options.inventory.eslint.suppressionsPath ?? DEFAULT_ESLINT_BASELINE;
-    const existing = await readJson(join23(options.root, path2));
+    const existing = await readJson3(join26(options.root, path2));
     await operations.baselineEslint({ repoPath: options.root, configPath: ESLINT_PATH, suppressionsPath: path2 });
-    const generated = await readJson(join23(options.root, path2));
+    const generated = await readJson3(join26(options.root, path2));
     const merged = mergeJson(generated, existing);
-    await writeJson(join23(options.root, path2), merged);
+    await writeJson(join26(options.root, path2), merged);
     files.push(path2);
     steps.push({ id: "baseline-eslint", status: "done", detail: `grandfathered ${String(countLeaves(merged))} ESLint violations` });
   } else steps.push({ id: "baseline-eslint", status: "skipped", detail: "ESLint policy overlay was not written" });
   if (decisions.depcruise) {
     const path2 = options.inventory.depcruise.knownViolationsPath ?? DEFAULT_DEPCRUISE_BASELINE;
-    const existing = await readJson(join23(options.root, path2));
+    const existing = await readJson3(join26(options.root, path2));
     await operations.baselineDepcruise({ repoPath: options.root, configPath: DEPCRUISE_PATH, baselinePath: path2 });
-    const generated = await readJson(join23(options.root, path2));
+    const generated = await readJson3(join26(options.root, path2));
     const merged = mergeJson(generated, existing);
-    await writeJson(join23(options.root, path2), merged);
+    await writeJson(join26(options.root, path2), merged);
     files.push(path2);
     steps.push({ id: "baseline-depcruise", status: "done", detail: `grandfathered ${String(countLeaves(merged))} dependency violations` });
   } else steps.push({ id: "baseline-depcruise", status: "skipped", detail: "dependency policy configuration was not written" });
 }
 async function configStep(options, choice, fs19, steps, files) {
-  const configPath = join23(options.root, ".shore/guard.json");
-  const packagePath = join23(options.root, "package.json");
+  const configPath = join26(options.root, ".shore/guard.json");
+  const packagePath = join26(options.root, "package.json");
   const config2 = await requiredRecord(configPath, fs19);
   const singleFileCommand = lintCommand(options.inventory, choice);
   const gates = stringArray(config2.installedGates);
   const nextConfig = { ...config2, schemaVersion: 1, installedGates: [.../* @__PURE__ */ new Set([...gates, EDIT_GATE, COMMIT_GATE])], lint: { tool: choice === "shore" ? "eslint" : "custom", singleFileCommand, checkCommand: choice === "shore" ? "eslint ." : singleFileCommand } };
-  await writeAtomic2(configPath, nextConfig, fs19);
+  await writeAtomic5(configPath, nextConfig, fs19);
   const pkg = await requiredRecord(packagePath, fs19);
-  const scripts = isRecord6(pkg.scripts) ? pkg.scripts : {};
+  const scripts = isRecord7(pkg.scripts) ? pkg.scripts : {};
   const nextScripts = { ...scripts, ..."guard:check" in scripts ? {} : { "guard:check": "shore-guard check" }, ..."lint:guard" in scripts ? {} : { "lint:guard": singleFileCommand } };
-  await writeAtomic2(packagePath, { ...pkg, scripts: nextScripts }, fs19);
+  await writeAtomic5(packagePath, { ...pkg, scripts: nextScripts }, fs19);
   files.push(".shore/guard.json", "package.json");
   steps.push({ id: "config", status: "done", detail: "configured lint commands, edit gate, commit gate, and package scripts" });
 }
@@ -24770,8 +25672,8 @@ async function stateStep(options, plan, choice, fs19, loaded, files, steps) {
   const managedPaths = [.../* @__PURE__ */ new Set([...loaded.state.managedPaths, ...files])];
   const fingerprint = await fingerprintManagedFiles(options.root, managedPaths, fs19);
   if (fingerprint.status !== "ok") throw new Error(`${fingerprint.path}: ${fingerprint.reason}`);
-  const now = (options.now ?? (() => /* @__PURE__ */ new Date()))().toISOString();
-  const state = { ...loaded.state, updatedAt: now, managedPaths, fingerprint: fingerprint.fingerprint, guards: { policyHash: plan.policyHash, choice, appliedAt: now, files: [...new Set(files)] } };
+  const now2 = (options.now ?? (() => /* @__PURE__ */ new Date()))().toISOString();
+  const state = { ...loaded.state, updatedAt: now2, managedPaths, fingerprint: fingerprint.fingerprint, guards: { policyHash: plan.policyHash, choice, appliedAt: now2, files: [...new Set(files)] } };
   const saved = await saveState(options.root, state, fs19);
   if (saved.status === "error") throw new Error(saved.reason);
   steps.push({ id: "state", status: "done", detail: `recorded ${String(files.length)} managed files` });
@@ -24780,47 +25682,47 @@ async function checkRerun(options, plan, loaded) {
   if (loaded.status !== "ok" || loaded.state.guards?.policyHash !== plan.policyHash) return void 0;
   const files = loaded.state.guards.files;
   const current = await fingerprintManagedFiles(options.root, files, options.fs ?? nodeFileSystem);
-  if (current.status !== "ok") return failure4(EXIT_CODES.config, `${current.path}: ${current.reason}`, [], []);
+  if (current.status !== "ok") return failure7(EXIT_CODES.config, `${current.path}: ${current.reason}`, [], []);
   const storedFiles = loaded.state.fingerprint.files.filter((item) => files.includes(item.path));
   const drift = detectDrift({ sha256: "", files: storedFiles }, current.fingerprint);
-  if (drift.status === "clean") return success3("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), []);
+  if (drift.status === "clean") return success6("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), []);
   if (options.force === true) return void 0;
-  return failure4(EXIT_CODES.userDecisionRequired, `Applied guard files have drifted: ${drift.files.map((item) => item.path).join(", ")}. Review them or pass --force.`, [], []);
+  return failure7(EXIT_CODES.userDecisionRequired, `Applied guard files have drifted: ${drift.files.map((item) => item.path).join(", ")}. Review them or pass --force.`, [], []);
 }
 async function requiredRecord(path2, fs19) {
   const value = JSON.parse((await fs19.readFile(path2)).toString("utf8"));
-  if (!isRecord6(value)) throw new Error(`${path2} must contain a JSON object`);
+  if (!isRecord7(value)) throw new Error(`${path2} must contain a JSON object`);
   return value;
 }
-async function writeAtomic2(path2, value, fs19) {
+async function writeAtomic5(path2, value, fs19) {
   const temporary = `${path2}.shore-guard-tmp`;
-  await fs19.mkdir(dirname6(path2), { recursive: true });
+  await fs19.mkdir(dirname10(path2), { recursive: true });
   await fs19.writeFile(temporary, `${JSON.stringify(value, null, 2)}
 `);
   await fs19.rename(temporary, path2);
 }
 async function writeTextAtomic(path2, value, fs19) {
   const temporary = `${path2}.shore-guard-tmp`;
-  await fs19.mkdir(dirname6(path2), { recursive: true });
+  await fs19.mkdir(dirname10(path2), { recursive: true });
   await fs19.writeFile(temporary, value);
   await fs19.rename(temporary, path2);
 }
-async function readJson(path2) {
+async function readJson3(path2) {
   try {
-    return JSON.parse(await nodeFs2.readFile(path2, "utf8"));
+    return JSON.parse(await nodeFs3.readFile(path2, "utf8"));
   } catch (error62) {
-    if (isMissing6(error62)) return {};
+    if (isMissing7(error62)) return {};
     throw error62;
   }
 }
 async function writeJson(path2, value) {
-  await nodeFs2.mkdir(dirname6(path2), { recursive: true });
-  await nodeFs2.writeFile(path2, `${JSON.stringify(value, null, 2)}
+  await nodeFs3.mkdir(dirname10(path2), { recursive: true });
+  await nodeFs3.writeFile(path2, `${JSON.stringify(value, null, 2)}
 `);
 }
 function mergeJson(current, prior) {
   if (Array.isArray(current) && Array.isArray(prior)) return [.../* @__PURE__ */ new Set([...current.map(stableJson), ...prior.map(stableJson)])].map((item) => JSON.parse(item));
-  if (isRecord6(current) && isRecord6(prior)) return Object.fromEntries([.../* @__PURE__ */ new Set([...Object.keys(current), ...Object.keys(prior)])].map((key) => [key, key in current && key in prior ? mergeJson(current[key], prior[key]) : current[key] ?? prior[key]]));
+  if (isRecord7(current) && isRecord7(prior)) return Object.fromEntries([.../* @__PURE__ */ new Set([...Object.keys(current), ...Object.keys(prior)])].map((key) => [key, key in current && key in prior ? mergeJson(current[key], prior[key]) : current[key] ?? prior[key]]));
   return current ?? prior;
 }
 function stableJson(value) {
@@ -24828,7 +25730,7 @@ function stableJson(value) {
 }
 function countLeaves(value) {
   if (Array.isArray(value)) return value.length;
-  if (isRecord6(value)) return Object.values(value).reduce((total, item) => total + countLeaves(item), 0);
+  if (isRecord7(value)) return Object.values(value).reduce((total, item) => total + countLeaves(item), 0);
   return value === void 0 || value === null ? 0 : 1;
 }
 function stringArray(value) {
@@ -24840,19 +25742,22 @@ function dryRunDetail(id) {
 function nextStepId(steps) {
   return STEP_IDS[steps.length] ?? "state";
 }
-function success3(messageText, steps, unenforced) {
+function success6(messageText, steps, unenforced) {
   return { command: "guards apply", outcome: "pass", exitCode: EXIT_CODES.pass, message: messageText, data: { steps, unenforced } };
 }
-function failure4(exitCode3, messageText, steps, unenforced) {
-  return { command: "guards apply", outcome: "error", exitCode: exitCode3, message: messageText, data: { steps, unenforced } };
+function failure7(exitCode3, messageText, steps, unenforced) {
+  return { command: "guards apply", outcome: "error", exitCode: exitCode3, message: messageText, data: { steps: completeFailedSteps(steps), unenforced } };
 }
-function message6(error62) {
+function completeFailedSteps(steps) {
+  return STEP_IDS.map((id) => steps.find((step) => step.id === id) ?? { id, status: "skipped", detail: "not run: earlier step failed" });
+}
+function message8(error62) {
   return error62 instanceof Error ? error62.message : String(error62);
 }
-function isRecord6(value) {
+function isRecord7(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function isMissing6(error62) {
+function isMissing7(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
 }
 function runProcess(command, args, cwd) {
@@ -24878,7 +25783,7 @@ function runProcess(command, args, cwd) {
 }
 
 // src/agents/claude-code.ts
-import { join as join24 } from "node:path";
+import { join as join27 } from "node:path";
 var PLUGIN = "shore-guard@shore-guard";
 var MARKETPLACE = "dcassil/shore-guard-plugin";
 function claudeCode(context) {
@@ -24911,18 +25816,18 @@ function claudeCode(context) {
 }
 async function readInstalledPlugin(context) {
   try {
-    const raw = await context.fs.readFile(join24(context.homeDir, ".claude/plugins/installed_plugins.json"));
+    const raw = await context.fs.readFile(join27(context.homeDir, ".claude/plugins/installed_plugins.json"));
     const parsed = JSON.parse(raw);
-    if (!isRecord7(parsed)) return { installed: false };
+    if (!isRecord8(parsed)) return { installed: false };
     const plugins = parsed["plugins"];
-    if (!isRecord7(plugins)) return { installed: false };
+    if (!isRecord8(plugins)) return { installed: false };
     const entries = plugins[PLUGIN];
     if (!Array.isArray(entries) || entries.length === 0) return { installed: false };
     const latest = entries.at(-1);
-    const version2 = isRecord7(latest) && typeof latest["version"] === "string" ? latest["version"] : void 0;
+    const version2 = isRecord8(latest) && typeof latest["version"] === "string" ? latest["version"] : void 0;
     return { installed: true, ...version2 === void 0 ? {} : { version: version2 } };
   } catch (error62) {
-    if (isMissing7(error62) || error62 instanceof SyntaxError) return { installed: false };
+    if (isMissing8(error62) || error62 instanceof SyntaxError) return { installed: false };
     throw error62;
   }
 }
@@ -24936,10 +25841,10 @@ ${result3.stderr}`);
 function commandError(action, stderr) {
   return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
 }
-function isRecord7(value) {
+function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function isMissing7(error62) {
+function isMissing8(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
 }
 
@@ -24994,7 +25899,7 @@ function findPlugin(value) {
     }
     return void 0;
   }
-  if (!isRecord8(value)) return void 0;
+  if (!isRecord9(value)) return void 0;
   const identity2 = [value["id"], value["name"], value["plugin"], value["selector"]].filter((candidate) => typeof candidate === "string");
   if (value["installed"] !== false && identity2.some((candidate) => candidate === "shore-guard" || candidate === PLUGIN2)) {
     return typeof value["version"] === "string" ? { version: value["version"] } : {};
@@ -25012,7 +25917,7 @@ ${result3.stderr}`);
 function commandError2(action, stderr) {
   return new Error(`Failed to ${action}${stderr.trim() === "" ? "." : `: ${stderr.trim()}`}`);
 }
-function isRecord8(value) {
+function isRecord9(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -25030,9 +25935,11 @@ var COMMANDS = {
   check: "Check the repository for violations",
   verify: "Run the completion verification gate",
   doctor: "Diagnose Shore Guard setup problems",
+  discover: "Discover an evidence-backed architecture policy proposal",
   adopt: "Approve, modify, or reject a discovery proposal",
   blueprint: "Submit a scrubbed policy blueprint to the public catalog",
-  guards: "Plan and apply architecture guard tooling"
+  guards: "Plan and apply architecture guard tooling",
+  report: "Submit or queue a scrubbed setup feedback report"
 };
 var GLOBAL_FLAGS = [
   { flag: "--json", description: "Emit the stable JSON result envelope." },
@@ -25112,6 +26019,25 @@ var COMMAND_HELP = {
     exitCodes: [PASS, CONFIG, AUTH, REMOTE, DECISION, UNSAFE],
     example: "shore-guard doctor"
   },
+  discover: {
+    command: "discover",
+    purpose: COMMANDS.discover,
+    usage: "shore-guard discover --json (--greenfield --facts <path> | --interview <path> --slug <slug> --name <name> | [--commit <sha>]) [options]",
+    flags: [
+      { flag: "--commit <sha>", description: "Discover from this exact 40-character commit SHA." },
+      { flag: "--codebase <id>", description: "Select a codebase when the repository contains several." },
+      { flag: "--out <path>", description: "Write the proposal to this path." },
+      { flag: "--dry-run", description: "Return the request and proposal without writing a file." },
+      { flag: "--greenfield", description: "Recommend architecture presets from greenfield facts." },
+      { flag: "--facts <path>", description: "Read and validate greenfield facts JSON." },
+      { flag: "--interview <path>", description: "Assemble an authored blueprint and proposal from interview JSON." },
+      { flag: "--slug <slug>", description: "Set the authored blueprint slug." },
+      { flag: "--name <name>", description: "Set the authored blueprint name." },
+      { flag: "--replace", description: "Replace an existing authored blueprint." }
+    ],
+    exitCodes: [PASS, CONFIG, AUTH, REMOTE, QUOTA, DECISION, UNSAFE],
+    example: "shore-guard discover --json"
+  },
   adopt: {
     command: "adopt",
     purpose: COMMANDS.adopt,
@@ -25149,6 +26075,19 @@ var COMMAND_HELP = {
     ],
     exitCodes: [PASS, CONFIG, REMOTE, DECISION],
     example: "shore-guard guards apply --choice shore --json"
+  },
+  report: {
+    command: "report",
+    purpose: COMMANDS.report,
+    usage: "shore-guard report submit --stage <stage> --file <path> [options]",
+    flags: [
+      { flag: "--stage <stage>", description: "Set the report lifecycle stage." },
+      { flag: "--file <path>", description: "Read report JSON from this path." },
+      { flag: "--pending", description: "Submit queued reports oldest first." },
+      { flag: "--set-consent <always|ask|never>", description: "Set repository report consent without submitting." }
+    ],
+    exitCodes: [PASS, CONFIG, AUTH, REMOTE],
+    example: "shore-guard report submit --stage init --file .shore/reports/draft-init.json"
   }
 };
 function renderCommandHelp(name) {
@@ -25222,6 +26161,28 @@ async function route(argv, cwd, dependencies = {}) {
       ...dependencies.blueprint
     }) };
   }
+  if (command === "report") {
+    if (args[1] !== "submit") return { json: json2, result: fail3(command, "Unknown report command. Usage: shore-guard report submit [options]") };
+    const env2 = dependencies.env ?? process.env;
+    const baseUrl2 = dependencies.baseUrl ?? env2["SHORE_API_BASE_URL"] ?? API_BASE_URL;
+    const lazyKey = async () => {
+      const direct2 = readValueFlag(argv, "--api-key") ?? env2.SHORE_API_KEY;
+      if (direct2 !== void 0) return direct2;
+      const selection2 = dependencies.storeSelection ?? await selectCredentialStore();
+      return (await resolveApiKey({ env: env2, store: selection2.store }))?.key;
+    };
+    return { json: json2, result: await runReportSubmit({
+      cwd,
+      stage: readValueFlag(argv, "--stage"),
+      file: readValueFlag(argv, "--file"),
+      pending: argv.includes("--pending"),
+      setConsent: readValueFlag(argv, "--set-consent"),
+      apiClientFactory: dependencies.report?.apiClientFactory ?? (() => createApiClient({ baseUrl: baseUrl2, getApiKey: lazyKey, fetch: dependencies.fetch })),
+      buildInfo: { pluginVersion: CLI_BUILD.version, cliVersion: CLI_BUILD.version },
+      ...dependencies.report?.fs === void 0 ? {} : { fs: dependencies.report.fs },
+      ...dependencies.report?.now === void 0 ? {} : { now: dependencies.report.now }
+    }) };
+  }
   if (command === "guards") {
     if (args[1] !== "plan" && args[1] !== "apply") return { json: json2, result: fail3(command, "Unknown guards command. Usage: shore-guard guards plan|apply [options]") };
     const inventory = await inventoryToolchain({ root: cwd, fs: nodeProbeFileSystem });
@@ -25242,6 +26203,29 @@ async function route(argv, cwd, dependencies = {}) {
   if (configResult.status === "invalid" && command !== "doctor" && command !== "setup" && !(command === "init" && argv.includes("--plan"))) return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
   const env = dependencies.env ?? process.env;
   const baseUrl = dependencies.baseUrl ?? env["SHORE_API_BASE_URL"] ?? API_BASE_URL;
+  if (command === "discover") {
+    if (configResult.status !== "ok") return { json: json2, result: fail3(command, 'Shore Guard is not initialized. Run "shore-guard init" first.') };
+    const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
+    const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store });
+    if (resolved2 === void 0) return { json: json2, result: { command, outcome: "error", exitCode: EXIT_CODES.auth, message: 'No API key configured. Run "shore-guard login" or set SHORE_API_KEY.' } };
+    const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2.key, fetch: dependencies.fetch });
+    return { json: json2, result: await runDiscover({
+      root: cwd,
+      config: configResult.config,
+      api: client2,
+      commit: readValueFlag(argv, "--commit"),
+      codebaseId: readValueFlag(argv, "--codebase"),
+      output: readValueFlag(argv, "--out"),
+      dryRun: argv.includes("--dry-run"),
+      greenfield: argv.includes("--greenfield"),
+      facts: readValueFlag(argv, "--facts"),
+      interview: readValueFlag(argv, "--interview"),
+      slug: readValueFlag(argv, "--slug"),
+      name: readValueFlag(argv, "--name"),
+      replace: argv.includes("--replace")
+    }) };
+  }
   if (command === "setup") {
     const exec = dependencies.setup?.exec ?? runCommand2;
     const selection2 = dependencies.storeSelection ?? await selectCredentialStore();
@@ -25252,7 +26236,7 @@ async function route(argv, cwd, dependencies = {}) {
       homeDir: homedir2(),
       artifactRoot: artifactRoot(),
       pluginVersion: CLI_BUILD.version,
-      fs: { readFile: (path2) => readFile22(path2, "utf8") }
+      fs: { readFile: (path2) => readFile24(path2, "utf8") }
     };
     const agentsFlag = readValueFlag(argv, "--agents");
     const login = async () => {
@@ -25290,7 +26274,7 @@ async function route(argv, cwd, dependencies = {}) {
       device: {
         client: client2,
         openBrowser: dependencies.deviceLogin?.openBrowser ?? createBrowserOpener(dependencies.deviceLogin?.platform ?? process.platform),
-        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve10) => setTimeout(resolve10, ms))),
+        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve14) => setTimeout(resolve14, ms))),
         now: dependencies.deviceLogin?.now ?? Date.now,
         stderr: dependencies.deviceLogin?.stderr ?? ((line) => {
           process.stderr.write(`${line}
@@ -25319,7 +26303,7 @@ async function route(argv, cwd, dependencies = {}) {
     const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
     const selection2 = direct2 === void 0 ? dependencies.storeSelection ?? await selectCredentialStore() : dependencies.storeSelection ?? { store: NOOP_STORE, kind: "file-fallback" };
     const warnings = [];
-    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store, onWarning: (message7) => warnings.push(message7) });
+    const resolved2 = await resolveApiKey({ explicitKey: apiKeyFlag, env, store: selection2.store, onWarning: (message9) => warnings.push(message9) });
     const client2 = createApiClient({ baseUrl, getApiKey: () => resolved2?.key, fetch: dependencies.fetch });
     return { json: json2, result: await runStatus({
       resolved: resolved2,
@@ -25383,11 +26367,11 @@ var NOOP_STORE = {
   set: () => Promise.reject(new Error("Credential store was not selected.")),
   delete: () => Promise.resolve(void 0)
 };
-function pass(command, message7, data) {
-  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message7, ...data === void 0 ? {} : { data } };
+function pass(command, message9, data) {
+  return { command, outcome: "pass", exitCode: EXIT_CODES.pass, message: message9, ...data === void 0 ? {} : { data } };
 }
-function fail3(command, message7) {
-  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message7 };
+function fail3(command, message9) {
+  return { command, outcome: "error", exitCode: EXIT_CODES.config, message: message9 };
 }
 function isCommandName(value) {
   return Object.hasOwn(COMMANDS, value);
@@ -25404,12 +26388,12 @@ function stripOptions(argv) {
     const value = argv[index];
     if (value === void 0) continue;
     if (value === "--json" || value === "--plan" || value === "--help" || value === "-h" || value === "--no-browser") continue;
-    if (["--api-key", "--proposal", "--approved-by", "--rationale", "--agents", "--file", "--choice"].includes(value)) {
+    if (["--api-key", "--proposal", "--approved-by", "--rationale", "--agents", "--file", "--choice", "--commit", "--codebase", "--out", "--facts", "--interview", "--slug", "--name", "--stage", "--set-consent"].includes(value)) {
       index += 1;
       continue;
     }
-    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale=", "--agents=", "--file=", "--choice="].some((prefix) => value.startsWith(prefix))) continue;
-    if (["--approve", "--modify", "--reject", "--replace-lock", "--skip-agents", "--dry-run", "--force"].includes(value)) continue;
+    if (["--api-key=", "--proposal=", "--approved-by=", "--rationale=", "--agents=", "--file=", "--choice=", "--commit=", "--codebase=", "--out=", "--facts=", "--interview=", "--slug=", "--name=", "--stage=", "--set-consent="].some((prefix) => value.startsWith(prefix))) continue;
+    if (["--approve", "--modify", "--reject", "--replace-lock", "--skip-agents", "--dry-run", "--force", "--greenfield", "--replace", "--pending"].includes(value)) continue;
     result3.push(value);
   }
   return result3;
@@ -25426,7 +26410,7 @@ function artifactRoot() {
   const executable2 = process.argv[1];
   if (executable2 === void 0) return void 0;
   try {
-    return dirname7(dirname7(realpathSync(executable2)));
+    return dirname11(dirname11(realpathSync(executable2)));
   } catch {
     return void 0;
   }

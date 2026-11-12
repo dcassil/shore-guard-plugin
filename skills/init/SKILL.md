@@ -1,16 +1,16 @@
 ---
-name: shore-guard-init
+name: init
 description: Guided, approval-first Shore Guard setup for this repository.
 ---
 # Guided initialization
 
-Step ids: `cli, login, connection, write-config, update-gitignore, commit, discovery, guards`
+Step ids: `cli, login, connection, write-config, update-gitignore, commit, discovery, guards, report`
 
 ## 0. Follow the safety rules
 
 Never paste or accept an API key in chat. Never run a step the user has not approved. `shore-guard <command> --help` is safe to run. If `shore-guard` is not on PATH, use `node "${CLAUDE_PLUGIN_ROOT}/bin/shore-guard"` for every command below. If the CLI is missing entirely, ask the user to run `npx shore-guard setup` in a terminal, or `npm install -g shore-guard`.
 
-Apply the completion-contract exit-code table to every CLI result: 0 continue; 1 remediate findings; 2 repair configuration or the internal error; 3 log in or escalate; 4 remediate remote availability; 5 remediate quota; 6 follow decision and git-safety guidance; 7 commit or restore a clean tree. For any other exit, escalate. Stop on every nonzero exit after giving its remediation.
+Apply the `completion-contract` skill (`shore-guard:completion-contract`) exit-code table to every CLI result: 0 continue; 1 remediate findings; 2 repair configuration or the internal error; 3 log in or escalate; 4 remediate remote availability; 5 remediate quota; 6 follow decision and git-safety guidance; 7 commit or restore a clean tree. For any other exit, escalate. Stop on every nonzero exit after giving its remediation.
 
 Manual:
 `shore-guard <command> --help`
@@ -81,16 +81,25 @@ Manual:
 
 ## 10. Discover architecture policy
 
-After the configuration commit, follow the discovery skill; do not reinvent it here. Write the proposal to `.shore/proposals/<YYYY-MM-DD>-discovery.json`, then summarize its modules, edges, rules, and tradeoffs in no more than 10 lines. Ask exactly one question with exactly these options: approve / modify / reject / skip. When adopt succeeds, follow the guards skill for the final guards step.
+After the configuration commit, follow the discovery skill (`shore-guard:discovery`); do not reinvent it here. If the full steps of that skill are not in your context, read ${CLAUDE_PLUGIN_ROOT}/skills/discovery/SKILL.md before doing anything else; do not proceed from this summary alone. Run `shore-guard discover --json` and read the proposal path from its output, then summarize its modules, edges, rules, and tradeoffs in no more than 10 lines. Ask exactly one question with exactly these options: approve / modify / reject / skip. When adopt succeeds, follow the guards skill (`shore-guard:guards`) for the final guards step. When guards setup finishes, follow the report skill (`shore-guard:report`) with stage init to file the setup report.
 
 For approve, run `shore-guard adopt --proposal <file> --approve --json`. For modify, ask the user to edit the proposal JSON, then rerun adopt with `--approve`. For reject, run `shore-guard adopt --proposal <file> --reject --json`; rejection writes nothing. For skip, say discovery can be run later from the discovery skill and continue to finish.
+
+Do not pass --approved-by unless the user has told you the name to record; never take it from git configuration or guess it.
 
 After approval, show `git status --porcelain` and the diffs for `.shore/policy.json`, `.shore/policy.lock.json`, and `AGENTS.md`. Ask for approval, then commit them with `chore: adopt Shore Guard architecture policy`. For option (a), push to the same `shore-guard/setup` branch so the pull request includes the policy; if the pull request already exists, say the push updates it.
 
 Manual:
 `shore-guard adopt --proposal <file> --approve --json`
 
-## 11. Finish
+## 11. File the setup report
+
+After guards setup finishes, follow the report skill with stage init. If reporting is disabled for this repository, continue without changing that choice.
+
+Manual:
+`shore-guard report submit --stage init --file .shore/reports/draft-init.json`
+
+## 12. Finish
 
 Run `shore-guard doctor --json` and summarize the result using the completion-contract table. Remind the user that `check` and `verify` need the configuration commit on the branch being verified.
 

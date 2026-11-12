@@ -13,7 +13,7 @@
 11. Inspect the complete configuration: `cat .shore/guard.json`.
 12. Stage the generated files: `git add .shore/guard.json .gitignore`.
 13. Commit the configuration: `git commit -m "chore: add Shore Guard configuration"`.
-14. Follow the discovery skill and write its proposal to `.shore/proposals/<YYYY-MM-DD>-discovery.json`.
+14. Follow the discovery skill (`shore-guard:discovery`), run `shore-guard discover --json`, and read the proposal path from its output.
 15. Review the proposal's modules, edges, rules, and tradeoffs; choose approve, modify, reject, or skip.
 16. Approve it when ready: `shore-guard adopt --proposal <file> --approve --json`.
 17. Inspect the adopted policy changes: `git status --porcelain && git diff -- .shore/policy.json .shore/policy.lock.json AGENTS.md`.

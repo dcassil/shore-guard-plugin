@@ -1,5 +1,5 @@
 ---
-name: shore-guard-guards
+name: guards
 description: Install and configure the rule engines that enforce the adopted Shore Guard policy, with one explicit confirmation.
 ---
 # Guided guards setup
@@ -8,14 +8,15 @@ description: Install and configure the rule engines that enforce the adopted Sho
 
 Never paste or accept a secret credential in chat. Never run a step the user has not approved. `shore-guard <command> --help` is safe to run. If `shore-guard` is not on PATH, use `node "${CLAUDE_PLUGIN_ROOT}/bin/shore-guard"` for every command below. If the CLI is missing entirely, ask the user to run `npx shore-guard setup` in a terminal, or `npm install -g shore-guard`.
 
-Apply the completion-contract exit-code table to every CLI result: 0 continue; 1 remediate findings; 2 repair configuration or the internal error; 3 log in or escalate; 4 remediate remote availability; 5 remediate quota; 6 follow decision and git-safety guidance; 7 commit or restore a clean tree. For any other exit, escalate. Stop on every nonzero exit after giving its remediation.
+Apply the `completion-contract` skill (`shore-guard:completion-contract`) exit-code table to every CLI result: 0 continue; 1 remediate findings; 2 repair configuration or the internal error; 3 log in or escalate; 4 remediate remote availability; 5 remediate quota; 6 follow decision and git-safety guidance; 7 commit or restore a clean tree. For any other exit, escalate. Stop on every nonzero exit after giving its remediation.
 
 Manual:
 `shore-guard <command> --help`
 
 ## 1. Read the plan
 
-Run `shore-guard guards plan --json` and parse `data.plan`. If the exit is nonzero, apply the completion-contract table and stop with the remediation. When exit 6 says `Adopt an architecture policy first (run discovery, then shore-guard adopt).`, tell the user to run the discovery skill first and stop.
+Run `shore-guard guards plan --json` and parse `data.plan`. If the exit is nonzero, apply the completion-contract table and stop with the remediation. When exit 6 says `Adopt an architecture policy first (run discovery, then shore-guard adopt).`, tell the user to run the discovery skill (`shore-guard:discovery`) first and stop.
+If the full steps of that skill are not in your context, read ${CLAUDE_PLUGIN_ROOT}/skills/discovery/SKILL.md before doing anything else; do not proceed from this summary alone.
 
 Manual:
 `shore-guard guards plan --json`
@@ -77,6 +78,8 @@ Manual:
 ## 5. Finish
 
 Tell the user that saving a file now runs the single-file check through the edit hook, `shore-guard check` runs the full gate, and the baseline only shrinks: fix grandfathered violations when touching those files.
+
+Then follow the report skill (`shore-guard:report`) with stage guards.
 
 Manual:
 `shore-guard check`
