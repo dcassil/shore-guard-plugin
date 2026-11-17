@@ -1,35 +1,40 @@
 ---
 name: discovery
-description: Investigate a repository and produce an evidence-backed Shore Guard policy proposal for human approval.
+description: Investigate a repository, select a catalog blueprint, or produce a short-lived evidence-backed proposal.
 ---
 
 # Shore Guard discovery
 
-Produce a proposal JSON matching `@shore/guard-policy`'s `PolicyProposal`. This is investigation, not installation: do not write a policy pack, lock, baseline, or generated configuration. Do not alter the repository.
+A blueprint is a catalog entry of pre-made architecture and rule definitions. A proposal is produced only when a blueprint must be derived from the repository's own solid architecture; it is used to generate rules, may optionally be submitted as a public blueprint, and is then discarded. Discovery does not install tools or rule configuration.
 
-## 1. Establish scope
+## 1. Assess
 
-Inventory the directory topology without generated/vendor directories. Read root and workspace manifests, package-manager workspace declarations, `tsconfig` references and path aliases, build/lint configs, architecture documentation, and any `AGENTS.md`. In a monorepo, investigate and report each workspace separately before proposing cross-workspace boundaries.
+Inventory the topology without generated or vendor directories. Read root and workspace manifests, workspace declarations, `tsconfig` references and aliases, build and lint configuration, architecture documentation, and any `AGENTS.md`.
 
-If `.shore/policy.lock.json` exists, read it and cite it as `existing-policy` evidence. Explain the existing decision and any proposed change; never silently re-propose or replace it.
+In a monorepo, assess every package separately. Each package gets its own blueprint choice because packages can differ. Guards are currently set up at the repository root, so when packages need different blueprints, tell the user that only one can be set up automatically today and which package and blueprint you recommend for the root setup.
 
-## 2. Classify greenfield deterministically
-
-A source file is a non-generated implementation file under the scoped repository/workspace; exclude vendored dependencies, build output, lockfiles, manifests, configuration, documentation, tests, fixtures, and generated code. An internal import edge is a resolvable import from one source file in scope to another.
+A source file is a non-generated implementation file under the scoped repository or workspace; exclude vendored dependencies, build output, lockfiles, manifests, configuration, documentation, tests, fixtures, and generated code. An internal import edge is a resolvable import from one source file in scope to another.
 
 Classify as **greenfield/near-empty** exactly when there are zero source files, or when there are at most two source files and zero observed internal import edges. Three source files are brownfield even with no edges; one or two files with an internal edge are brownfield. Record counts and cited paths.
 
-For greenfield/near-empty scopes, do not infer architecture. A selected preset enters the same proposal and approval path with empty repository baselines. Use `greenfield` evidence on every proposed module, edge, and rule, explaining that it comes from the user's preset selection rather than observed code.
+Get the catalog candidates for every repository, brownfield included. Answer the section 2 fields first, then write `.shore/discovery-facts.json` with exactly these four keys and no others: `languages` (array of strings), `frameworksAndTools` (array of strings; use `["none"]` when there are none), `repoShape` (`single`, `monorepo`, or `unknown`), and `appKind` (`client`, `server`, `fullstack`, `cli`, `plugin`, `library`, or `unknown`). Run `shore-guard discover --greenfield --facts .shore/discovery-facts.json --json`; the option is named for its first use and works for any repository. Keep every `data.candidates` entry: `policyPackId` is the blueprint id that guards takes, and `name`, `score`, `fitReasons`, and `whenToAvoid` describe the fit. Guards does not accept `presetId`. When `data.interviewRequired` is true, no candidate fits on these facts alone.
 
-## 2b. No suitable preset
+For brownfield, also run `shore-guard discover --json`. It needs a clean working tree and a commit Shore has scanned. It writes a proposal derived from the repository's own architecture and returns `data.proposalPath`, `data.summary`, and `data.dropped`; list every `data.dropped` entry with its reason.
 
-Continue to the interview when `discover` returns `interviewRequired`, or when the user declines every candidate. If the user declines the interview, return to the existing candidate offer and stop with exit 6 decision semantics; do not assemble a tailored result or write files.
+On exit 6, handle `data.reason` as follows:
 
-## 2c. Interview
+- `codebase_required`: list every `data.codebases` entry (`codebaseId`, `rootPath`, `displayName`), ask which one to assess, then rerun with `shore-guard discover --codebase <codebaseId> --json`.
+- `profile_stale`: relay the returned remediation and stop.
+- `scan_not_found`: relay the returned message and remediation and stop.
+- Any other reason: apply the `completion-contract` skill (`shore-guard:completion-contract`) table and stop.
 
-Use this fixed field set: `languages`, `frameworksAndTools`, `repoShape`, `appKind`, `lintSystem`, and `testFramework`.
+For every other nonzero exit, apply the completion-contract table and stop.
 
-Show each supported value as `Detected <value> from <evidence>; correct?` and ask only about fields that remain unresolved. Ask the corresponding text below byte-for-byte only when a field has no evidence. Also use the corresponding question when evidence conflicts and cannot support one value, first citing every conflicting fact.
+## 2. Interview, answered by the agent
+
+Use exactly these fields: `languages`, `frameworksAndTools`, `repoShape`, `appKind`, `lintSystem`, and `testFramework`.
+
+Answer every field determinable from the repository and record its evidence. Do not ask the user to confirm fields answered from repository evidence. Ask only for fields that cannot be determined or where evidence conflicts. For a conflict, cite every conflicting fact before asking the corresponding question byte-for-byte:
 
 - `languages`: "What language(s) will you use in this project? (JS/TS, Python, Rust, Ruby, Go, other)"
 - `frameworksAndTools`: "What frameworks or tools will you use? (for example Vite, Next.js, Webpack, Vercel, Fly, none)"
@@ -38,60 +43,46 @@ Show each supported value as `Detected <value> from <evidence>; correct?` and as
 - `lintSystem`: "No lint rules were found. Do you have a preferred rules system? Shore recommends flat ESLint with architecture boundaries: it checks the file you just saved and only requires files to pass once they are touched, grandfathering existing violations behind a ratchet baseline."
 - `testFramework`: "No test framework was found. Do you have a preference? Shore recommends Vitest (plus Playwright for browser end-to-end when the app has a UI)."
 
-Confirm corrected detections as asked answers. Record `none` when the user chooses no lint or test system. Retain the evidence paths for every detected or answered field.
+Record `none` when the user chooses no lint or test system. Retain evidence for every answer.
 
-## 3. Investigate brownfield evidence
+Run the interview command only when a tailored blueprint is needed: the candidates run returned `data.interviewRequired` true, or no candidate fits and there is no brownfield proposal. If the user declines to answer a field you could not determine, do not run it; choose among the candidates in section 3. Otherwise write `.shore/discovery-interview.json` with one entry per field, each shaped `{ "value": "<answer>", "source": "inferred", "evidence": ["<repository-relative path or fact>"] }`; use `inferred` for a field answered from the repository and `asked` for a field the user answered. Choose a lowercase hyphenated slug and human-readable name with the user, then run `shore-guard discover --interview .shore/discovery-interview.json --slug <slug> --name <name> --json`. It writes `.shore/blueprints/<slug>.json` and a proposal, and returns `data.proposalPath`, `data.blueprintId`, and `data.strength`.
 
-Run `shore-guard discover --json`.
+For every nonzero exit, apply the completion-contract table and stop. If `data.strength.strong` is false, relay every `data.strength.reasons` entry.
 
-On exit 6, handle `data.reason` as follows:
+## 3. Decide the outcome
 
-- `codebase_required`: the repository has several codebases; list every entry in `data.codebases` (`codebaseId`, `rootPath`, `displayName`), ask the user which one to discover, then rerun with `shore-guard discover --codebase <codebaseId> --json`.
-- `profile_stale`: relay the remediation returned by the command and stop.
-- `scan_not_found`: relay the returned message and remediation and stop.
-- Any other reason: apply the `completion-contract` skill (`shore-guard:completion-contract`) table and stop.
+Choose one outcome and tell the user with its sentence verbatim:
 
-For every other nonzero exit, apply the completion-contract table and stop. On success, read `data.proposalPath`. Summarize the returned proposal's modules, edges, rules, and tradeoffs in no more than 10 lines, then list every entry in `data.dropped` with its returned reason. Continue to section 5.
+1. `We found an architecture that aligns closely to yours.`
+2. `We found an architecture that is considered first class for your type of project and suggest creating rules that can transition your code towards this over time.`
+3. `We did not have an existing architecture that matches yours, but upon review, your architecture is solid. We will set up rules and guards that will help keep it that way as your codebase evolves.`
 
-## 4. Discover a greenfield proposal
+Decide by comparing the repository's actual modules and dependencies with each candidate. Outcomes one and two use a candidate's `policyPackId` and pass it as `--blueprint <id>` to guards. If the architecture is neither close to a blueprint nor solid, use outcome two with the best-fitting blueprint and explain what must change. Outcome three passes `--source <proposalPath>` with the `data.proposalPath` from the brownfield run, or from the interview run when that is the only proposal. A proposal whose `data.strength.strong` is false is not a solid architecture; use outcome two. Never author proposal JSON for a catalog blueprint.
 
-Gather facts for `languages`, `frameworksAndTools`, `repoShape`, `appKind`, `lintSystem`, and `testFramework`, retaining repository-relative evidence paths for every fact. Write them to `.shore/discovery-facts.json`, then run:
+## 4. Summarize the rules
 
-`shore-guard discover --greenfield --facts .shore/discovery-facts.json --json`
+In no more than about ten lines, summarize the modules, main forbidden dependencies, entry-point rules, and that today's violations are grandfathered so the code can move toward the architecture over time. Do not ask the user to read or edit JSON. Ask one question: proceed, or stop.
 
-For every nonzero exit, apply the completion-contract table and stop. Present every returned candidate with its `fitReasons` and `whenToAvoid` values.
+On stop, change nothing. On proceed, follow the guards skill (`shore-guard:guards`) with the selected source option. If the full steps of that skill are not in your context, read ${CLAUDE_PLUGIN_ROOT}/skills/guards/SKILL.md before doing anything else; do not proceed from this summary alone.
 
-When the user selects a preset, write a proposal with `source: "preset"` and that `presetId` to `.shore/proposals/<YYYY-MM-DD>-preset.json`, using the preset's local pack data, `greenfield` evidence on every item, and empty repository baselines. Summarize the proposal in no more than 10 lines and continue to section 5.
+After setup, tell the user to review the pull request or, on the current branch, recap what was written. State plainly: From here, the rules belong to this repository. Your agent may add, change, or remove them as the architecture evolves, and Shore Guard will not change them again.
 
-If the result has `interviewRequired`, or the user declines every candidate, follow section 2c. Write the completed answers and evidence to `.shore/discovery-interview.json`, choose a lowercase hyphenated slug and a human-readable name with the user, then run:
+## 7. Offer catalog submission
 
-`shore-guard discover --interview .shore/discovery-interview.json --slug <slug> --name <name> --json`
+Run this section only when outcome three was used and the interview run wrote `.shore/blueprints/<slug>.json`. Never offer it for a catalog blueprint.
 
-For every nonzero exit, apply the completion-contract table and stop. If the returned strength is not strong, relay every entry in `data.strength.reasons`. Read `data.proposalPath`, summarize the proposal in no more than 10 lines, list `data.dropped`, and continue to section 5.
-
-## 5. Approval handoff
-
-Tell the user to review the JSON, edit it if desired, then run `shore-guard adopt --proposal <file> --approve`. Rejection (`--reject`) writes nothing. An existing lock requires `--replace-lock`. Approval is the only path that writes the pack, lock, and fenced Shore Guard section in `AGENTS.md`. After approval, follow the guards skill (`shore-guard:guards`) to install and configure the rule engines that enforce the adopted policy.
-If the full steps of that skill are not in your context, read ${CLAUDE_PLUGIN_ROOT}/skills/guards/SKILL.md before doing anything else; do not proceed from this summary alone.
-
-Do not pass --approved-by unless the user has told you the name to record; never take it from git configuration or guess it.
-
-## 6. Offer catalog submission
-
-Run this section only after an adopted proposal with `source: "authored"`. Never offer submission for `preset` or `discovery` sources.
-
-Run `shore-guard blueprint submit --file .shore/blueprints/<id>.json --dry-run --json`. If the command exits 6 with strength reasons in `data.reasons`, stop silently without making an offer. This includes a blueprint that became weak after adoption. If the command says the blueprint id is already listed in `submittedBlueprints`, relay that message and do not offer again. If the command exits 2 because the installed version has no `blueprint` subcommand, tell the user to upgrade Shore Guard and stop. For every other nonzero exit, apply the completion-contract table and stop with its remediation. Continue only on exit 0.
+Run `shore-guard blueprint submit --file .shore/blueprints/<slug>.json --dry-run --json`. If exit 6 includes strength reasons in `data.reasons`, stop silently. If the id is in `submittedBlueprints`, relay that message and do not offer again. If exit 2 says there is no `blueprint` subcommand, tell the user to upgrade Shore Guard and stop. For every other nonzero exit, apply the completion-contract table and stop. Continue only on exit 0.
 
 Show this reassurance verbatim:
 
 This sends only a generalized architecture schema: module names, path patterns, edges, and rules. It contains no code, file contents, repository name, URLs, or evidence from your project.
 
-Then print the complete `data.payload` JSON from the dry run and ask exactly:
+Print the complete `data.payload` JSON and ask exactly:
 
 Submit this blueprint to the public Shore Guard catalog? (yes/no)
 
 Only an explicit yes is consent. For every other answer, say exactly: "Not submitted. You can run `shore-guard blueprint submit --file <path>` later." Then stop.
 
-On yes, run `shore-guard blueprint submit --file .shore/blueprints/<id>.json --json` without `--dry-run`. On exit 0, report `data.issueUrl`. On exit 6 with `data.prefilledUrl`, say that no GitHub credential was found and give the web address to open. On exit 3, tell the user to run `shore-guard login` or escalate; do not complete. On exit 4, report remote availability as a distinct non-completion state and remediate or escalate; never report success. For every other nonzero exit, apply the completion-contract table and stop with its remediation. Relay an already-submitted message and never offer that blueprint id again.
+On yes, run the same command without `--dry-run`. On exit 0, report `data.issueUrl`. On exit 6 with `data.prefilledUrl`, say no GitHub credential was found and give the web address to open. On exit 3, tell the user to run `shore-guard login` or escalate; do not complete. On exit 4, report remote availability as a distinct non-completion state and remediate or escalate. For every other nonzero exit, apply the completion-contract table and stop. Relay an already-submitted message and never offer that id again.
 
 Then follow the report skill (`shore-guard:report`) with stage discovery.

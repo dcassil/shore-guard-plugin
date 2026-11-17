@@ -1,6 +1,6 @@
 ---
 name: init
-description: Guided, approval-first Shore Guard setup for this repository.
+description: Guided one-time Shore Guard setup for this repository.
 ---
 # Guided initialization
 
@@ -22,7 +22,7 @@ Run `shore-guard init --plan --json`. Parse `data.plan`. If the exit is nonzero,
 Manual:
 `shore-guard init --plan --json`
 
-## 2. Ask for one approval
+## 2. Choose where to work
 
 Present `data.plan.steps` as a numbered list. Show a status marker, `title — detail`, every `changes` path when present, and the `manual` command. Then ask exactly one question with exactly these options:
 
@@ -79,22 +79,20 @@ For (a), run `git push -u origin shore-guard/setup`. If `gh auth status` succeed
 Manual:
 `git push -u origin shore-guard/setup && gh pr create --base <default> --title "Add Shore Guard configuration" --body <short-body>`
 
-## 10. Discover architecture policy
+## 10. Discover and set up rules
 
-After the configuration commit, follow the discovery skill (`shore-guard:discovery`); do not reinvent it here. If the full steps of that skill are not in your context, read ${CLAUDE_PLUGIN_ROOT}/skills/discovery/SKILL.md before doing anything else; do not proceed from this summary alone. Run `shore-guard discover --json` and read the proposal path from its output, then summarize its modules, edges, rules, and tradeoffs in no more than 10 lines. Ask exactly one question with exactly these options: approve / modify / reject / skip. When adopt succeeds, follow the guards skill (`shore-guard:guards`) for the final guards step. When guards setup finishes, follow the report skill (`shore-guard:report`) with stage init to file the setup report.
+After the configuration commit, follow the discovery skill (`shore-guard:discovery`); do not reinvent it here. If the full steps are not in context, read ${CLAUDE_PLUGIN_ROOT}/skills/discovery/SKILL.md before doing anything else. It assesses each package, answers determinable interview fields without confirmation, selects one of the three outcomes, summarizes the rules in about ten lines, and asks only whether to proceed or stop.
 
-For approve, run `shore-guard adopt --proposal <file> --approve --json`. For modify, ask the user to edit the proposal JSON, then rerun adopt with `--approve`. For reject, run `shore-guard adopt --proposal <file> --reject --json`; rejection writes nothing. For skip, say discovery can be run later from the discovery skill and continue to finish.
+On proceed, follow the guards skill with the selected `--blueprint <id>` or `--source <proposalPath>`. After setup, show `git status --porcelain` and the generated rule files and baselines. Ask before committing, then commit them with `chore: add Shore Guard rules and guards`. For option (a), push the same branch so its pull request is updated. For option (b), recap what was written.
 
-Do not pass --approved-by unless the user has told you the name to record; never take it from git configuration or guess it.
-
-After approval, show `git status --porcelain` and the diffs for `.shore/policy.json`, `.shore/policy.lock.json`, and `AGENTS.md`. Ask for approval, then commit them with `chore: adopt Shore Guard architecture policy`. For option (a), push to the same `shore-guard/setup` branch so the pull request includes the policy; if the pull request already exists, say the push updates it.
+Tell the user: From here, the rules belong to this repository. Your agent may add, change, or remove them as the architecture evolves, and Shore Guard will not change them again.
 
 Manual:
-`shore-guard adopt --proposal <file> --approve --json`
+`shore-guard discover --json`
 
 ## 11. File the setup report
 
-After guards setup finishes, follow the report skill with stage init. If reporting is disabled for this repository, continue without changing that choice.
+After guards setup finishes, follow the report skill (`shore-guard:report`) with stage init. If reporting is disabled for this repository, continue without changing that choice.
 
 Manual:
 `shore-guard report submit --stage init --file .shore/reports/draft-init.json`
