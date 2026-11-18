@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "374e1e67a01c2185c54f31658b7594f0c9037890", version: "0.6.0" };
+var define_SHORE_GUARD_BUILD_default = { sha: "40e4da4c1cb0641884003ca605a75919d4325353", version: "0.7.0" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -5038,7 +5038,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve15) {
+function isRecursive(inst, stack, resolve17) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -5048,7 +5048,7 @@ function isRecursive(inst, stack, resolve15) {
   let result3 = NONE;
   const check2 = (child) => {
     if (result3 !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve15);
+      const answer = isRecursive(child, stack, resolve17);
       if (answer > result3)
         result3 = answer;
     }
@@ -5059,7 +5059,7 @@ function isRecursive(inst, stack, resolve15) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve15) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve17) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -5123,7 +5123,7 @@ function isRecursive(inst, stack, resolve15) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve15 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve17 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -19689,6 +19689,11 @@ var guardConfigSchema = external_exports.object({
   autoCreateTempBranch: external_exports.boolean().optional(),
   feedbackReports: external_exports.enum(["always", "ask", "never"]).optional(),
   installedGates: external_exports.array(external_exports.string().min(1)).optional(),
+  setupDecisions: external_exports.partialRecord(
+    external_exports.enum(["lint", "boundaries", "shore-guard", "commit-hook", "on-save", "ci"]),
+    external_exports.enum(["accepted", "declined"])
+  ).optional(),
+  commitChecks: external_exports.object({ typecheck: external_exports.boolean() }).strict().optional(),
   lint: external_exports.object({
     tool: external_exports.enum(["eslint", "custom"]),
     singleFileCommand: external_exports.string().min(1),
@@ -19743,9 +19748,9 @@ function errorMessage(error62) {
 // ../core/src/git/exec.ts
 import { execFile } from "node:child_process";
 function createGitRunner(execute = execFile) {
-  return (cwd, args) => new Promise((resolve15) => {
+  return (cwd, args) => new Promise((resolve17) => {
     execute("git", args, { cwd, encoding: "utf8", windowsHide: true }, (error62, stdout, stderr) => {
-      resolve15({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
+      resolve17({ code: numericExitCode(error62), stdout: stdout || text(error62?.stdout), stderr: stderr || text(error62?.stderr) });
     });
   });
 }
@@ -20338,7 +20343,7 @@ async function selectCredentialStore(options2 = {}) {
   };
 }
 function spawnWithInput(command, args, input2) {
-  return new Promise((resolve15, reject) => {
+  return new Promise((resolve17, reject) => {
     const child = spawn(command, args, { stdio: ["pipe", "ignore", "pipe"] });
     let stderr = "";
     child.stderr.on("data", (chunk) => {
@@ -20347,7 +20352,7 @@ function spawnWithInput(command, args, input2) {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {
-        resolve15();
+        resolve17();
       } else {
         reject(new Error(`${command} exited ${String(code)}: ${stderr.trim()}`));
       }
@@ -20467,7 +20472,8 @@ var guardsStateSchema = external_exports.object({
   appliedAt: external_exports.iso.datetime(),
   files: external_exports.array(external_exports.string())
 }).strict();
-var guardsApplyStepIdSchema = external_exports.enum(["plan", "install", "render-eslint", "render-depcruise", "baseline-eslint", "baseline-depcruise", "config", "hook", "state"]);
+var guardsApplyStepIdSchema = external_exports.enum(["plan", "install", "render-eslint", "render-depcruise", "baseline-eslint", "baseline-depcruise", "config", "hook", "ci", "state"]);
+var guardsItemIdSchema = external_exports.enum(["lint", "boundaries", "shore-guard", "commit-hook", "on-save", "ci"]);
 var guardsProgressSchema = external_exports.object({
   sourceHash: external_exports.string().min(1),
   source: guardsSourceSchema,
@@ -20477,6 +20483,7 @@ var guardsProgressSchema = external_exports.object({
   completed: external_exports.array(guardsApplyStepIdSchema),
   files: external_exports.array(external_exports.string()),
   filesByStep: external_exports.record(external_exports.string(), external_exports.array(external_exports.string())).optional(),
+  decisions: external_exports.partialRecord(guardsItemIdSchema, external_exports.enum(["accepted", "declined"])).optional(),
   failed: external_exports.object({ step: guardsApplyStepIdSchema, detail: external_exports.string() }).strict().optional()
 }).strict();
 var feedbackReportRecordSchema = external_exports.object({
@@ -21259,7 +21266,7 @@ var DEFAULT_RETRY_POLICY = {
 };
 var DEFAULT_RETRY_RUNTIME = {
   now: Date.now,
-  sleep: (milliseconds) => new Promise((resolve15) => setTimeout(resolve15, milliseconds)),
+  sleep: (milliseconds) => new Promise((resolve17) => setTimeout(resolve17, milliseconds)),
   random: Math.random
 };
 function parseRetryAfter(value, nowMs, ceilingMs) {
@@ -22064,7 +22071,7 @@ import { join as join15 } from "node:path";
 // ../enforcement/src/gates/process.ts
 import { spawn as spawn3 } from "node:child_process";
 async function runCommand(binary, args, cwd, input2) {
-  return new Promise((resolve15, reject) => {
+  return new Promise((resolve17, reject) => {
     const child = spawn3(binary, args, { cwd, stdio: [input2 === void 0 ? "ignore" : "pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
@@ -22085,7 +22092,7 @@ async function runCommand(binary, args, cwd, input2) {
     });
     child.once("error", reject);
     child.once("close", (code) => {
-      resolve15({ exitCode: code ?? 1, stdout, stderr });
+      resolve17({ exitCode: code ?? 1, stdout, stderr });
     });
     if (input2 !== void 0) {
       if (standardInput === null) {
@@ -22132,9 +22139,13 @@ async function runPolicyChain(options2) {
 }
 
 // ../enforcement/src/gates/commit-gate.ts
-import * as fs10 from "node:fs/promises";
-import { basename, join as join17 } from "node:path";
+import { basename } from "node:path";
 import { pathToFileURL } from "node:url";
+
+// ../enforcement/src/gates/enforce.ts
+import * as fs10 from "node:fs/promises";
+import * as os3 from "node:os";
+import { join as join17, resolve as resolve8 } from "node:path";
 
 // ../enforcement/src/gates/eslint-runner.ts
 import * as fs9 from "node:fs/promises";
@@ -22237,45 +22248,113 @@ async function checkBaselineGrowth(options2) {
   return ok ? { ok: true, shrunk, messages } : { ok: false, messages };
 }
 
-// ../enforcement/src/gates/commit-gate.ts
+// ../enforcement/src/gates/enforce.ts
 async function gitPaths(repoPath, args) {
   const result3 = await runCommand("git", args, repoPath);
-  if (result3.exitCode !== 0) throw new Error(result3.stderr.trim() || "git could not inspect the staged index");
+  if (result3.exitCode !== 0) throw new Error(result3.stderr.trim() || "git could not inspect repository files");
   return result3.stdout.split("\0").filter((item) => item.length > 0);
 }
-async function runCommitGate(options2) {
+async function exists2(path2) {
   try {
-    const staged = await gitPaths(options2.repoPath, ["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"]);
-    const selected = await existingSourcePaths(options2.repoPath, staged);
-    if (selected.files.length === 0) return { exitCode: 0, message: "No staged JavaScript/TypeScript files; commit gate skipped.", files: [] };
-    const unstaged = new Set(await gitPaths(options2.repoPath, ["diff", "--name-only", "-z"]));
-    const partial2 = selected.files.filter((file2) => unstaged.has(file2));
-    if (partial2.length > 0) return { exitCode: 2, message: `Partially staged JavaScript/TypeScript files cannot be validated safely: ${partial2.join(", ")}. Stage the complete file or stash unstaged edits.`, files: selected.files };
-    let graph = true;
-    try {
-      await fs10.access(join17(options2.repoPath, ".dependency-cruiser.shore.mjs"));
-    } catch {
-      graph = false;
+    await fs10.access(path2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function checkBaselineRef(repoPath, baselineRef) {
+  if (baselineRef.startsWith("-")) return { exitCode: 2, messages: [`Baseline ref must not start with "-": ${baselineRef}`] };
+  const resolved = await runCommand("git", ["rev-parse", "--verify", `${baselineRef}^{commit}`], repoPath);
+  if (resolved.exitCode !== 0) return { exitCode: 2, messages: [`Baseline ref could not be resolved: ${baselineRef}`] };
+  const paths = resolveGateBaselinePaths(repoPath);
+  const temporaryDirectory = await fs10.mkdtemp(join17(os3.tmpdir(), "shore-baseline-ref-"));
+  const messages = [];
+  let grew = false;
+  try {
+    for (const [kind, path2] of [["eslint", paths.eslint], ["depcruise", paths.depcruise]]) {
+      const shown = await runCommand("git", ["show", `${baselineRef}:${path2}`], repoPath);
+      if (shown.exitCode !== 0) {
+        messages.push(`Baseline ${path2} does not exist at ${baselineRef}; comparison skipped.`);
+        continue;
+      }
+      const earlier = join17(temporaryDirectory, kind === "eslint" ? "eslint.json" : "depcruise.json");
+      await fs10.writeFile(earlier, shown.stdout);
+      const current = resolve8(repoPath, path2);
+      if (kind === "eslint") {
+        const result3 = await checkSuppressionBaselineFiles(earlier, current);
+        if (!result3.ok) {
+          if (result3.status === "grown") {
+            grew = true;
+            messages.push(`ESLint suppression growth: ${result3.growth.map((item) => `${item.file}/${item.ruleId} ${String(item.baselineCount)}\u2192${String(item.currentCount)}`).join(", ")}. Fix the violations or run an approved re-baseline.`);
+          } else messages.push(result3.message);
+        }
+      } else {
+        const result3 = await checkKnownViolationsFiles(earlier, current);
+        if (result3.status === "growth") {
+          grew = true;
+          messages.push(`Dependency boundary growth: ${String(result3.entries.filter((entry2) => entry2.kind === "added").length)} new violation(s). Fix them or run an approved re-baseline.`);
+        } else if (result3.status === "malformed") messages.push(`Malformed dependency-cruiser baseline: ${result3.message}`);
+      }
     }
+  } finally {
+    await fs10.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+  return { exitCode: grew ? 1 : 0, messages };
+}
+async function lintFiles(repoPath, files) {
+  for (let index = 0; index < files.length; index += 200) {
+    const lint = await runEslint({ repoPath, files: files.slice(index, index + 200) });
+    if (lint.exitCode !== 0) return { exitCode: lint.exitCode, message: formatEslintFailure(lint) };
+  }
+  return { exitCode: 0 };
+}
+async function runGuardsEnforcement(options2) {
+  return runEnforcement(options2);
+}
+async function runEnforcement(options2) {
+  try {
+    const paths = options2.mode === "staged" ? await gitPaths(options2.repoPath, ["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"]) : await gitPaths(options2.repoPath, ["ls-files", "-z"]);
+    const selected = await existingSourcePaths(options2.repoPath, paths);
+    if (selected.files.length === 0) {
+      const message9 = options2.mode === "staged" ? "No staged JavaScript/TypeScript files; commit gate skipped." : "No tracked JavaScript/TypeScript files; there is nothing to check.";
+      return { exitCode: 0, message: message9, files: [] };
+    }
+    if (options2.mode === "staged") {
+      const unstaged = new Set(await gitPaths(options2.repoPath, ["diff", "--name-only", "-z"]));
+      const partial2 = selected.files.filter((file2) => unstaged.has(file2));
+      if (partial2.length > 0) return { exitCode: 2, message: `Partially staged JavaScript/TypeScript files cannot be validated safely: ${partial2.join(", ")}. Stage the complete file or stash unstaged edits.`, files: selected.files };
+    }
+    const graph = await exists2(join17(options2.repoPath, ".dependency-cruiser.shore.mjs"));
     await assertGateBaselines(options2.repoPath, graph);
     if (options2.currentSuppressionsPath !== void 0) {
       const growth = await checkBaselineGrowth({ repoPath: options2.repoPath, currentSuppressionsPath: options2.currentSuppressionsPath, ...options2.currentKnownViolationsPath === void 0 ? {} : { currentKnownViolationsPath: options2.currentKnownViolationsPath } });
       if (!growth.ok) return { exitCode: 2, message: growth.messages.join("\n"), files: selected.files };
     }
-    const lint = await runEslint({ repoPath: options2.repoPath, files: selected.files });
-    if (lint.exitCode !== 0) return { exitCode: lint.exitCode, message: formatEslintFailure(lint), files: selected.files };
-    let hasTsconfig = true;
-    try {
-      await fs10.access(join17(options2.repoPath, "tsconfig.json"));
-    } catch {
-      hasTsconfig = false;
+    const notes = [];
+    if (options2.mode === "all" && options2.baselineRef !== void 0) {
+      const comparison = await checkBaselineRef(options2.repoPath, options2.baselineRef);
+      notes.push(...comparison.messages);
+      if (comparison.exitCode !== 0) return { exitCode: comparison.exitCode, message: notes.join("\n"), files: selected.files };
     }
-    const chain = await runPolicyChain({ repoPath: options2.repoPath, files: selected.files, runDepcruise: graph, runTsc: options2.runTsc ?? hasTsconfig });
-    if (!chain.ok) return { exitCode: chain.exitCode, message: `${chain.tool}: ${chain.message}`, files: selected.files };
-    return { exitCode: 0, message: `Passed commit gate for ${selected.files.join(", ")}.`, files: selected.files };
+    const lint = await lintFiles(options2.repoPath, selected.files);
+    if (lint.exitCode !== 0) return { exitCode: lint.exitCode, message: lint.message ?? "ESLint failed.", files: selected.files };
+    const hasTsconfig = await exists2(join17(options2.repoPath, "tsconfig.json"));
+    const runTsc = options2.mode === "all" ? hasTsconfig : options2.typecheck === void 0 ? hasTsconfig : options2.typecheck;
+    const chain = await runPolicyChain({ repoPath: options2.repoPath, ...options2.mode === "staged" ? { files: selected.files } : {}, runDepcruise: graph, runTsc });
+    if (!chain.ok) {
+      const ruleFailure = chain.message.startsWith("dependency-cruiser failed:") || chain.message.startsWith("tsc failed:");
+      return { exitCode: ruleFailure ? 1 : chain.exitCode, message: `${chain.tool}: ${chain.message}`, files: selected.files };
+    }
+    notes.push(options2.mode === "staged" ? `Passed commit gate for ${selected.files.join(", ")}.` : `Passed all-files enforcement for ${String(selected.files.length)} file(s).`);
+    return { exitCode: 0, message: notes.join("\n"), files: selected.files };
   } catch (error62) {
     return { exitCode: 70, message: error62 instanceof Error ? error62.message : String(error62), files: [] };
   }
+}
+
+// ../enforcement/src/gates/commit-gate.ts
+async function runCommitGate(options2) {
+  return runEnforcement({ repoPath: options2.repoPath, mode: "staged", ...options2.runTsc === void 0 ? {} : { typecheck: options2.runTsc }, ...options2.currentSuppressionsPath === void 0 ? {} : { currentSuppressionsPath: options2.currentSuppressionsPath }, ...options2.currentKnownViolationsPath === void 0 ? {} : { currentKnownViolationsPath: options2.currentKnownViolationsPath } });
 }
 async function main() {
   const result3 = await runCommitGate({ repoPath: process.cwd() });
@@ -22380,7 +22459,7 @@ var commitGateRegistration = {
     if (port === void 0) {
       return skipped("no-enforcement-port", "No enforcement port was supplied to the commit gate.", "Provide ports.enforcement.repoPath when running verify.");
     }
-    const result3 = await runCommitGate({ repoPath: port.repoPath });
+    const result3 = await runGuardsEnforcement({ repoPath: port.repoPath, mode: "all" });
     return fromExit("commit", result3.exitCode, result3.message, result3.files);
   }
 };
@@ -22411,11 +22490,11 @@ function skipped(code, message9, remediation) {
 // ../enforcement/src/hooks/installer.ts
 import * as fs11 from "node:fs/promises";
 import { constants as constants2 } from "node:fs";
-import { join as join18 } from "node:path";
+import { isAbsolute as isAbsolute3, join as join18, resolve as resolve9 } from "node:path";
 var START = "# shore-guard:start";
 var END = "# shore-guard:end";
-var COMMAND = "npx --no-install tsx node_modules/@shore/guard-enforcement/src/gates/commit-gate.ts";
-async function exists2(path2) {
+var SHORE_HOOK_COMMAND = "npx --no-install shore-guard guards enforce --staged";
+async function exists3(path2) {
   try {
     await fs11.access(path2);
     return true;
@@ -22434,14 +22513,14 @@ async function packageJson(repoPath) {
 async function detectHookFramework(repoPath) {
   const manifest = await packageJson(repoPath);
   const detected = [];
-  if (await exists2(join18(repoPath, ".husky"))) detected.push("husky");
-  if (await exists2(join18(repoPath, "lefthook.yml")) || await exists2(join18(repoPath, "lefthook.yaml"))) detected.push("lefthook");
-  if (await exists2(join18(repoPath, ".pre-commit-config.yaml"))) detected.push("pre-commit");
+  if (await exists3(join18(repoPath, ".husky"))) detected.push("husky");
+  if (await exists3(join18(repoPath, "lefthook.yml")) || await exists3(join18(repoPath, "lefthook.yaml"))) detected.push("lefthook");
+  if (await exists3(join18(repoPath, ".pre-commit-config.yaml"))) detected.push("pre-commit");
   if ("simple-git-hooks" in manifest || typeof manifest.devDependencies === "object" && manifest.devDependencies !== null && "simple-git-hooks" in manifest.devDependencies) detected.push("simple-git-hooks");
-  const framework = detected[0] ?? (await exists2(join18(repoPath, "package.json")) ? "husky" : "raw");
+  const framework = detected[0] ?? (await exists3(join18(repoPath, "package.json")) ? "husky" : "raw");
   return { framework, detected, ...detected.length > 1 ? { note: `Multiple hook frameworks detected; selected ${framework} by precedence.` } : detected.length === 0 ? { note: framework === "husky" ? "No framework detected; using the ported package-repository default (Husky)." : "No framework or package.json detected; using a raw Git hook." } : {} };
 }
-function block(command = COMMAND) {
+function block(command = SHORE_HOOK_COMMAND) {
   return `${START}
 ${command}
 ${END}`;
@@ -22455,7 +22534,7 @@ ${replacement}
 `;
 }
 async function validateHook(path2) {
-  if (!await exists2(path2)) return;
+  if (!await exists3(path2)) return;
   const source = await fs11.readFile(path2, "utf8");
   if (!source.startsWith("#!")) throw new Error(`Existing hook ${path2} has no shebang; refusing to compose an ambiguous executable.`);
   try {
@@ -22479,7 +22558,7 @@ async function hookTarget(repoPath, framework) {
     await fs11.mkdir(join18(repoPath, ".git/hooks"), { recursive: true });
     return join18(repoPath, ".git/hooks/pre-commit");
   }
-  if (framework === "lefthook") return join18(repoPath, await exists2(join18(repoPath, "lefthook.yml")) ? "lefthook.yml" : "lefthook.yaml");
+  if (framework === "lefthook") return join18(repoPath, await exists3(join18(repoPath, "lefthook.yml")) ? "lefthook.yml" : "lefthook.yaml");
   if (framework === "pre-commit") return join18(repoPath, ".pre-commit-config.yaml");
   return join18(repoPath, "package.json");
 }
@@ -22520,7 +22599,7 @@ repos:
 ${entry2}`;
 }
 async function installCommitHook(repoPath, options2 = {}) {
-  const command = options2.command ?? COMMAND;
+  const command = options2.command ?? SHORE_HOOK_COMMAND;
   const detection = await detectHookFramework(repoPath);
   const target = await hookTarget(repoPath, detection.framework);
   if (detection.framework === "husky" || detection.framework === "raw") await validateHook(target);
@@ -22544,6 +22623,45 @@ async function installCommitHook(repoPath, options2 = {}) {
     if (detection.framework === "husky" || detection.framework === "raw") await fs11.chmod(target, 493);
   }
   return { ...detection, changed: next !== old, path: target, conflicts: foundConflicts };
+}
+function inactive(framework, reason, remediation) {
+  return { active: false, framework, reason, remediation };
+}
+function containsBlock(source, command) {
+  const start = source.indexOf(START);
+  const end = source.indexOf(END, start + START.length);
+  return start >= 0 && end > start && source.slice(start + START.length, end).includes(command);
+}
+async function verifyHookActivation(repoPath, options2 = {}) {
+  const command = options2.command ?? SHORE_HOOK_COMMAND;
+  const detection = await detectHookFramework(repoPath);
+  const hookResult = await runCommand("git", ["rev-parse", "--git-path", "hooks/pre-commit"], repoPath);
+  if (hookResult.exitCode !== 0) return inactive(detection.framework, `git could not resolve the effective pre-commit hook path: ${hookResult.stderr.trim()}`, "Initialize this repository with git, then rerun `shore-guard guards apply`.");
+  const reported = hookResult.stdout.trim();
+  const hookPath = isAbsolute3(reported) ? reported : resolve9(repoPath, reported);
+  if (!await exists3(hookPath)) return inactive(detection.framework, `The effective pre-commit hook does not exist at ${hookPath}.`, "Install the selected hook framework, then rerun `shore-guard guards apply`.");
+  try {
+    await fs11.access(hookPath, constants2.X_OK);
+  } catch {
+    return inactive(detection.framework, `The effective pre-commit hook at ${hookPath} is not executable.`, `Run \`chmod +x ${hookPath}\`, then rerun \`shore-guard guards apply\`.`);
+  }
+  if (command.startsWith("npx --no-install shore-guard") && !await exists3(join18(repoPath, "node_modules/.bin/shore-guard"))) {
+    return inactive(detection.framework, "the shore-guard package is not installed in this repository", "Install shore-guard in this repository, then rerun `shore-guard guards apply`.");
+  }
+  const hookSource = await fs11.readFile(hookPath, "utf8");
+  let reached = containsBlock(hookSource, command);
+  const huskyUserHook = join18(repoPath, ".husky/pre-commit");
+  const huskyShim = resolve9(repoPath, ".husky/_/pre-commit");
+  if (!reached && hookPath === huskyShim && await exists3(huskyUserHook)) reached = containsBlock(await fs11.readFile(huskyUserHook, "utf8"), command);
+  if (!reached && (detection.framework === "lefthook" || detection.framework === "pre-commit" || detection.framework === "simple-git-hooks")) {
+    const target = await hookTarget(repoPath, detection.framework);
+    if (await exists3(target)) reached = containsBlock(await fs11.readFile(target, "utf8"), command) || detection.framework === "simple-git-hooks" && (await fs11.readFile(target, "utf8")).includes(command);
+  }
+  if (!reached) {
+    const remediation = detection.framework === "husky" ? "Run `npx husky` so git uses .husky, then rerun `shore-guard guards apply`." : "Rerun `shore-guard guards apply`, then activate the selected hook framework.";
+    return inactive(detection.framework, `The effective pre-commit hook at ${hookPath} does not reach the requested Shore Guard command.`, remediation);
+  }
+  return { active: true, framework: detection.framework, hookPath };
 }
 
 // src/commands/doctor-dependencies.ts
@@ -22656,7 +22774,7 @@ var known = /* @__PURE__ */ new Set(["repo", "ref", "thresholds", "timeoutMinute
 function record3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-async function exists3(path2) {
+async function exists4(path2) {
   return fs12.access(path2).then(() => true, () => false);
 }
 function translateLegacyConfig(legacy) {
@@ -22689,8 +22807,8 @@ function translateLegacyConfig(legacy) {
 async function migrateLegacyConfig(root) {
   const source = join19(root, ".shoreguard.json");
   const destination = join19(root, ".shore", "guard.json");
-  if (!await exists3(source)) return { status: "not-found" };
-  if (await exists3(destination)) return { status: "conflict", source, destination };
+  if (!await exists4(source)) return { status: "not-found" };
+  if (await exists4(destination)) return { status: "conflict", source, destination };
   let parsed;
   try {
     parsed = JSON.parse(await fs12.readFile(source, "utf8"));
@@ -23264,7 +23382,7 @@ var PROPOSAL_VERSION = 1;
 
 // ../policy/src/proposal-validate.ts
 import { existsSync as existsSync3 } from "node:fs";
-import { resolve as resolve8 } from "node:path";
+import { resolve as resolve10 } from "node:path";
 var text2 = external_exports.string().trim().min(1);
 var path = text2.refine((value) => !value.includes("\0") && !value.includes("\n") && !value.includes("\r"), "must be a concrete path");
 var evidenceSchema2 = external_exports.discriminatedUnion("kind", [
@@ -23340,7 +23458,7 @@ function validateProposal(input2, options2 = {}) {
   if (parsed.success && options2.root !== void 0 && options2.checkEvidencePaths !== false) {
     const root = options2.root;
     visitEvidence(parsed.data, (evidence, evidencePath) => {
-      for (const cited of citedPaths(evidence)) if (!existsSync3(resolve8(root, cited))) issues.push({ path: evidencePath, message: `cites non-existent path "${cited}"` });
+      for (const cited of citedPaths(evidence)) if (!existsSync3(resolve10(root, cited))) issues.push({ path: evidencePath, message: `cites non-existent path "${cited}"` });
     });
   }
   if (!parsed.success || issues.length > 0) throw new ProposalValidationError(issues);
@@ -23586,22 +23704,22 @@ ${block2}
 // ../renderers/src/non-destructive.ts
 import * as fs13 from "node:fs/promises";
 import { constants as constants3 } from "node:fs";
-import { isAbsolute as isAbsolute3, relative as relative4, resolve as resolve9, sep as sep4 } from "node:path";
+import { isAbsolute as isAbsolute4, relative as relative4, resolve as resolve11, sep as sep4 } from "node:path";
 function isMissing(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
 }
 async function confinedPath(repoPath, relativePath) {
-  if (isAbsolute3(relativePath)) throw new Error(`managed path must be repository-relative: ${relativePath}`);
-  const repo = resolve9(repoPath);
-  const target = resolve9(repo, relativePath);
+  if (isAbsolute4(relativePath)) throw new Error(`managed path must be repository-relative: ${relativePath}`);
+  const repo = resolve11(repoPath);
+  const target = resolve11(repo, relativePath);
   const fromRepo = relative4(repo, target);
-  if (fromRepo === ".." || fromRepo.startsWith(`..${sep4}`) || isAbsolute3(fromRepo)) {
+  if (fromRepo === ".." || fromRepo.startsWith(`..${sep4}`) || isAbsolute4(fromRepo)) {
     throw new Error(`managed path escapes repository root: ${relativePath}`);
   }
   const parts = fromRepo.split(sep4).filter(Boolean);
   let cursor = repo;
   for (const part of parts) {
-    cursor = resolve9(cursor, part);
+    cursor = resolve11(cursor, part);
     try {
       if ((await fs13.lstat(cursor)).isSymbolicLink()) {
         throw new Error(`managed path traverses a symbolic link: ${relativePath}`);
@@ -23637,7 +23755,7 @@ var ESLINT_OVERLAY_NAME = "eslint.config.shore.mjs";
 var PROVENANCE_PREFIX = "// Generated by @shore/guard-renderers. Do not edit managed content by hand.\n// Policy: ";
 var FLAT_NAMES = ["eslint.config.mjs", "eslint.config.js", "eslint.config.cjs", "eslint.config.ts"];
 var LEGACY_NAMES = [".eslintrc", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.yaml", ".eslintrc.yml"];
-async function exists4(path2) {
+async function exists5(path2) {
   try {
     await fs14.access(path2);
     return true;
@@ -23648,11 +23766,11 @@ async function exists4(path2) {
 async function findEslintEntry(repoPath) {
   for (const file2 of FLAT_NAMES) {
     const full = await confinedPath(repoPath, file2);
-    if (await exists4(full) && !isShoreGeneratedEslintEntry(await fs14.readFile(full, "utf8"))) return { kind: "flat", file: file2, full };
+    if (await exists5(full) && !isShoreGeneratedEslintEntry(await fs14.readFile(full, "utf8"))) return { kind: "flat", file: file2, full };
   }
   for (const file2 of LEGACY_NAMES) {
     const full = await confinedPath(repoPath, file2);
-    if (await exists4(full)) return { kind: "legacy", file: file2, full };
+    if (await exists5(full)) return { kind: "legacy", file: file2, full };
   }
   return void 0;
 }
@@ -24297,20 +24415,20 @@ function fail(exitCode3, message9) {
 async function runStatus(options2) {
   if (options2.resolved === void 0) return fail2(EXIT_CODES.auth, 'Not authenticated. Run "shore-guard login" or set SHORE_API_KEY.');
   try {
-    const [account, usage] = await Promise.all([options2.client.getAccount(), options2.client.getUsage()]);
+    const [account, usage2] = await Promise.all([options2.client.getAccount(), options2.client.getUsage()]);
     const repository = options2.config?.repoConnectionId === void 0 ? { configured: false } : { configured: true, repoConnectionId: options2.config.repoConnectionId };
     const data = {
       authenticated: true,
       keySource: options2.resolved.source,
       identity: { accountId: account.accountId, plan: account.plan },
       repository,
-      usage
+      usage: usage2
     };
     const lines = [
       `Authenticated (${data.keySource})`,
       `Account: ${data.identity.accountId} (${data.identity.plan})`,
       repository.configured ? `Repository: ${repository.repoConnectionId}` : "Repository: not configured",
-      `API calls: ${String(usage.apiCalls.remaining)}/${String(usage.apiCalls.limit)} remaining`,
+      `API calls: ${String(usage2.apiCalls.remaining)}/${String(usage2.apiCalls.limit)} remaining`,
       ...options2.warning === void 0 ? [] : [options2.warning]
     ];
     return { command: "status", outcome: "pass", exitCode: EXIT_CODES.pass, message: lines.join("\n"), data };
@@ -24369,8 +24487,8 @@ function createHealthApiPort(client, repoConnectionId) {
 var SYSTEM_CLOCK = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve15) => {
-    setTimeout(resolve15, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve17) => {
+    setTimeout(resolve17, milliseconds);
   })
 };
 function humanMessage(result3) {
@@ -24408,8 +24526,8 @@ function defaultPorts(options2) {
 var SYSTEM_CLOCK2 = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve15) => {
-    setTimeout(resolve15, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve17) => {
+    setTimeout(resolve17, milliseconds);
   })
 };
 function exitCode(result3) {
@@ -24425,24 +24543,24 @@ function humanMessage2(result3) {
 }
 
 // src/commands/discover-io.ts
-import { access as access9, mkdir as mkdir7, rename as rename3, writeFile as writeFile10 } from "node:fs/promises";
-import { dirname as dirname6, resolve as resolve10 } from "node:path";
+import { access as access9, mkdir as mkdir7, rename as rename3, writeFile as writeFile11 } from "node:fs/promises";
+import { dirname as dirname6, resolve as resolve12 } from "node:path";
 async function writeDiscoveryProposal(root, proposal, output2, clock = { now: () => /* @__PURE__ */ new Date() }) {
-  const path2 = output2 === void 0 ? await availableDefaultPath(root, clock.now()) : resolve10(root, output2);
+  const path2 = output2 === void 0 ? await availableDefaultPath(root, clock.now()) : resolve12(root, output2);
   await writeAtomic(path2, `${JSON.stringify(proposal, null, 2)}
 `);
   return output2 === void 0 ? relativeProposalPath(root, path2) : output2;
 }
 async function availableDefaultPath(root, now2) {
   const date5 = now2.toISOString().slice(0, 10);
-  const base = resolve10(root, ".shore", "proposals", `${date5}-discovery.json`);
-  if (!await exists5(base)) return base;
+  const base = resolve12(root, ".shore", "proposals", `${date5}-discovery.json`);
+  if (!await exists6(base)) return base;
   for (let suffix = 2; ; suffix += 1) {
-    const candidate = resolve10(root, ".shore", "proposals", `${date5}-discovery-${String(suffix)}.json`);
-    if (!await exists5(candidate)) return candidate;
+    const candidate = resolve12(root, ".shore", "proposals", `${date5}-discovery-${String(suffix)}.json`);
+    if (!await exists6(candidate)) return candidate;
   }
 }
-async function exists5(path2) {
+async function exists6(path2) {
   try {
     await access9(path2);
     return true;
@@ -24453,11 +24571,11 @@ async function exists5(path2) {
 async function writeAtomic(path2, contents) {
   await mkdir7(dirname6(path2), { recursive: true });
   const temporary = `${path2}.shore-guard-tmp`;
-  await writeFile10(temporary, contents);
+  await writeFile11(temporary, contents);
   await rename3(temporary, path2);
 }
 function relativeProposalPath(root, path2) {
-  return path2.slice(resolve10(root).length + 1);
+  return path2.slice(resolve12(root).length + 1);
 }
 
 // src/commands/discover-verify.ts
@@ -24539,8 +24657,8 @@ function message4(error62) {
 var CLOCK = {
   now: () => Date.now(),
   random: () => Math.random(),
-  sleep: (milliseconds) => new Promise((resolve15) => {
-    setTimeout(resolve15, milliseconds);
+  sleep: (milliseconds) => new Promise((resolve17) => {
+    setTimeout(resolve17, milliseconds);
   })
 };
 async function runBrownfieldDiscover(options2) {
@@ -24595,10 +24713,10 @@ function failure2(exitCode3, message9, data) {
 }
 
 // src/commands/discover-greenfield.ts
-import { access as access10, mkdir as mkdir8, readFile as readFile18, rename as rename4, writeFile as writeFile11 } from "node:fs/promises";
-import { dirname as dirname7, resolve as resolve11 } from "node:path";
+import { access as access10, mkdir as mkdir8, readFile as readFile18, rename as rename4, writeFile as writeFile12 } from "node:fs/promises";
+import { dirname as dirname7, resolve as resolve13 } from "node:path";
 async function runRecommend(options2) {
-  const input2 = await readJson(resolve11(options2.root, options2.factsPath), "facts");
+  const input2 = await readJson(resolve13(options2.root, options2.factsPath), "facts");
   if (input2.status === "error") return failure3(input2.message);
   const parsed = architectureFactsSchema.safeParse(input2.value);
   if (!parsed.success) return failure3("Facts JSON is invalid.", { issues: parsed.error.issues });
@@ -24614,7 +24732,7 @@ async function runRecommend(options2) {
   }
 }
 async function runAssemble(options2) {
-  const input2 = await readJson(resolve11(options2.root, options2.interviewPath), "interview");
+  const input2 = await readJson(resolve13(options2.root, options2.interviewPath), "interview");
   if (input2.status === "error") return failure3(input2.message);
   const interview = unwrapInterview(input2.value);
   const parsed = assembleArchitectureBlueprintInputSchema.safeParse({
@@ -24625,7 +24743,7 @@ async function runAssemble(options2) {
   if (!parsed.success) return failure3("Interview JSON, slug, or name is invalid.", { issues: parsed.error.issues });
   const blueprintPath = `.shore/blueprints/${options2.slug}.json`;
   const proposalPath = `.shore/proposals/${(options2.now ?? (() => /* @__PURE__ */ new Date()))().toISOString().slice(0, 10)}-authored.json`;
-  if (options2.replace !== true && await exists6(resolve11(options2.root, blueprintPath))) {
+  if (options2.replace !== true && await exists7(resolve13(options2.root, blueprintPath))) {
     return failure3(EXIT_CODES.userDecisionRequired, `Blueprint already exists at ${blueprintPath}. Use --replace to overwrite it.`, { reason: "blueprint_exists", blueprintPath });
   }
   try {
@@ -24634,9 +24752,9 @@ async function runAssemble(options2) {
     const proposal = validateProposal(assembled.proposal);
     const data = { blueprintPath, proposalPath, blueprintId: assembled.blueprintId, strength: assembled.strength };
     if (options2.dryRun === true) return success3("Architecture blueprint assembly dry run completed; no files were written.", data);
-    await writeAtomic2(resolve11(options2.root, blueprintPath), `${JSON.stringify(blueprint, null, 2)}
+    await writeAtomic2(resolve13(options2.root, blueprintPath), `${JSON.stringify(blueprint, null, 2)}
 `);
-    await writeAtomic2(resolve11(options2.root, proposalPath), `${JSON.stringify(proposal, null, 2)}
+    await writeAtomic2(resolve13(options2.root, proposalPath), `${JSON.stringify(proposal, null, 2)}
 `);
     return success3(`Architecture blueprint written to ${blueprintPath} and proposal written to ${proposalPath}.`, data);
   } catch (error62) {
@@ -24655,7 +24773,7 @@ async function readJson(path2, label) {
     return { status: "error", message: `Could not read valid ${label} JSON at ${path2}.` };
   }
 }
-async function exists6(path2) {
+async function exists7(path2) {
   try {
     await access10(path2);
     return true;
@@ -24666,7 +24784,7 @@ async function exists6(path2) {
 async function writeAtomic2(path2, contents) {
   await mkdir8(dirname7(path2), { recursive: true });
   const temporary = `${path2}.shore-guard-tmp`;
-  await writeFile11(temporary, contents);
+  await writeFile12(temporary, contents);
   await rename4(temporary, path2);
 }
 function isApiError(error62) {
@@ -24863,19 +24981,19 @@ function message5(error62) {
 
 // src/commands/blueprint-submit.ts
 import { readFile as readFile19 } from "node:fs/promises";
-import { resolve as resolve12 } from "node:path";
+import { resolve as resolve14 } from "node:path";
 
 // src/agents/exec.ts
 import { execFile as execFile4 } from "node:child_process";
 function createCommandRunner(execute = execFile4) {
-  return (file2, args, options2) => new Promise((resolve15) => {
+  return (file2, args, options2) => new Promise((resolve17) => {
     execute(file2, args, {
       cwd: options2?.cwd ?? process.cwd(),
       detached: options2?.detached ?? false,
       encoding: "utf8",
       windowsHide: true
     }, (error62, stdout, stderr) => {
-      resolve15({
+      resolve17({
         code: exitCode2(error62),
         stdout: stdout || errorText(error62?.stdout),
         stderr: stderr || errorText(error62?.stderr)
@@ -24901,7 +25019,7 @@ var BODY_LIMIT = 65 * 1024;
 var PREFILLED_LIMIT = 8 * 1024;
 async function runBlueprintSubmit(options2) {
   if (options2.file === void 0 || options2.file === "") return failure4(EXIT_CODES.config, "Missing required --file <path>.");
-  const read = await readBlueprint(resolve12(options2.cwd, options2.file));
+  const read = await readBlueprint(resolve14(options2.cwd, options2.file));
   if (read.status === "error") return failure4(EXIT_CODES.config, read.message);
   const parsed = read.value;
   let pack;
@@ -25084,7 +25202,7 @@ function message6(error62) {
 // src/commands/report-submit.ts
 import * as nodeFs2 from "node:fs/promises";
 import { randomUUID as randomUUID4 } from "node:crypto";
-import { basename as basename4, dirname as dirname8, join as join22, resolve as resolve13, sep as sep5 } from "node:path";
+import { basename as basename4, dirname as dirname8, join as join22, resolve as resolve15, sep as sep5 } from "node:path";
 var STAGES = ["init", "discovery", "guards", "check", "verify", "other"];
 var defaultFs = {
   readFile: (path2) => nodeFs2.readFile(path2),
@@ -25271,8 +25389,8 @@ function isUnsafe(value) {
   return /(?:^|\n)(?:\/|[A-Za-z]:\\|~\/)/u.test(value) || /(?:sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|AKIA[A-Z0-9]{12,}|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|(?:password|secret|token)\s*[=:])/iu.test(value);
 }
 function confined(root, path2) {
-  const base = resolve13(root);
-  const target = resolve13(base, path2);
+  const base = resolve15(root);
+  const target = resolve15(base, path2);
   if (target !== base && !target.startsWith(`${base}${sep5}`)) throw new Error(`Path escapes repository: ${path2}`);
   return target;
 }
@@ -25323,7 +25441,7 @@ function probeFileSystem(fs19) {
   };
 }
 async function assertConfinedWrite(root, target, fs19) {
-  const base = resolve13(root);
+  const base = resolve15(root);
   const relative8 = target.slice(base.length + 1);
   let current = base;
   for (const part of relative8.split(sep5)) {
@@ -25360,32 +25478,60 @@ function failure5(exitCode3, messageText, data) {
 
 // src/commands/guards-plan.ts
 import * as fs18 from "node:fs/promises";
-import { isAbsolute as isAbsolute4, join as join23, relative as relative6, resolve as resolve14, sep as sep6 } from "node:path";
+import { isAbsolute as isAbsolute5, join as join23, relative as relative6, resolve as resolve16, sep as sep6 } from "node:path";
 var SOURCE_REQUIRED = 'Choose the architecture to set up: pass --blueprint <id> or --source <file> (run "shore-guard discover" first).';
 var LEGACY_SUFFIX = "will be ignored by flat config; Shore baselines require ESLint 9.24 or newer.";
-async function runGuardsPlan({ root, inventory, blueprint, source, resolvedSource }) {
+async function runGuardsPlan({ root, inventory, blueprint, source, resolvedSource, cliVersion = "dev" }) {
   const resolved = resolvedSource ?? await resolveGuardsSource(root, blueprint, source);
   if ("error" in resolved) return { command: "guards plan", outcome: "error", exitCode: resolved.exitCode, message: resolved.error };
-  const nodeProject = await exists7(join23(root, "package.json"));
-  const parserInstalled = await exists7(join23(root, "node_modules", "@typescript-eslint", "parser", "package.json"));
+  const nodeProject = await exists8(join23(root, "package.json"));
+  const parserInstalled = await exists8(join23(root, "node_modules", "@typescript-eslint", "parser", "package.json"));
   const shoreGeneratedEntry = await hasShoreGeneratedEntry(root, inventory);
-  const plan = nodeProject ? await buildPlan(root, inventory, resolved, parserInstalled, shoreGeneratedEntry) : unsupportedPlan(inventory, resolved);
+  const plan = nodeProject ? await buildPlan(root, inventory, resolved, parserInstalled, shoreGeneratedEntry, cliVersion) : unsupportedPlan(inventory, resolved);
   return { command: "guards plan", outcome: "pass", exitCode: EXIT_CODES.pass, message: "Guard toolchain plan ready.", data: { plan } };
 }
-async function buildPlan(root, inventory, source, parserInstalled, shoreGeneratedEntry) {
+async function buildPlan(root, inventory, source, parserInstalled, shoreGeneratedEntry, cliVersion) {
   const capabilities = buildCapabilities(inventory, shoreGeneratedEntry);
   const impacts = capabilities.flatMap((capability2) => capability2.impact === void 0 ? [] : [capability2.impact]);
+  const items = await planItems(root, inventory, parserInstalled, cliVersion);
   return {
     planVersion: 1,
     sourceHash: source.sourceHash,
     sourceId: source.sourceId,
     choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0),
     capabilities,
-    installs: { packageManager: inventory.packageManager, dev: requiredInstalls(inventory, parserInstalled) },
-    writes: await plannedWrites(root, inventory, shoreGeneratedEntry),
+    items,
+    installs: { packageManager: inventory.packageManager, dev: [...new Set(items.filter((item) => item.status === "needed").flatMap((item) => item.installs))] },
+    writes: await plannedWrites(root, inventory, shoreGeneratedEntry, items),
     impacts,
     unsupported: []
   };
+}
+async function planItems(root, inventory, parserInstalled, cliVersion) {
+  const manifest = await readRecord(join23(root, "package.json"));
+  const dependencies = { ...isRecord7(manifest.dependencies) ? manifest.dependencies : {}, ...isRecord7(manifest.devDependencies) ? manifest.devDependencies : {} };
+  const config2 = await readRecord(join23(root, ".shore/guard.json"));
+  const recorded = isRecord7(config2.setupDecisions) ? config2.setupDecisions : {};
+  const framework = await detectHookFramework(root);
+  const hook = await verifyHookActivation(root);
+  const workflows = await workflowFiles(root);
+  const ciPresent = await workflowHasGuard(root, workflows);
+  const hookWrites = framework.detected.length === 0 ? [".husky/pre-commit", "package.json"] : [framework.framework === "husky" ? ".husky/pre-commit" : framework.framework === "lefthook" ? "lefthook.yml" : framework.framework === "pre-commit" ? ".pre-commit-config.yaml" : "package.json"];
+  const lintInstalls = requiredInstalls(inventory, parserInstalled).filter((value) => value !== GUARD_INSTALL_SPECIFIERS.dependencyCruiser && value !== GUARD_INSTALL_SPECIFIERS.eslintD);
+  const versioned = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(cliVersion);
+  const definitions = [
+    { id: "lint", title: "Lint rules", requirement: "required", status: lintInstalls.length > 0 ? "needed" : "present", installs: lintInstalls, writes: [], detail: lintInstalls.length > 0 ? "Install supported lint tooling." : "Supported lint tooling is present." },
+    { id: "boundaries", title: "Dependency boundaries", requirement: "required", status: inventory.depcruise.present ? "present" : "needed", installs: inventory.depcruise.present ? [] : [GUARD_INSTALL_SPECIFIERS.dependencyCruiser], writes: [], detail: inventory.depcruise.present ? "Dependency boundary tooling is present." : "Install dependency boundary tooling." },
+    { id: "shore-guard", title: "Shore Guard command", requirement: "required", status: "shore-guard" in dependencies ? "present" : "needed", installs: "shore-guard" in dependencies ? [] : [versioned ? `shore-guard@${cliVersion}` : "shore-guard"], writes: ["package.json"], detail: versioned ? `Pin the repository command to shore-guard@${cliVersion}.` : "The development build cannot be pinned; install shore-guard from the current development source." },
+    { id: "commit-hook", title: "Commit hook", requirement: "required-for-commit-checks", status: hook.active ? "present" : "needed", installs: hook.active || framework.detected.length > 0 ? [] : ["husky@^9.1.0"], writes: hookWrites, detail: hook.active ? `The ${hook.framework} hook is active at ${relative6(root, hook.hookPath)}.` : `${hook.reason} ${hook.remediation}` },
+    { id: "on-save", title: "On-save linting", requirement: "optional", status: inventory.eslintD.present ? "present" : "needed", installs: inventory.eslintD.present ? [] : [GUARD_INSTALL_SPECIFIERS.eslintD], writes: [], detail: inventory.eslintD.present ? "Fast on-save linting is present." : "Install fast on-save linting." },
+    { id: "ci", title: "CI check", requirement: "optional", status: ciPresent ? "present" : "needed", installs: [], writes: workflows.length === 0 ? [".github/workflows/shore-guard.yml"] : [], detail: ciPresent ? "An existing workflow runs the rules." : workflows.length === 0 ? "Create a GitHub Actions workflow that runs the rules." : "Add a guard:rules step to an existing workflow." }
+  ];
+  return definitions.map((item) => {
+    const value = recorded[item.id];
+    const decision2 = value === "accepted" || value === "declined" ? value : null;
+    return { ...item, decision: decision2 };
+  });
 }
 function buildCapabilities(inventory, shoreGeneratedEntry = false) {
   return [lintCapability(inventory, shoreGeneratedEntry), boundariesCapability(inventory), typecheckCapability(inventory), onChangeCapability(inventory), baselineCapability(inventory)];
@@ -25428,10 +25574,11 @@ function requiredInstalls(inventory, parserInstalled) {
   if (inventory.typescript.present && !inventory.eslint.flat && !parserInstalled) installs.push(GUARD_INSTALL_SPECIFIERS.typescriptEslintParser);
   return installs;
 }
-async function plannedWrites(root, inventory, shoreGeneratedEntry) {
+async function plannedWrites(root, inventory, shoreGeneratedEntry, items) {
   const suppressionsPath = inventory.eslint.suppressionsPath ?? DEFAULT_ESLINT_BASELINE;
   const knownViolationsPath = inventory.depcruise.knownViolationsPath ?? DEFAULT_DEPCRUISE_BASELINE;
   const hook = await plannedHook(root);
+  const itemWrites = items.flatMap((item) => item.writes).filter((path2) => !["package.json"].includes(path2));
   return [
     { path: ESLINT_PATH, action: "create" },
     ...!inventory.eslint.flat || shoreGeneratedEntry ? [{ path: ESLINT_ENTRY_PATH, action: "create" }] : [],
@@ -25440,17 +25587,39 @@ async function plannedWrites(root, inventory, shoreGeneratedEntry) {
     { path: knownViolationsPath, action: inventory.depcruise.knownViolationsPath === void 0 ? "create" : "backup-and-overlay" },
     { path: ".shore/guard.json", action: "overlay" },
     { path: "package.json", action: "overlay" },
-    hook
+    hook,
+    ...itemWrites.filter((path2) => path2 !== hook.path).map((path2) => ({ path: path2, action: "create" }))
   ];
 }
 async function plannedHook(root) {
   const { framework } = await detectHookFramework(root);
-  const path2 = framework === "husky" ? ".husky/pre-commit" : framework === "raw" ? ".git/hooks/pre-commit" : framework === "lefthook" ? await exists7(join23(root, "lefthook.yml")) ? "lefthook.yml" : "lefthook.yaml" : framework === "pre-commit" ? ".pre-commit-config.yaml" : "package.json";
-  return { path: path2, action: await exists7(join23(root, path2)) ? "overlay" : "create" };
+  const path2 = framework === "husky" ? ".husky/pre-commit" : framework === "raw" ? ".git/hooks/pre-commit" : framework === "lefthook" ? await exists8(join23(root, "lefthook.yml")) ? "lefthook.yml" : "lefthook.yaml" : framework === "pre-commit" ? ".pre-commit-config.yaml" : "package.json";
+  return { path: path2, action: await exists8(join23(root, path2)) ? "overlay" : "create" };
 }
 function unsupportedPlan(inventory, source) {
   const capabilities = buildCapabilities(inventory).map((capability2) => ({ ...capability2, status: "unsupported" }));
-  return { planVersion: 1, sourceHash: source.sourceHash, sourceId: source.sourceId, choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0), capabilities, installs: { packageManager: inventory.packageManager, dev: [] }, writes: [], impacts: [], unsupported: ["Node project required"] };
+  return { planVersion: 1, sourceHash: source.sourceHash, sourceId: source.sourceId, choiceRequired: capabilities.some((capability2) => capability2.existing !== void 0), capabilities, items: [], installs: { packageManager: inventory.packageManager, dev: [] }, writes: [], impacts: [], unsupported: ["Node project required"] };
+}
+async function workflowFiles(root) {
+  try {
+    return (await fs18.readdir(join23(root, ".github/workflows"))).filter((path2) => /\.ya?ml$/u.test(path2));
+  } catch {
+    return [];
+  }
+}
+async function workflowHasGuard(root, workflows) {
+  for (const path2 of workflows) {
+    if (/guard:rules|guards enforce --all/u.test(await fs18.readFile(join23(root, ".github/workflows", path2), "utf8"))) return true;
+  }
+  return false;
+}
+async function readRecord(path2) {
+  try {
+    const value = JSON.parse(await fs18.readFile(path2, "utf8"));
+    return isRecord7(value) ? value : {};
+  } catch {
+    return {};
+  }
 }
 async function resolveGuardsSource(root, blueprint, source) {
   if (blueprint !== void 0 && source !== void 0) return { error: "Pass exactly one of --blueprint <id> or --source <file>.", exitCode: EXIT_CODES.config };
@@ -25461,8 +25630,8 @@ async function resolveGuardsSource(root, blueprint, source) {
     return { pack: pack2, sourceHash: hash2(pack2), sourceId: pack2.metadata.id, reference: { kind: "blueprint", id: blueprint } };
   }
   const sourcePath = source ?? "";
-  const fullPath = isAbsolute4(sourcePath) ? resolve14(sourcePath) : resolve14(root, sourcePath);
-  const rel = relative6(resolve14(root), fullPath);
+  const fullPath = isAbsolute5(sourcePath) ? resolve16(sourcePath) : resolve16(root, sourcePath);
+  const rel = relative6(resolve16(root), fullPath);
   if (rel === "" || rel === ".." || rel.startsWith(`..${sep6}`) || rel.startsWith(sep6)) return { error: `Source path must be inside the repository: ${sourcePath}`, exitCode: EXIT_CODES.config };
   let input2;
   try {
@@ -25506,7 +25675,7 @@ function isRecord7(value) {
 function isMissing6(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
 }
-async function exists7(path2) {
+async function exists8(path2) {
   try {
     await fs18.access(path2);
     return true;
@@ -25519,7 +25688,7 @@ async function exists7(path2) {
 import { spawn as spawn4 } from "node:child_process";
 import * as nodeFs3 from "node:fs/promises";
 import { dirname as dirname9, join as join24, relative as relative7 } from "node:path";
-var STEP_IDS = ["plan", "install", "render-eslint", "render-depcruise", "baseline-eslint", "baseline-depcruise", "config", "hook", "state"];
+var STEP_IDS = ["plan", "install", "render-eslint", "render-depcruise", "baseline-eslint", "baseline-depcruise", "config", "hook", "ci", "state"];
 var EDIT_GATE = "shore-guard.edit";
 var COMMIT_GATE = "shore-guard.commit";
 async function selectSource(options2, loaded) {
@@ -25549,14 +25718,15 @@ async function selectSource(options2, loaded) {
   return { source: resolved };
 }
 async function alreadyAppliedResult(options2, files) {
-  if (options2.force === true) return success6("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), []);
+  const notSetUp = await recordedNotSetUp(options2);
+  if (options2.force === true) return success6("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), [], notSetUp);
   const loaded = await loadState(options2.root, options2.fs ?? nodeFileSystem);
   if (loaded.status !== "ok") return failure6(EXIT_CODES.config, "Shore state could not be loaded.", [], []);
   const current = await fingerprintManagedFiles(options2.root, files, options2.fs ?? nodeFileSystem);
   if (current.status !== "ok") return failure6(EXIT_CODES.config, `${current.path}: ${current.reason}`, [], []);
   const storedFiles = loaded.state.fingerprint.files.filter((item) => files.includes(item.path));
   const drift = detectDrift({ sha256: "", files: storedFiles }, current.fingerprint);
-  return drift.status === "clean" ? success6("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), []) : failure6(EXIT_CODES.userDecisionRequired, `Applied guard files have drifted: ${drift.files.map((item) => item.path).join(", ")}. Review them or pass --force.`, [], []);
+  return drift.status === "clean" ? success6("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), [], notSetUp) : failure6(EXIT_CODES.userDecisionRequired, `Applied guard files have drifted: ${drift.files.map((item) => item.path).join(", ")}. Review them or pass --force.`, [], [], notSetUp);
 }
 async function runGuardsApply(options2) {
   const steps = [];
@@ -25565,11 +25735,11 @@ async function runGuardsApply(options2) {
   const selected = await selectSource(options2, existingState);
   if ("result" in selected) return selected.result;
   const source = selected.source;
-  const planResult = await runGuardsPlan({ root: options2.root, inventory: options2.inventory, resolvedSource: source });
+  const planResult = await runGuardsPlan({ root: options2.root, inventory: options2.inventory, resolvedSource: source, cliVersion: options2.cliVersion });
   const plan = guardsPlan(planResult);
   if (plan === void 0) {
     steps.push({ id: "plan", status: "failed", detail: planResult.message });
-    return { ...planResult, command: "guards apply", data: { steps: completeFailedSteps(steps), unenforced: [] } };
+    return { ...planResult, command: "guards apply", data: { steps: completeFailedSteps(steps), unenforced: [], notSetUp: [] } };
   }
   if (plan.choiceRequired && options2.choice === void 0) {
     steps.push({ id: "plan", status: "failed", detail: "choice required: shore or existing" });
@@ -25577,6 +25747,9 @@ async function runGuardsApply(options2) {
   }
   const savedChoice = existingState.status === "ok" && existingState.state.guardsProgress?.sourceHash === plan.sourceHash ? existingState.state.guardsProgress.choice : void 0;
   const choice = options2.choice ?? savedChoice ?? "shore";
+  const savedDecisions = existingState.status === "ok" && existingState.state.guardsProgress?.sourceHash === plan.sourceHash ? existingState.state.guardsProgress.decisions : void 0;
+  const setup = resolveSetupDecisions(plan, options2.accept, options2.decline, savedDecisions);
+  if ("error" in setup) return failure6(setup.exitCode, setup.error, steps, [], setup.notSetUp);
   const rerun = await checkRerun(options2, plan, existingState);
   if (rerun !== void 0) return rerun;
   const decisions = decideCapabilities(plan, choice, source.pack);
@@ -25586,9 +25759,9 @@ async function runGuardsApply(options2) {
       const completed = prepared.progress?.completed.includes(id) === true;
       steps.push({ id, status: completed ? "done" : "skipped", detail: completed ? "completed in an earlier run" : `dry-run: ${dryRunDetail(id)}${id === "plan" ? prepared.planSuffix : ""}` });
     }
-    return success6("Guard apply dry-run complete; no files were changed.", steps, decisions.unenforced);
+    return success6("Guard apply dry-run complete; no files were changed.", steps, decisions.unenforced, setup.notSetUp);
   }
-  const tracker = progressTracker(options2, plan, choice, source.reference, existingState, prepared.progress, runtime.fs);
+  const tracker = progressTracker(options2, plan, choice, source.reference, setup.decisions, existingState, prepared.progress, runtime.fs);
   const resumedFrom = prepared.applicable ? firstIncomplete(tracker.progress.completed) : void 0;
   const operations = [
     { id: "plan", run: () => {
@@ -25596,7 +25769,7 @@ async function runGuardsApply(options2) {
       return Promise.resolve();
     } },
     { id: "install", exitCode: EXIT_CODES.remoteUnavailable, run: async () => {
-      const result3 = await installDependencies(plan, decisions, options2.inventory, runtime.process, options2.root);
+      const result3 = await installDependencies(plan, setup.decisions, decisions, options2.inventory, runtime.process, options2.root);
       steps.push(result3.step);
       if (result3.step.status === "failed") throw new Error(result3.step.detail);
     } },
@@ -25604,8 +25777,9 @@ async function runGuardsApply(options2) {
     { id: "render-depcruise", run: () => renderDepcruiseStep(options2, source.pack, decisions, runtime.operations, steps, tracker.files) },
     { id: "baseline-eslint", run: () => baselineEslintStep(options2, decisions, runtime.operations, steps, tracker.files) },
     { id: "baseline-depcruise", run: () => baselineDepcruiseStep(options2, decisions, runtime.operations, steps, tracker.files) },
-    { id: "config", run: () => configStep(options2, choice, runtime.fs, steps, tracker.files) },
-    { id: "hook", run: () => hookStep(options2, runtime.operations, steps, tracker.files) },
+    { id: "config", run: () => configStep(options2, plan, choice, setup.decisions, runtime.fs, steps, tracker.files) },
+    { id: "hook", run: () => hookStep(options2, plan, setup.decisions, runtime, steps, tracker.files) },
+    { id: "ci", run: () => ciStep(options2, plan, setup.decisions, runtime.fs, steps, tracker.files) },
     { id: "state", run: () => stateStep(options2, plan, choice, runtime.fs, tracker.state, tracker.files, steps) }
   ];
   for (const operation of operations) {
@@ -25621,10 +25795,10 @@ async function runGuardsApply(options2) {
       const detail = message8(error62);
       if (steps.find((item) => item.id === operation.id) === void 0) steps.push({ id: operation.id, status: "failed", detail });
       await tracker.fail(operation.id, detail);
-      return resumeFailure(operation.exitCode ?? EXIT_CODES.config, operation.id, detail, steps, decisions.unenforced, tracker.progress.completed);
+      return resumeFailure(operation.exitCode ?? EXIT_CODES.config, operation.id, detail, steps, decisions.unenforced, setup.notSetUp, tracker.progress.completed, existingState.status === "ok");
     }
   }
-  return success6("Architecture guards applied.", steps, decisions.unenforced, resumedFrom === void 0 ? {} : { resumedFrom });
+  return success6("Architecture guards applied.", steps, decisions.unenforced, setup.notSetUp, resumedFrom === void 0 ? {} : { resumedFrom });
 }
 function runtimeOptions(options2) {
   return {
@@ -25635,23 +25809,77 @@ function runtimeOptions(options2) {
       renderDepcruise: options2.operations?.renderDepcruise ?? writeDepcruiseConfig,
       baselineEslint: options2.operations?.baselineEslint ?? generateEslintBaseline,
       baselineDepcruise: options2.operations?.baselineDepcruise ?? generateKnownViolations,
-      installCommitHook: options2.operations?.installCommitHook ?? installCommitHook
+      installCommitHook: options2.operations?.installCommitHook ?? installCommitHook,
+      verifyHookActivation: options2.operations?.verifyHookActivation ?? verifyHookActivation,
+      activateHusky: options2.operations?.activateHusky ?? ((root, processPort) => processPort("npx", ["--no-install", "husky"], root))
     }
   };
 }
-async function hookStep(options2, operations, steps, files) {
-  const result3 = await operations.installCommitHook(options2.root, { command: "shore-guard verify" });
+async function hookStep(options2, plan, setup, runtime, steps, files) {
+  if (plan.items.find((item) => item.id === "commit-hook")?.status === "present") {
+    steps.push({ id: "hook", status: "skipped", detail: "already installed" });
+    return;
+  }
+  if (setup["commit-hook"] === "declined") {
+    steps.push({ id: "hook", status: "skipped", detail: "declined by the user" });
+    return;
+  }
+  const detection = await detectHookFramework(options2.root);
+  if (detection.detected.length === 0) {
+    const activation2 = await runtime.operations.activateHusky(options2.root, runtime.process);
+    if (activation2.code !== 0) throw new Error(activation2.stderr.trim() || "Husky activation failed.");
+  }
+  const result3 = await runtime.operations.installCommitHook(options2.root);
   const hookPath = relative7(options2.root, result3.path);
   const localHook = hookPath === ".git/hooks/pre-commit" || hookPath.startsWith(".git/hooks/");
   if (!localHook) files.push(hookPath);
   const installed = result3.changed ? `installed Shore Guard pre-commit hook (${result3.framework}) at ${hookPath}` : `pre-commit hook already installed (${result3.framework})`;
   const conflictDetail = result3.conflicts.length === 0 ? "" : `; conflicts: ${result3.conflicts.join(", ")}`;
   const localDetail = localHook ? "; hook lives in .git/hooks and is local to this clone" : "";
-  steps.push({ id: "hook", status: "done", detail: `${installed}${conflictDetail}${localDetail}; edit hook reads lint.singleFileCommand from .shore/guard.json` });
+  const activation = await runtime.operations.verifyHookActivation(options2.root);
+  if (!activation.active) throw new Error(`${activation.reason}. ${activation.remediation}`);
+  steps.push({ id: "hook", status: "done", detail: `${installed}${conflictDetail}${localDetail}; active ${activation.framework} hook at ${relative7(options2.root, activation.hookPath)}` });
 }
 function guardsPlan(result3) {
   if (result3.exitCode !== EXIT_CODES.pass || !isRecord8(result3.data) || !isRecord8(result3.data.plan)) return void 0;
   return result3.data.plan;
+}
+var ITEM_IDS = ["lint", "boundaries", "shore-guard", "commit-hook", "on-save", "ci"];
+function resolveSetupDecisions(plan, accept, decline, saved) {
+  const accepted = parseIds(accept, true);
+  const declined = parseIds(decline, false);
+  const invalid2 = [...accepted.invalid, ...declined.invalid];
+  if (invalid2.length > 0) return { error: `Unknown setup item${invalid2.length === 1 ? "" : "s"}: ${invalid2.join(", ")}.`, exitCode: EXIT_CODES.config, notSetUp: [] };
+  const decisions = {};
+  for (const item of plan.items) {
+    if (item.status === "present") {
+      decisions[item.id] = "accepted";
+      continue;
+    }
+    if (declined.ids.has(item.id)) decisions[item.id] = "declined";
+    else if (accepted.ids.has(item.id)) decisions[item.id] = "accepted";
+    else if (item.decision !== null) decisions[item.id] = item.decision;
+    else {
+      const savedDecision = saved?.[item.id];
+      if (savedDecision !== void 0) decisions[item.id] = savedDecision;
+      else if (accepted.all) decisions[item.id] = "accepted";
+    }
+  }
+  const undecided = plan.items.filter((item) => item.status === "needed" && decisions[item.id] === void 0).map((item) => item.id);
+  const notSetUp = plan.items.filter((item) => decisions[item.id] === "declined").map((item) => ({ id: item.id, reason: "declined by the user" }));
+  if (undecided.length > 0) return { error: `Decide these items first: ${undecided.join(", ")}. Pass --accept all, or --accept/--decline with each id.`, exitCode: EXIT_CODES.userDecisionRequired, notSetUp };
+  const required2 = plan.items.filter((item) => item.status === "needed" && item.requirement === "required" && decisions[item.id] === "declined");
+  if (required2.length > 0) return { error: `Shore Guard cannot check the rules without ${required2.map((item) => item.title).join(", ")}.`, exitCode: EXIT_CODES.userDecisionRequired, notSetUp };
+  const hookAvailable = plan.items.find((item) => item.id === "commit-hook")?.status === "present" || decisions["commit-hook"] === "accepted";
+  const ciAvailable = plan.items.find((item) => item.id === "ci")?.status === "present" || decisions.ci === "accepted";
+  if (!hookAvailable && !ciAvailable) return { error: "Nothing would run the rules: accept the commit hook or the CI check.", exitCode: EXIT_CODES.userDecisionRequired, notSetUp };
+  return { decisions, notSetUp };
+}
+function parseIds(value, allowAll) {
+  const values = value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+  const all = allowAll && values.includes("all");
+  const invalid2 = values.filter((item) => !(allowAll && item === "all") && !ITEM_IDS.some((id) => id === item));
+  return { ids: new Set(values.filter((item) => ITEM_IDS.some((id) => id === item))), all, invalid: invalid2 };
 }
 function decideCapabilities(plan, choice, pack) {
   const lint = capability(plan, "lint");
@@ -25669,20 +25897,25 @@ function planDetail(plan, choice) {
   const impacts = choice === "shore" ? plan.capabilities.filter((item) => item.status === "conflict").flatMap((item) => item.impact === void 0 ? [] : [item.impact]) : [];
   return `choice ${choice}${impacts.length === 0 ? "" : `; ${impacts.join(" ")}`}`;
 }
-async function installDependencies(plan, decisions, inventory, processPort, root) {
+async function installDependencies(plan, setup, decisions, inventory, processPort, root) {
   const eslintPackages = /* @__PURE__ */ new Set([GUARD_INSTALL_SPECIFIERS.eslint, GUARD_INSTALL_SPECIFIERS.eslintD, GUARD_INSTALL_SPECIFIERS.typescriptEslintParser]);
-  const packages = plan.installs.dev.filter((name) => decisions.eslint || !eslintPackages.has(name)).filter((name) => decisions.depcruise || name !== GUARD_INSTALL_SPECIFIERS.dependencyCruiser);
+  const acceptedPackages = new Set(plan.items.filter((item) => setup[item.id] === "accepted").flatMap((item) => item.installs));
+  const packages = plan.installs.dev.filter((name) => acceptedPackages.has(name)).filter((name) => decisions.eslint || !eslintPackages.has(name)).filter((name) => decisions.depcruise || name !== GUARD_INSTALL_SPECIFIERS.dependencyCruiser);
   if (packages.length === 0) return { step: { id: "install", status: "skipped", detail: "no dependencies to install" } };
-  const command = installCommand(inventory.packageManager, packages);
-  if (command === void 0) return { step: { id: "install", status: "failed", detail: `Package manager was not detected; install manually: ${packages.join(" ")}` } };
-  const result3 = await processPort(command.binary, command.args, root);
-  const manual = [command.binary, ...command.args].join(" ");
-  return result3.code === 0 ? { step: { id: "install", status: "done", detail: manual } } : { step: { id: "install", status: "failed", detail: `Install failed; run manually: ${manual}` } };
+  const exact = packages.filter((name) => name.startsWith("shore-guard@"));
+  const ranged = packages.filter((name) => !exact.includes(name));
+  const commands = [ranged.length === 0 ? void 0 : installCommand(inventory.packageManager, ranged), exact.length === 0 ? void 0 : installCommand(inventory.packageManager, exact, true)].filter((value) => value !== void 0);
+  if (commands.length === 0) return { step: { id: "install", status: "failed", detail: `Package manager was not detected; install manually: ${packages.join(" ")}` } };
+  for (const command of commands) {
+    const result3 = await processPort(command.binary, command.args, root);
+    if (result3.code !== 0) return { step: { id: "install", status: "failed", detail: `Install failed; run manually: ${[command.binary, ...command.args].join(" ")}` } };
+  }
+  return { step: { id: "install", status: "done", detail: commands.map((command) => [command.binary, ...command.args].join(" ")).join("; ") } };
 }
-function installCommand(manager, packages) {
-  if (manager === "pnpm") return { binary: "pnpm", args: ["add", "-D", ...packages] };
-  if (manager === "npm") return { binary: "npm", args: ["install", "-D", ...packages] };
-  if (manager === "yarn") return { binary: "yarn", args: ["add", "-D", ...packages] };
+function installCommand(manager, packages, exact = false) {
+  if (manager === "pnpm") return { binary: "pnpm", args: ["add", "-D", ...exact ? ["--save-exact"] : [], ...packages] };
+  if (manager === "npm") return { binary: "npm", args: ["install", "-D", ...exact ? ["--save-exact"] : [], ...packages] };
+  if (manager === "yarn") return { binary: "yarn", args: ["add", "-D", ...exact ? ["--exact"] : [], ...packages] };
   return void 0;
 }
 async function renderEslintStep(options2, pack, decisions, fs19, operations, steps, files) {
@@ -25737,24 +25970,88 @@ async function baselineDepcruiseStep(options2, decisions, operations, steps, fil
     steps.push({ id: "baseline-depcruise", status: "done", detail: `grandfathered ${String(countLeaves(merged))} dependency violations` });
   } else steps.push({ id: "baseline-depcruise", status: "skipped", detail: "dependency rules configuration was not written" });
 }
-async function configStep(options2, choice, fs19, steps, files) {
+async function configStep(options2, plan, choice, setup, fs19, steps, files) {
   const configPath = join24(options2.root, ".shore/guard.json");
   const packagePath = join24(options2.root, "package.json");
   const config2 = await requiredRecord(configPath, fs19);
-  const singleFileCommand = lintCommand(options2.inventory, choice);
+  const singleFileCommand = lintCommand(options2.inventory, choice, setup["on-save"] === "accepted");
   const gates = stringArray(config2.installedGates);
-  const nextConfig = { ...config2, schemaVersion: 1, installedGates: [.../* @__PURE__ */ new Set([...gates, EDIT_GATE, COMMIT_GATE])], lint: { tool: choice === "shore" ? "eslint" : "custom", singleFileCommand, checkCommand: choice === "shore" ? "eslint ." : singleFileCommand } };
+  const existingDecisions = isRecord8(config2.setupDecisions) ? config2.setupDecisions : {};
+  const needed = new Set(plan.items.filter((item) => item.status === "needed").map((item) => item.id));
+  const neededDecisions = Object.fromEntries(Object.entries(setup).filter(([id]) => isItemId(id) && needed.has(id)));
+  const nextConfig = { ...config2, schemaVersion: 1, installedGates: [.../* @__PURE__ */ new Set([...gates, EDIT_GATE, COMMIT_GATE])], setupDecisions: { ...existingDecisions, ...neededDecisions }, ..."commitChecks" in config2 ? {} : { commitChecks: { typecheck: true } }, lint: { tool: choice === "shore" ? "eslint" : "custom", singleFileCommand, checkCommand: choice === "shore" ? "eslint ." : singleFileCommand } };
   await writeAtomic4(configPath, nextConfig, fs19);
   const pkg = await requiredRecord(packagePath, fs19);
   const scripts = isRecord8(pkg.scripts) ? pkg.scripts : {};
-  const nextScripts = { ...scripts, ..."guard:check" in scripts ? {} : { "guard:check": "shore-guard check" }, ..."lint:guard" in scripts ? {} : { "lint:guard": singleFileCommand } };
+  const detection = await detectHookFramework(options2.root);
+  const needsHusky = setup["commit-hook"] === "accepted" && detection.detected.length === 0;
+  const prepare = typeof scripts.prepare === "string" ? scripts.prepare : void 0;
+  const nextPrepare = !needsHusky ? {} : prepare === void 0 ? { prepare: "husky" } : prepare.includes("husky") ? {} : { prepare: `${prepare} && husky` };
+  const nextScripts = { ...scripts, ..."guard:check" in scripts ? {} : { "guard:check": "shore-guard check" }, ..."lint:guard" in scripts ? {} : { "lint:guard": singleFileCommand }, ..."guard:rules" in scripts ? {} : { "guard:rules": "shore-guard guards enforce --all" }, ...nextPrepare };
   await writeAtomic4(packagePath, { ...pkg, scripts: nextScripts }, fs19);
   files.push(".shore/guard.json", "package.json");
   steps.push({ id: "config", status: "done", detail: "configured lint commands, edit gate, commit gate, and package scripts" });
 }
-function lintCommand(inventory, choice) {
-  if (choice === "shore") return "eslint_d --max-warnings=0 --cache --cache-location .eslintcache";
+function lintCommand(inventory, choice, onSave) {
+  if (choice === "shore") return onSave || inventory.eslintD.present ? "eslint_d --max-warnings=0 --cache --cache-location .eslintcache" : "eslint --max-warnings=0 --cache --cache-location .eslintcache";
   return inventory.scripts.lint ?? (inventory.biome.present ? "biome check" : "eslint");
+}
+async function ciStep(options2, plan, setup, fs19, steps, files) {
+  if (plan.items.find((item) => item.id === "ci")?.status === "present") {
+    steps.push({ id: "ci", status: "skipped", detail: "already wired" });
+    return;
+  }
+  const itemDecision = setup.ci;
+  if (itemDecision === "declined") {
+    steps.push({ id: "ci", status: "skipped", detail: "declined by the user" });
+    return;
+  }
+  const directory = join24(options2.root, ".github/workflows");
+  let workflows;
+  try {
+    workflows = (await nodeFs3.readdir(directory)).filter((path2) => /\.ya?ml$/u.test(path2));
+  } catch {
+    workflows = [];
+  }
+  if (workflows.length === 0) {
+    const path2 = ".github/workflows/shore-guard.yml";
+    await writeTextAtomic(join24(options2.root, path2), workflowSource(options2.inventory.packageManager), fs19);
+    files.push(path2);
+    steps.push({ id: "ci", status: "done", detail: `created ${path2}` });
+    return;
+  }
+  for (const path2 of workflows) {
+    if (/guard:rules|guards enforce --all/u.test(await nodeFs3.readFile(join24(directory, path2), "utf8"))) {
+      steps.push({ id: "ci", status: "done", detail: `already wired in .github/workflows/${path2}` });
+      return;
+    }
+  }
+  throw new Error("No workflow runs the guard:rules script. Add a step to an existing workflow, then rerun.");
+}
+function workflowSource(manager) {
+  const install = manager === "pnpm" ? "      - uses: pnpm/action-setup@v4\n      - run: pnpm install --frozen-lockfile" : manager === "yarn" ? "      - run: yarn install --immutable" : "      - run: npm ci";
+  return `# Generated once by Shore Guard setup. This file belongs to the repository; edit it freely.
+name: Shore Guard
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+${install}
+      - if: github.event_name == 'pull_request'
+        run: npx --no-install shore-guard guards enforce --all --baseline-ref \${{ github.event.pull_request.base.sha }}
+      - if: github.event_name != 'pull_request'
+        run: npx --no-install shore-guard guards enforce --all
+`;
 }
 async function stateStep(options2, plan, choice, fs19, loaded, files, steps) {
   if (loaded.status !== "ok") throw new Error("Shore state must be initialized before applying guards.");
@@ -25793,8 +26090,9 @@ async function checkRerun(options2, plan, loaded) {
   if (current.status !== "ok") return failure6(EXIT_CODES.config, `${current.path}: ${current.reason}`, [], []);
   const storedFiles = loaded.state.fingerprint.files.filter((item) => files.includes(item.path));
   const drift = detectDrift({ sha256: "", files: storedFiles }, current.fingerprint);
-  if (drift.status === "clean") return success6("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), []);
-  return failure6(EXIT_CODES.userDecisionRequired, `Applied guard files have drifted: ${drift.files.map((item) => item.path).join(", ")}. Review them or pass --force.`, [], []);
+  const notSetUp = await recordedNotSetUp(options2);
+  if (drift.status === "clean") return success6("Architecture guards already applied.", STEP_IDS.map((id) => ({ id, status: "skipped", detail: "already applied" })), [], notSetUp);
+  return failure6(EXIT_CODES.userDecisionRequired, `Applied guard files have drifted: ${drift.files.map((item) => item.path).join(", ")}. Review them or pass --force.`, [], [], notSetUp);
 }
 async function prepareProgress(options2, plan, choice, loaded, fs19) {
   if (options2.force === true || loaded.status !== "ok" || loaded.state.guardsProgress === void 0) return { applicable: false, planSuffix: "" };
@@ -25804,7 +26102,7 @@ async function prepareProgress(options2, plan, choice, loaded, fs19) {
   const missingStep = await earliestMissingStep(options2.root, progress, fs19);
   if (missingStep === void 0) return { progress, applicable: true, planSuffix: "" };
   const cutoff = STEP_IDS.indexOf(missingStep);
-  const completed = progress.completed.filter((id) => isStepId(id) && STEP_IDS.indexOf(id) < cutoff);
+  const completed = progress.completed.filter((id) => STEP_IDS.indexOf(id) < cutoff);
   const filesByStep = Object.fromEntries(Object.entries(progress.filesByStep ?? {}).filter(([id]) => isStepId(id) && STEP_IDS.indexOf(id) < cutoff));
   const files = [...new Set(Object.values(filesByStep).flat())];
   return {
@@ -25814,7 +26112,7 @@ async function prepareProgress(options2, plan, choice, loaded, fs19) {
   };
 }
 async function earliestMissingStep(root, progress, fs19) {
-  for (const id of STEP_IDS) {
+  for (const id of STEP_IDS.filter((candidate) => candidate !== "ci")) {
     if (!progress.completed.includes(id)) continue;
     const recorded = progress.filesByStep?.[id] ?? (id === firstFileStep(progress.completed) ? progress.files : []);
     for (const path2 of recorded) {
@@ -25831,9 +26129,9 @@ async function earliestMissingStep(root, progress, fs19) {
 function firstFileStep(completed) {
   return STEP_IDS.find((id) => completed.includes(id) && !["plan", "install", "hook", "state"].includes(id));
 }
-function progressTracker(options2, plan, choice, source, loaded, saved, fs19) {
+function progressTracker(options2, plan, choice, source, decisions, loaded, saved, fs19) {
   const now2 = (options2.now ?? (() => /* @__PURE__ */ new Date()))().toISOString();
-  const progress = saved ?? { sourceHash: plan.sourceHash, source, choice, startedAt: now2, updatedAt: now2, completed: [], files: [], filesByStep: {} };
+  const progress = saved === void 0 ? { sourceHash: plan.sourceHash, source, choice, decisions, startedAt: now2, updatedAt: now2, completed: [], files: [], filesByStep: {} } : { ...saved, decisions };
   const tracker = {
     files: [...progress.files],
     progress,
@@ -25924,19 +26222,19 @@ function stringArray(value) {
 function dryRunDetail(id) {
   return id === "install" ? "install planned dependencies" : id === "state" ? "record applied guard state" : `execute ${id}`;
 }
-function success6(messageText, steps, unenforced, extra = {}) {
-  return { command: "guards apply", outcome: "pass", exitCode: EXIT_CODES.pass, message: messageText, data: { steps, unenforced, ...extra } };
+function success6(messageText, steps, unenforced, notSetUp = [], extra = {}) {
+  return { command: "guards apply", outcome: "pass", exitCode: EXIT_CODES.pass, message: messageText, data: { steps, unenforced, notSetUp, ...extra } };
 }
-function failure6(exitCode3, messageText, steps, unenforced) {
-  return { command: "guards apply", outcome: "error", exitCode: exitCode3, message: messageText, data: { steps: completeFailedSteps(steps), unenforced } };
+function failure6(exitCode3, messageText, steps, unenforced, notSetUp = []) {
+  return { command: "guards apply", outcome: "error", exitCode: exitCode3, message: messageText, data: { steps: completeFailedSteps(steps), unenforced, notSetUp } };
 }
-function resumeFailure(exitCode3, id, detail, steps, unenforced, completed) {
+function resumeFailure(exitCode3, id, detail, steps, unenforced, notSetUp, completed, progressSaved) {
   return {
     command: "guards apply",
     outcome: "error",
     exitCode: exitCode3,
-    message: `Guard apply stopped at ${id}: ${detail}. Completed steps are saved; fix the cause and rerun the same command to continue.`,
-    data: { steps: completeFailedSteps(steps), unenforced, resume: { nextStep: id, completed: completed.filter(isStepId) } }
+    message: progressSaved ? `Guard apply stopped at ${id}: ${detail}. Completed steps are saved; fix the cause and rerun the same command to continue.` : `Guard apply stopped at ${id}: ${detail}. Progress could not be saved because .shore/state.json does not exist; rerun the same command with the same options.`,
+    data: { steps: completeFailedSteps(steps), unenforced, notSetUp, resume: { nextStep: id, completed: completed.filter(isStepId) } }
   };
 }
 function completeFailedSteps(steps) {
@@ -25948,8 +26246,21 @@ function message8(error62) {
 function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+function isItemId(value) {
+  return ITEM_IDS.some((id) => id === value);
+}
 function isMissing7(error62) {
   return error62 instanceof Error && "code" in error62 && error62.code === "ENOENT";
+}
+async function recordedNotSetUp(options2) {
+  try {
+    const config2 = JSON.parse((await (options2.fs ?? nodeFileSystem).readFile(join24(options2.root, ".shore/guard.json"))).toString("utf8"));
+    if (!isRecord8(config2) || !isRecord8(config2.setupDecisions)) return [];
+    const setupDecisions = config2.setupDecisions;
+    return ITEM_IDS.filter((id) => setupDecisions[id] === "declined").map((id) => ({ id, reason: "declined by the user" }));
+  } catch {
+    return [];
+  }
 }
 function runProcess(command, args, cwd) {
   return new Promise((resolvePromise) => {
@@ -25971,6 +26282,32 @@ function runProcess(command, args, cwd) {
       resolvePromise({ code: code ?? 1, stdout, stderr });
     });
   });
+}
+
+// src/commands/guards-enforce.ts
+async function runGuardsEnforce(options2) {
+  if (options2.staged === options2.all) return usage("Pass exactly one of --staged or --all.");
+  if (options2.baselineRef !== void 0 && !options2.all) return usage("--baseline-ref can only be used with --all.");
+  const mode = options2.staged ? "staged" : "all";
+  const config2 = await loadGuardConfig(options2.root);
+  const typecheck = mode === "staged" && config2.status === "ok" && config2.config.commitChecks?.typecheck === false ? false : void 0;
+  const result3 = await (options2.enforce ?? runGuardsEnforcement)({
+    repoPath: options2.root,
+    mode,
+    ...typecheck === void 0 ? {} : { typecheck },
+    ...options2.baselineRef === void 0 ? {} : { baselineRef: options2.baselineRef }
+  });
+  const exitCode3 = result3.exitCode === 0 ? EXIT_CODES.pass : result3.exitCode === 2 || result3.exitCode === 70 ? EXIT_CODES.config : EXIT_CODES.violation;
+  return {
+    command: "guards enforce",
+    outcome: exitCode3 === EXIT_CODES.pass ? "pass" : "error",
+    exitCode: exitCode3,
+    message: result3.message,
+    data: { mode, files: result3.files }
+  };
+}
+function usage(message9) {
+  return { command: "guards enforce", outcome: "error", exitCode: EXIT_CODES.config, message: `${message9} Usage: shore-guard guards enforce --staged | --all [--baseline-ref <sha>] [--json]` };
 }
 
 // src/agents/claude-code.ts
@@ -26243,16 +26580,21 @@ var COMMAND_HELP = {
   guards: {
     command: "guards",
     purpose: COMMANDS.guards,
-    usage: "shore-guard guards plan (--blueprint <id> | --source <file>) [--json]\n       shore-guard guards apply [options]",
+    usage: "shore-guard guards plan (--blueprint <id> | --source <file>) [--json]\n       shore-guard guards apply [options]\n       shore-guard guards enforce (--staged | --all) [--baseline-ref <sha>] [--json]",
     flags: [
       { flag: "--blueprint <id>", description: "Render rules from a built-in architecture blueprint." },
       { flag: "--source <file>", description: "Render rules from a proposal or blueprint JSON file inside the repository." },
       { flag: "--choice <shore|existing>", description: "Choose Shore overlays or compatible existing tooling." },
       { flag: "--dry-run", description: "Show apply steps without changing files." },
-      { flag: "--force", description: "Reapply after managed guard files drift." }
+      { flag: "--force", description: "Reapply after managed guard files drift." },
+      { flag: "--accept <all|id,id>", description: "Accept all undecided setup items or the named items." },
+      { flag: "--decline <id,id>", description: "Decline the named setup items." },
+      { flag: "--staged", description: "Enforce rules against staged files for a commit hook." },
+      { flag: "--all", description: "Enforce rules against all tracked files for CI." },
+      { flag: "--baseline-ref <sha>", description: "With --all, reject baseline growth since the given commit." }
     ],
-    exitCodes: [PASS, CONFIG, REMOTE, DECISION],
-    example: "shore-guard guards apply --blueprint shore.preset.node-api --choice shore --json"
+    exitCodes: [PASS, FINDINGS, CONFIG, REMOTE, DECISION],
+    example: 'Hook: shore-guard guards enforce --staged\n  CI: shore-guard guards enforce --all --baseline-ref "$BASE_SHA"'
   },
   report: {
     command: "report",
@@ -26362,11 +26704,17 @@ async function route(argv, cwd, dependencies = {}) {
     }) };
   }
   if (command === "guards") {
-    if (args[1] !== "plan" && args[1] !== "apply") return { json: json2, result: fail3(command, "Unknown guards command. Usage: shore-guard guards plan|apply [options]") };
+    if (args[1] !== "plan" && args[1] !== "apply" && args[1] !== "enforce") return { json: json2, result: fail3(command, "Unknown guards command. Usage: shore-guard guards plan|apply|enforce [options]") };
+    if (args[1] === "enforce") return { json: json2, result: await runGuardsEnforce({
+      root: cwd,
+      staged: argv.includes("--staged"),
+      all: argv.includes("--all"),
+      baselineRef: readValueFlag(argv, "--baseline-ref")
+    }) };
     const inventory = await inventoryToolchain({ root: cwd, fs: nodeProbeFileSystem });
     const blueprint = readValueFlag(argv, "--blueprint");
     const source = readValueFlag(argv, "--source");
-    if (args[1] === "plan") return { json: json2, result: await runGuardsPlan({ root: cwd, inventory, blueprint, source }) };
+    if (args[1] === "plan") return { json: json2, result: await runGuardsPlan({ root: cwd, inventory, blueprint, source, cliVersion: CLI_BUILD.version }) };
     const choiceValue = readValueFlag(argv, "--choice");
     if (choiceValue !== void 0 && choiceValue !== "shore" && choiceValue !== "existing") return { json: json2, result: fail3(command, "--choice must be shore or existing.") };
     return { json: json2, result: await runGuardsApply({
@@ -26377,6 +26725,9 @@ async function route(argv, cwd, dependencies = {}) {
       choice: choiceValue,
       dryRun: argv.includes("--dry-run"),
       force: argv.includes("--force"),
+      accept: readValueFlag(argv, "--accept"),
+      decline: readValueFlag(argv, "--decline"),
+      cliVersion: CLI_BUILD.version,
       ...dependencies.guards
     }) };
   }
@@ -26456,7 +26807,7 @@ async function route(argv, cwd, dependencies = {}) {
       device: {
         client: client2,
         openBrowser: dependencies.deviceLogin?.openBrowser ?? createBrowserOpener(dependencies.deviceLogin?.platform ?? process.platform),
-        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve15) => setTimeout(resolve15, ms))),
+        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve17) => setTimeout(resolve17, ms))),
         now: dependencies.deviceLogin?.now ?? Date.now,
         stderr: dependencies.deviceLogin?.stderr ?? ((line) => {
           process.stderr.write(`${line}
@@ -26561,12 +26912,12 @@ function stripOptions(argv) {
     const value = argv[index];
     if (value === void 0) continue;
     if (value === "--json" || value === "--plan" || value === "--help" || value === "-h" || value === "--no-browser") continue;
-    if (["--api-key", "--agents", "--file", "--choice", "--blueprint", "--source", "--commit", "--codebase", "--out", "--facts", "--interview", "--slug", "--name", "--stage", "--set-consent"].includes(value)) {
+    if (["--api-key", "--agents", "--file", "--choice", "--blueprint", "--source", "--commit", "--codebase", "--out", "--facts", "--interview", "--slug", "--name", "--stage", "--set-consent", "--accept", "--decline", "--baseline-ref"].includes(value)) {
       index += 1;
       continue;
     }
-    if (["--api-key=", "--agents=", "--file=", "--choice=", "--blueprint=", "--source=", "--commit=", "--codebase=", "--out=", "--facts=", "--interview=", "--slug=", "--name=", "--stage=", "--set-consent="].some((prefix) => value.startsWith(prefix))) continue;
-    if (["--skip-agents", "--dry-run", "--force", "--greenfield", "--replace", "--pending"].includes(value)) continue;
+    if (["--api-key=", "--agents=", "--file=", "--choice=", "--blueprint=", "--source=", "--commit=", "--codebase=", "--out=", "--facts=", "--interview=", "--slug=", "--name=", "--stage=", "--set-consent=", "--accept=", "--decline=", "--baseline-ref="].some((prefix) => value.startsWith(prefix))) continue;
+    if (["--skip-agents", "--dry-run", "--force", "--greenfield", "--replace", "--pending", "--staged", "--all"].includes(value)) continue;
     result3.push(value);
   }
   return result3;

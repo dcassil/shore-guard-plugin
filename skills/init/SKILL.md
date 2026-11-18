@@ -83,7 +83,7 @@ Manual:
 
 After the configuration commit, follow the discovery skill (`shore-guard:discovery`); do not reinvent it here. If the full steps are not in context, read ${CLAUDE_PLUGIN_ROOT}/skills/discovery/SKILL.md before doing anything else. It assesses each package, answers determinable interview fields without confirmation, selects one of the three outcomes, summarizes the rules in about ten lines, and asks only whether to proceed or stop.
 
-On proceed, follow the guards skill with the selected `--blueprint <id>` or `--source <proposalPath>`. After setup, show `git status --porcelain` and the generated rule files and baselines. Ask before committing, then commit them with `chore: add Shore Guard rules and guards`. For option (a), push the same branch so its pull request is updated. For option (b), recap what was written.
+On proceed, follow the guards skill with the selected `--blueprint <id>` or `--source <proposalPath>`. It presents one approval list of required and optional repository tooling, then asks yes to all, no, or choose each item one at a time. After setup, show `git status --porcelain` and the generated rule files and baselines. Ask before committing, then commit them with `chore: add Shore Guard rules and guards`. For option (a), push the same branch so its pull request is updated. For option (b), recap what was written.
 
 Tell the user: From here, the rules belong to this repository. Your agent may add, change, or remove them as the architecture evolves, and Shore Guard will not change them again.
 
