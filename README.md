@@ -1,7 +1,7 @@
 # Shore Guard
 
 Shore Guard provides a standalone repository-health CLI and a Claude Code plugin.
-This artifact was built from monorepo commit `40e4da4c1cb0641884003ca605a75919d4325353` (version `0.7.0`).
+This artifact was built from monorepo commit `8d7f5bba97836fabd107f9439ab84b1a27cbcd89` (version `0.7.1`).
 
 ## Getting started
 
@@ -14,9 +14,18 @@ review and approve the work, then merge the generated pull request.
 Requires Node.js 20 or newer. Add this repository as a marketplace and install the plugin:
 
 ```sh
-claude plugin marketplace add danielcassil/shore-guard
+claude plugin marketplace add dcassil/shore-guard-plugin
 claude plugin install shore-guard@shore-guard
 ```
+
+For Codex:
+
+```sh
+codex plugin marketplace add dcassil/shore-guard-plugin
+codex plugin add shore-guard@shore-guard
+```
+
+`npx shore-guard setup` does all of this—CLI, login, and plugin setup for the detected agents—in one step.
 
 Inside Claude Code, the `shore-guard` command is then available in the agent's shell
 with no further steps because the plugin's `bin/` directory is on PATH:

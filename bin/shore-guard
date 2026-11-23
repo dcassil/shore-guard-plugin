@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "40e4da4c1cb0641884003ca605a75919d4325353", version: "0.7.0" };
+var define_SHORE_GUARD_BUILD_default = { sha: "8d7f5bba97836fabd107f9439ab84b1a27cbcd89", version: "0.7.1" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -26736,6 +26736,43 @@ async function route(argv, cwd, dependencies = {}) {
   if (configResult.status === "invalid" && command !== "doctor" && command !== "setup" && !(command === "init" && argv.includes("--plan"))) return { json: json2, result: fail3(command, `Invalid configuration at ${configResult.field}: ${configResult.reason}`) };
   const env = dependencies.env ?? process.env;
   const baseUrl = dependencies.baseUrl ?? env["SHORE_API_BASE_URL"] ?? API_BASE_URL;
+  const login = async (selection2) => {
+    const key = apiKeyFlag ?? env.SHORE_API_KEY;
+    const clientForKey = (candidate) => createApiClient({ baseUrl, getApiKey: () => candidate, fetch: dependencies.fetch });
+    const client2 = createApiClient({ baseUrl, getApiKey: () => void 0, fetch: dependencies.fetch });
+    let result3 = await runLogin({
+      key,
+      store: selection2.store,
+      fallbackNotice: selection2.notice,
+      clientForKey,
+      device: {
+        client: client2,
+        openBrowser: dependencies.deviceLogin?.openBrowser ?? createBrowserOpener(dependencies.deviceLogin?.platform ?? process.platform),
+        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve17) => setTimeout(resolve17, ms))),
+        now: dependencies.deviceLogin?.now ?? Date.now,
+        stderr: dependencies.deviceLogin?.stderr ?? ((line) => {
+          process.stderr.write(`${line}
+`);
+        }),
+        clientName: "shore-guard",
+        hostname: dependencies.deviceLogin?.hostname ?? hostname3(),
+        noBrowser: argv.includes("--no-browser"),
+        ...dependencies.deviceLogin?.timeoutMs === void 0 ? {} : { timeoutMs: dependencies.deviceLogin.timeoutMs }
+      }
+    });
+    const unavailable = "Browser login is not enabled on the server.";
+    if (key === void 0 && result3.message.startsWith(unavailable) && (dependencies.isTTY ?? process.stdin.isTTY)) {
+      const unavailableNotice = result3.message;
+      const prompted = await (dependencies.promptForKey ?? promptForKey)();
+      result3 = await runLogin({
+        key: prompted,
+        store: selection2.store,
+        clientForKey,
+        fallbackNotice: [unavailableNotice, selection2.notice].filter((notice) => notice !== void 0).join("\n")
+      });
+    }
+    return result3;
+  };
   if (command === "discover") {
     if (configResult.status !== "ok") return { json: json2, result: fail3(command, 'Shore Guard is not initialized. Run "shore-guard init" first.') };
     const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;
@@ -26772,22 +26809,13 @@ async function route(argv, cwd, dependencies = {}) {
       fs: { readFile: (path2) => readFile23(path2, "utf8") }
     };
     const agentsFlag = readValueFlag(argv, "--agents");
-    const login = async () => {
-      const key = apiKeyFlag ?? env.SHORE_API_KEY ?? (dependencies.isTTY ?? process.stdin.isTTY ? await (dependencies.promptForKey ?? promptForKey)() : void 0);
-      return runLogin({
-        key,
-        store: selection2.store,
-        fallbackNotice: selection2.notice,
-        clientForKey: (candidate) => createApiClient({ baseUrl, getApiKey: () => candidate, fetch: dependencies.fetch })
-      });
-    };
     return { json: json2, result: await runSetup({
       exec,
       adapters: dependencies.setup?.adapters ?? createAgentAdapters(adapterContext),
       isCliOnPath: dependencies.setup?.isCliOnPath ?? createCliDetector(exec),
       installCli: dependencies.setup?.installCli ?? createCliInstaller(exec, CLI_BUILD.version),
       authStatus: dependencies.setup?.authStatus ?? (() => checkAuthentication(resolved2, client2)),
-      login: dependencies.setup?.login ?? login,
+      login: dependencies.setup?.login ?? (() => login(selection2)),
       ...agentsFlag === void 0 ? {} : { agentsFilter: agentsFlag.split(",").map((value) => value.trim()).filter((value) => value !== "") },
       skipAgents: argv.includes("--skip-agents"),
       dryRun: argv.includes("--dry-run"),
@@ -26796,41 +26824,7 @@ async function route(argv, cwd, dependencies = {}) {
   }
   if (command === "login") {
     const selection2 = dependencies.storeSelection ?? await selectCredentialStore();
-    const key = apiKeyFlag ?? env.SHORE_API_KEY;
-    const clientForKey = (candidate) => createApiClient({ baseUrl, getApiKey: () => candidate, fetch: dependencies.fetch });
-    const client2 = createApiClient({ baseUrl, getApiKey: () => void 0, fetch: dependencies.fetch });
-    let result3 = await runLogin({
-      key,
-      store: selection2.store,
-      fallbackNotice: selection2.notice,
-      clientForKey,
-      device: {
-        client: client2,
-        openBrowser: dependencies.deviceLogin?.openBrowser ?? createBrowserOpener(dependencies.deviceLogin?.platform ?? process.platform),
-        sleep: dependencies.deviceLogin?.sleep ?? ((ms) => new Promise((resolve17) => setTimeout(resolve17, ms))),
-        now: dependencies.deviceLogin?.now ?? Date.now,
-        stderr: dependencies.deviceLogin?.stderr ?? ((line) => {
-          process.stderr.write(`${line}
-`);
-        }),
-        clientName: "shore-guard",
-        hostname: dependencies.deviceLogin?.hostname ?? hostname3(),
-        noBrowser: argv.includes("--no-browser"),
-        ...dependencies.deviceLogin?.timeoutMs === void 0 ? {} : { timeoutMs: dependencies.deviceLogin.timeoutMs }
-      }
-    });
-    const unavailable = "Browser login is not enabled on the server.";
-    if (key === void 0 && result3.message.startsWith(unavailable) && (dependencies.isTTY ?? process.stdin.isTTY)) {
-      const unavailableNotice = result3.message;
-      const prompted = await (dependencies.promptForKey ?? promptForKey)();
-      result3 = await runLogin({
-        key: prompted,
-        store: selection2.store,
-        clientForKey,
-        fallbackNotice: [unavailableNotice, selection2.notice].filter((notice) => notice !== void 0).join("\n")
-      });
-    }
-    return { json: json2, result: result3 };
+    return { json: json2, result: await login(selection2) };
   }
   if (command === "status") {
     const direct2 = apiKeyFlag ?? env.SHORE_API_KEY;

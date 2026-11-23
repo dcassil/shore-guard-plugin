@@ -39,7 +39,7 @@ Choose (a), (b), or (c).
 
 ## 3. Complete login
 
-If `login` is pending or blocked, ask the user to run `shore-guard login` in their own terminal. Wait, then rerun the plan. Browser login is coming in SCRUM-103; until then login stays in the user's terminal. Never ask them to paste a key into chat.
+If `login` is pending or blocked, ask the user to run `shore-guard login` in their own terminal. It prints a URL and code and opens the browser; the user checks that the code matches and approves, then you rerun the plan. If the CLI reports that browser login is not enabled on the server, the user creates an API key in Shore Sight under Account › API keys and runs `shore-guard login` again in an interactive terminal, where the CLI prompts for it. Never ask them to paste a key into chat.
 
 Manual:
 `shore-guard login && shore-guard init --plan --json`
