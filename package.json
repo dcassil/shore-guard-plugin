@@ -1,13 +1,13 @@
 {
   "name": "shore-guard",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "CLI-only Shore Guard workflows for coding agents",
   "type": "module",
   "bin": {
     "shore-guard": "bin/shore-guard"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "license": "MIT",
   "repository": {

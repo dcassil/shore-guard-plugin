@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "8d7f5bba97836fabd107f9439ab84b1a27cbcd89", version: "0.7.1" };
+var define_SHORE_GUARD_BUILD_default = { sha: "9bad9a5950eb3943986727d749e89cd16a00c70a", version: "0.7.2" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -26045,7 +26045,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 ${install}
       - if: github.event_name == 'pull_request'
         run: npx --no-install shore-guard guards enforce --all --baseline-ref \${{ github.event.pull_request.base.sha }}

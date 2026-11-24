@@ -1,17 +1,21 @@
 # Shore Guard
 
 Shore Guard provides a standalone repository-health CLI and a Claude Code plugin.
-This artifact was built from monorepo commit `8d7f5bba97836fabd107f9439ab84b1a27cbcd89` (version `0.7.1`).
+This artifact was built from monorepo commit `9bad9a5950eb3943986727d749e89cd16a00c70a` (version `0.7.2`).
 
 ## Getting started
 
 Run `npx shore-guard setup`, open your coding agent in the project, then run
-`/shore-guard:init`. The approval-first flow shows its plan before changing anything;
-review and approve the work, then merge the generated pull request.
+`/shore-guard:init`. The agent investigates the repository, recommends an architecture,
+and shows one approval list for the repository tooling. On approval it installs the rule
+engines, generated rule files and baselines, a commit hook, and a CI workflow in the
+working tree. You choose where that happens: a new `shore-guard/setup`
+worktree branch (recommended; pushed, with a pull request opened when the GitHub CLI is
+signed in) or the current branch.
 
 ## Install
 
-Requires Node.js 20 or newer. Add this repository as a marketplace and install the plugin:
+Requires Node.js 22 or newer. Add this repository as a marketplace and install the plugin:
 
 ```sh
 claude plugin marketplace add dcassil/shore-guard-plugin
@@ -33,7 +37,7 @@ with no further steps because the plugin's `bin/` directory is on PATH:
 ```sh
 shore-guard login
 shore-guard init
-shore-guard verify --json
+shore-guard status --json
 ```
 
 `shore-guard login` opens a browser for account approval and stores the resulting
@@ -45,17 +49,37 @@ For terminals and CI, install from GitHub or run the CLI directly:
 npm install -g github:dcassil/shore-guard-plugin   # or: npx github:dcassil/shore-guard-plugin status --json
 ```
 
-Once the package is published to the npm registry, `npm install -g shore-guard` works too.
+The same CLI is published to npm: `npm install -g shore-guard`.
 
-### CI
+## Local and CI rule enforcement
 
-Set `SHORE_API_KEY` in the CI environment and run `shore-guard verify --json` as
-the completion gate. Exit 0 passes; exit 1 reports findings; all other exit codes must
-be handled according to the bundled completion-contract skill.
+The installed pre-commit hook runs:
 
-The completion contract permits an agent to claim completion only when
-`shore-guard verify --json` passes for the exact candidate commit. All other exit
-codes must be handled according to the bundled completion-contract skill.
+```sh
+npx --no-install shore-guard guards enforce --staged
+```
+
+The generated CI workflow runs `shore-guard guards enforce --all`. On pull requests it
+also passes `--baseline-ref <base-sha>` so baseline growth is rejected. Enforcement
+checks the generated ESLint and dependency-boundary rules and TypeScript configuration;
+staged mode checks staged JavaScript and TypeScript files, while all-files mode checks
+all tracked JavaScript and TypeScript files. It is local: it needs no Shore login,
+`SHORE_API_KEY`, clean working tree, or remote service. Exit 0 passes, exit 1 reports
+rule findings, and exit 2 reports configuration or internal errors.
+
+## Agent completion verification
+
+`shore-guard verify --json` is separate from the commit hook and CI workflow. It requires
+a clean working tree and Shore authentication from `shore-guard login` or
+`SHORE_API_KEY`. It resolves the exact base and HEAD commits, checks Shore's remote
+health comparison, runs configured gates including the same all-files rule enforcement,
+and writes a receipt containing `data.headSha`.
+
+The bundled completion-contract skill permits an agent to claim completion only when
+verify exits 0 and the receipt's `data.headSha` exactly matches current HEAD. Exit 1
+means findings; 2 means configuration or internal error; 3 authentication error; 4
+remote unavailable; 5 quota exceeded; and 7 unsafe git state. None of the nonzero
+outcomes permits completion.
 
 ## Distribution model
 
