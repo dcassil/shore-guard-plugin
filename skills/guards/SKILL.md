@@ -14,7 +14,7 @@ Apply the `completion-contract` skill (`shore-guard:completion-contract`) exit t
 
 ## 1. Read the plan
 
-Carry forward exactly one discovery option. Run `shore-guard guards plan --blueprint <id> --json` or `shore-guard guards plan --source <proposalPath> --json` and parse `data.plan`. If exit 6 asks for a blueprint or source, follow the discovery skill (`shore-guard:discovery`) first and stop. If its full steps are absent, read ${CLAUDE_PLUGIN_ROOT}/skills/discovery/SKILL.md before doing anything else. For every other nonzero exit, apply the completion-contract table and stop.
+Carry forward exactly one discovery option. Run `shore-guard guards plan --blueprint <id> --json` or `shore-guard guards plan --source <proposalPath> --json` for a single codebase. For several codebases, run `shore-guard guards plan --manifest .shore/architecture-manifest.json --json`; one installation at the repository root covers every codebase. Parse `data.plan`. If exit 6 asks for a blueprint or source, follow the discovery skill (`shore-guard:discovery`) first and stop. If its full steps are absent, read ${CLAUDE_PLUGIN_ROOT}/skills/discovery/SKILL.md before doing anything else. A missing proposal or unknown blueprint in a manifest is reported with its codebase path and exit 2; fix that decision in the manifest before planning again. For every other nonzero exit, apply the completion-contract table and stop.
 
 ## 2. Present the plan
 
@@ -58,7 +58,7 @@ Do not ask again about `present` items or recorded decisions. Do not proceed unt
 
 ## 4. Apply
 
-For approval option (a), run `shore-guard guards apply --blueprint <id> --choice shore --accept all --json` or `shore-guard guards apply --source <proposalPath> --choice shore --accept all --json`. Use `--choice existing` instead when the tools answer was (b). For approval option (c), pass `--accept <id,id> --decline <id,id>`, listing every undecided `needed` item exactly once; omit items that already have a recorded decision.
+For approval option (a), run `shore-guard guards apply --blueprint <id> --choice shore --accept all --json`, `shore-guard guards apply --source <proposalPath> --choice shore --accept all --json`, or, for several codebases, `shore-guard guards apply --manifest .shore/architecture-manifest.json --choice shore --accept all --json`. Use `--choice existing` instead when the tools answer was (b). For approval option (c), pass `--accept <id,id> --decline <id,id>`, listing every undecided `needed` item exactly once; omit items that already have a recorded decision. A manifest problem exits 2 and identifies the codebase path; fix it in the manifest and rerun the same command. After a successful manifest apply, the manifest and proposals it references are removed, just as a discovery proposal is removed after a successful source apply.
 
 Report every `data.steps` entry as `[x]` for `done`, `[ ]` for `skipped`, or `[!]` for `failed`, including `id` and `detail`. Report baseline counts. List every non-empty `data.unenforced` rule id. Report every `data.notSetUp` entry in plain words under this exact heading:
 
@@ -86,7 +86,7 @@ Hooks can be skipped by a developer; CI is the check that cannot be skipped loca
 
 Boundary rules run in the pre-commit hook through `npx --no-install shore-guard guards enforce --staged` and in CI through `shore-guard guards enforce --all`; `shore-guard verify` includes the same all-files check. `shore-guard check` is the Shore health check. Enforcement needs no login, clean tree, or remote service. A staged check refuses a partially staged JavaScript or TypeScript file and explains why. The commit hook also runs typecheck on every commit; `.shore/guard.json` `commitChecks.typecheck: false` turns it off for commits only, while `--all` always typechecks.
 
-If `on-save` was declined, do not install or configure on-save tooling; say on-save checking is not set up and continue. Otherwise, identify the languages, framework, and module system. Choose the standard per-file tool and configure resolved imports so path aliases, base-relative and absolute specifiers, relative paths, and extensionless imports resolve to the same file the boundary engine sees. Generated ESLint import patterns match import text only; do not call them boundary enforcement.
+If `on-save` was declined, do not install or configure on-save tooling; say on-save checking is not set up and continue. Otherwise, identify the languages, framework, and module system. Choose the standard per-file tool and configure resolved imports so path aliases, base-relative and absolute specifiers, relative paths, and extensionless imports resolve to the same file the boundary engine sees. Generated ESLint import patterns match import text only; do not call them boundary enforcement. In a monorepo, type checking still uses only the root `tsconfig.json`.
 
 Present what will be installed, changed, and covered on save. Get an explicit yes before installing or writing anything. The accepted approval-list decision supplies that yes. Reread `setupDecisions` immediately before changing it. Extend existing configuration; never replace or weaken it.
 

@@ -13,10 +13,10 @@
 11. Inspect the complete configuration: `cat .shore/guard.json`.
 12. Stage the generated files: `git add .shore/guard.json .gitignore`.
 13. Commit the configuration: `git commit -m "chore: add Shore Guard configuration"`.
-14. Follow the discovery skill (`shore-guard:discovery`) and run `shore-guard discover --json` for brownfield, or its documented greenfield command.
-15. Let the agent answer interview fields supported by repository evidence; answer only unresolved or conflicting fields.
-16. Review the agent's short summary of modules, forbidden dependencies, entry-point rules, and grandfathered violations; choose proceed or stop.
-17. On proceed, follow the guards skill with `--blueprint <id>` or `--source <proposalPath>`; it shows one approval list of required and optional repository tooling and asks yes to all, no, or choose each item one at a time.
+14. Follow the discovery skill (`shore-guard:discovery`) and run `shore-guard discover --json` for brownfield, or its documented greenfield command. In a monorepo this evaluates every codebase.
+15. Let the agent compare each codebase's derived proposal with catalog choices based on that package's own facts, answer interview fields supported by repository evidence, and record every decision in `.shore/architecture-manifest.json`.
+16. For a monorepo, review one table covering every codebase and confirm it once. For a single codebase, review the agent's short summary of modules, forbidden dependencies, entry-point rules, and grandfathered violations; choose proceed or stop.
+17. On proceed, follow the guards skill with `--manifest .shore/architecture-manifest.json` for a monorepo, or `--blueprint <id>` or `--source <proposalPath>` for a single codebase; it shows one approval list of required and optional repository tooling and asks yes to all, no, or choose each item one at a time.
 18. To accept the whole list manually, run `shore-guard guards apply --blueprint <id> --choice shore --accept all --json`.
 19. For an existing pull-request workflow, add a step that runs `npm run guard:rules -- --baseline-ref <base commit SHA>` and ensure checkout has full history.
 20. Inspect and commit the generated rule files and baselines with `git commit -m "chore: add Shore Guard rules and guards"`.

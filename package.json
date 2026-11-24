@@ -1,6 +1,6 @@
 {
   "name": "shore-guard",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "CLI-only Shore Guard workflows for coding agents",
   "type": "module",
   "bin": {
