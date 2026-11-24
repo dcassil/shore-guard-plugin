@@ -6,7 +6,7 @@ var __export = (target, all) => {
 };
 
 // <define:__SHORE_GUARD_BUILD__>
-var define_SHORE_GUARD_BUILD_default = { sha: "14ffb8d94605428c703d3e7ec7d4b5ff50bba034", version: "0.8.0" };
+var define_SHORE_GUARD_BUILD_default = { sha: "1f70ffc755890105efc1ae93cc753ca0d1f2c5c1", version: "0.9.0" };
 
 // ../core/src/config.ts
 import { readFile } from "node:fs/promises";
@@ -20970,15 +20970,11 @@ var architectureFactsSchema = external_exports.object({
   repoShape: external_exports.enum(["single", "monorepo", "unknown"])
 }).strict();
 var recommendArchitecturePresetsInputSchema = external_exports.object({ facts: architectureFactsSchema }).strict();
+var contentHashSchema = external_exports.string().regex(/^sha256:[0-9a-f]{64}$/);
 var recommendationCandidateSchema = external_exports.object({
-  presetId: external_exports.enum([
-    "nodeApiPreset",
-    "reactNextVercelWebappPreset",
-    "supabaseApiPreset",
-    "supabaseNodeRagPreset",
-    "viteClientSideWebappPreset"
-  ]),
+  presetId: external_exports.string().min(1),
   policyPackId: external_exports.string().min(1),
+  contentHash: contentHashSchema.optional(),
   name: external_exports.string().min(1),
   score: external_exports.number().int().min(0).max(100),
   fitReasons: external_exports.array(external_exports.string().min(1)),
@@ -20988,9 +20984,22 @@ var recommendationCandidateSchema = external_exports.object({
   layers: external_exports.string().min(1)
 }).strict();
 var recommendArchitecturePresetsResponseSchema = external_exports.object({
-  candidates: external_exports.array(recommendationCandidateSchema).length(5),
+  candidates: external_exports.array(recommendationCandidateSchema).min(1),
   interviewRequired: external_exports.boolean(),
   recommendationVersion: external_exports.literal(1)
+}).strict();
+var listArchitectureBlueprintsResponseSchema = external_exports.object({
+  blueprints: external_exports.array(external_exports.object({
+    policyPackId: external_exports.string().min(1),
+    presetId: external_exports.string().min(1),
+    name: external_exports.string().min(1),
+    revision: external_exports.string().min(1),
+    contentHash: contentHashSchema
+  }).strict())
+}).strict();
+var getArchitectureBlueprintResponseSchema = external_exports.object({
+  blueprint: external_exports.unknown(),
+  contentHash: contentHashSchema
 }).strict();
 var interviewAnswerSchema = external_exports.object({
   value: external_exports.string().min(1),
@@ -21466,6 +21475,15 @@ function createApiClient(options2) {
       return mapDraftArchitectureError(error62, requestedCommitSha);
     }
   }
+  async function getArchitectureBlueprint(policyPackId) {
+    try {
+      const response = await request2("GET", `/architecture/blueprints/${encodeURIComponent(policyPackId)}`, getArchitectureBlueprintResponseSchema);
+      return { status: "ok", ...response };
+    } catch (error62) {
+      if (error62 instanceof RequestRejectedError && error62.status === 404 && error62.code === "blueprint_not_found") return { status: "not-found" };
+      throw error62;
+    }
+  }
   return {
     startDeviceLogin: (input2) => request2("POST", "/auth/device", deviceLoginStartResponseSchema, input2, { unauthenticated: true }),
     pollDeviceLogin: (deviceCode) => request2(
@@ -21485,7 +21503,9 @@ function createApiClient(options2) {
     getUsage: () => request2("GET", "/account/usage", usageSchema),
     draftArchitectureProposal,
     recommendArchitecturePresets: (input2) => request2("POST", "/architecture/recommendations", recommendArchitecturePresetsResponseSchema, input2),
-    assembleArchitectureBlueprint: (input2) => request2("POST", "/architecture/blueprints", assembleArchitectureBlueprintResponseSchema, input2)
+    assembleArchitectureBlueprint: (input2) => request2("POST", "/architecture/blueprints", assembleArchitectureBlueprintResponseSchema, input2),
+    listArchitectureBlueprints: () => request2("GET", "/architecture/blueprints", listArchitectureBlueprintsResponseSchema),
+    getArchitectureBlueprint
   };
 }
 function mapDraftArchitectureError(error62, requestedCommitSha) {
@@ -25967,6 +25987,49 @@ function failure6(exitCode3, messageText, data) {
   return { command: "report submit", outcome: "error", exitCode: exitCode3, message: messageText, ...data === void 0 ? {} : { data } };
 }
 
+// src/commands/blueprint-catalog.ts
+var bundledIds = () => policyPresets.map((preset) => preset.metadata.id);
+var bundled = (id) => policyPresets.find((preset) => preset.metadata.id === id);
+var bundledBlueprintLookup = (id) => {
+  const pack = bundled(id);
+  return Promise.resolve(pack === void 0 ? { status: "unknown", validIds: bundledIds() } : { status: "found", pack, origin: "bundled" });
+};
+function createBlueprintLookup(api) {
+  if (api === void 0) return bundledBlueprintLookup;
+  return async (id) => {
+    let served;
+    try {
+      served = await api.getArchitectureBlueprint(id);
+    } catch {
+      return bundledBlueprintLookup(id);
+    }
+    if (served.status === "not-found") {
+      const local = bundled(id);
+      if (local !== void 0) return { status: "found", pack: local, origin: "bundled" };
+      return { status: "unknown", validIds: await catalogIds(api) };
+    }
+    let pack;
+    try {
+      const validation = validate2(served.blueprint);
+      if (validation.hasUnknownEnforcingKinds) return { status: "invalid", message: `Blueprint "${id}" uses rule kinds this version of Shore Guard cannot enforce. Upgrade Shore Guard.` };
+      pack = validation.pack;
+    } catch (error62) {
+      return { status: "invalid", message: `The catalog returned an invalid blueprint for "${id}": ${error62 instanceof Error ? error62.message : String(error62)}` };
+    }
+    if (pack.metadata.id !== id) return { status: "invalid", message: `The catalog returned blueprint "${pack.metadata.id}" for "${id}".` };
+    if (hash2(pack) !== served.contentHash) return { status: "invalid", message: `Blueprint "${id}" does not match its published content hash.` };
+    return { status: "found", pack, origin: "catalog" };
+  };
+}
+async function catalogIds(api) {
+  try {
+    const listed = (await api.listArchitectureBlueprints()).blueprints.map((blueprint) => blueprint.policyPackId);
+    return [.../* @__PURE__ */ new Set([...listed, ...bundledIds()])].sort();
+  } catch {
+    return bundledIds();
+  }
+}
+
 // src/commands/guards-plan.ts
 import * as fs19 from "node:fs/promises";
 import { isAbsolute as isAbsolute6, join as join23, relative as relative7, resolve as resolve17, sep as sep7 } from "node:path";
@@ -25975,7 +26038,7 @@ import { isAbsolute as isAbsolute6, join as join23, relative as relative7, resol
 import * as fs18 from "node:fs/promises";
 import { createHash as createHash4 } from "node:crypto";
 import { isAbsolute as isAbsolute5, relative as relative6, resolve as resolve16, sep as sep6 } from "node:path";
-async function resolveManifestSource(root, manifestPath) {
+async function resolveManifestSource(root, manifestPath, blueprints) {
   const confined2 = confinedFile(root, manifestPath);
   if ("error" in confined2) return confined2;
   let manifestText;
@@ -25994,7 +26057,7 @@ async function resolveManifestSource(root, manifestPath) {
       items.push({ path: codebase.path, displayName: codebase.displayName, kind: "none", reason: codebase.decision.reason });
       continue;
     }
-    const loaded = await loadDecision(root, codebase.decision, codebase.path);
+    const loaded = await loadDecision(root, codebase.decision, codebase.path, blueprints);
     if ("error" in loaded) return loaded;
     packs.set(codebase.path, loaded.pack);
     sourceContents.push(loaded.content);
@@ -26002,7 +26065,7 @@ async function resolveManifestSource(root, manifestPath) {
   }
   let repository;
   if (manifest.repository !== void 0 && manifest.repository !== null) {
-    const loaded = await loadDecision(root, manifest.repository, "repository");
+    const loaded = await loadDecision(root, manifest.repository, "repository", blueprints);
     if ("error" in loaded) return loaded;
     repository = loaded.pack;
     sourceContents.push(loaded.content);
@@ -26024,10 +26087,12 @@ async function resolveManifestSource(root, manifestPath) {
     return { error: `Invalid architecture manifest composition: ${errorMessage4(error62)}`, exitCode: EXIT_CODES.config };
   }
 }
-async function loadDecision(root, decision2, label) {
+async function loadDecision(root, decision2, label, blueprints) {
   if (decision2.kind === "blueprint") {
-    const pack = policyPresets.find((candidate) => candidate.metadata.id === decision2.id);
-    if (pack === void 0) return { error: `Codebase ${label}: unknown blueprint "${decision2.id}". Valid blueprint ids: ${policyPresets.map((candidate) => candidate.metadata.id).join(", ")}`, exitCode: EXIT_CODES.config };
+    const found = await blueprints(decision2.id);
+    if (found.status === "unknown") return { error: `Codebase ${label}: unknown blueprint "${decision2.id}". Valid blueprint ids: ${found.validIds.join(", ")}`, exitCode: EXIT_CODES.config };
+    if (found.status === "invalid") return { error: `Codebase ${label}: ${found.message}`, exitCode: EXIT_CODES.config };
+    const pack = found.pack;
     return { pack, content: JSON.stringify(pack), item: { kind: "blueprint", id: decision2.id, hash: hash2(pack) } };
   }
   const confined2 = confinedFile(root, decision2.source);
@@ -26068,8 +26133,8 @@ function contentHash(contents) {
 // src/commands/guards-plan.ts
 var SOURCE_REQUIRED = 'Choose the architecture to set up: pass --blueprint <id>, --source <file>, or --manifest <path> (run "shore-guard discover" first).';
 var LEGACY_SUFFIX = "will be ignored by flat config; Shore baselines require ESLint 9.24 or newer.";
-async function runGuardsPlan({ root, inventory, blueprint, source, manifest, resolvedSource, cliVersion = "dev" }) {
-  const resolved = resolvedSource ?? await resolveGuardsSource(root, blueprint, source, manifest);
+async function runGuardsPlan({ root, inventory, blueprint, source, manifest, resolvedSource, cliVersion = "dev", blueprints }) {
+  const resolved = resolvedSource ?? await resolveGuardsSource(root, blueprint, source, manifest, blueprints);
   if ("error" in resolved) return { command: "guards plan", outcome: "error", exitCode: resolved.exitCode, message: resolved.error };
   const nodeProject = await exists8(join23(root, "package.json"));
   const parserInstalled = await exists8(join23(root, "node_modules", "@typescript-eslint", "parser", "package.json"));
@@ -26208,14 +26273,16 @@ async function readRecord(path2) {
     return {};
   }
 }
-async function resolveGuardsSource(root, blueprint, source, manifest) {
+async function resolveGuardsSource(root, blueprint, source, manifest, blueprints = bundledBlueprintLookup) {
   const provided = [blueprint, source, manifest].filter((value) => value !== void 0).length;
   if (provided > 1) return { error: "Pass exactly one of --blueprint <id>, --source <file>, or --manifest <path>.", exitCode: EXIT_CODES.config };
   if (provided === 0) return { error: SOURCE_REQUIRED, exitCode: EXIT_CODES.userDecisionRequired };
-  if (manifest !== void 0) return resolveManifestSource(root, manifest);
+  if (manifest !== void 0) return resolveManifestSource(root, manifest, blueprints);
   if (blueprint !== void 0) {
-    const pack2 = policyPresets.find((candidate) => candidate.metadata.id === blueprint);
-    if (pack2 === void 0) return { error: `Unknown blueprint "${blueprint}". Valid blueprint ids: ${policyPresets.map((candidate) => candidate.metadata.id).join(", ")}`, exitCode: EXIT_CODES.config };
+    const found = await blueprints(blueprint);
+    if (found.status === "unknown") return { error: `Unknown blueprint "${blueprint}". Valid blueprint ids: ${found.validIds.join(", ")}`, exitCode: EXIT_CODES.config };
+    if (found.status === "invalid") return { error: found.message, exitCode: EXIT_CODES.config };
+    const pack2 = found.pack;
     return { pack: pack2, sourceHash: hash2(pack2), sourceId: pack2.metadata.id, reference: { kind: "blueprint", id: blueprint } };
   }
   const sourcePath = source ?? "";
@@ -26284,22 +26351,22 @@ async function selectSource(options2, loaded) {
   const explicit = options2.blueprint !== void 0 || options2.source !== void 0 || options2.manifest !== void 0;
   if (loaded.status === "ok" && loaded.state.guards !== void 0) {
     if (!explicit) return { result: await alreadyAppliedResult(options2, loaded.state.guards.files) };
-    const resolved2 = await resolveGuardsSource(options2.root, options2.blueprint, options2.source, options2.manifest);
+    const resolved2 = await resolveGuardsSource(options2.root, options2.blueprint, options2.source, options2.manifest, options2.blueprints);
     if ("error" in resolved2) return { result: failure7(resolved2.exitCode, resolved2.error, [], []) };
     if (resolved2.sourceHash !== loaded.state.guards.sourceHash) return { result: failure7(EXIT_CODES.userDecisionRequired, `Guards are already set up from ${loaded.state.guards.sourceId}. Shore Guard does not replace an existing setup; change the generated rules directly.`, [], []) };
     return { source: resolved2 };
   }
   if (explicit) {
-    const resolved2 = await resolveGuardsSource(options2.root, options2.blueprint, options2.source, options2.manifest);
+    const resolved2 = await resolveGuardsSource(options2.root, options2.blueprint, options2.source, options2.manifest, options2.blueprints);
     return "error" in resolved2 ? { result: failure7(resolved2.exitCode, resolved2.error, [], []) } : { source: resolved2 };
   }
   const progress = loaded.status === "ok" ? loaded.state.guardsProgress : void 0;
   if (progress === void 0) {
-    const resolved2 = await resolveGuardsSource(options2.root);
+    const resolved2 = await resolveGuardsSource(options2.root, void 0, void 0, void 0, options2.blueprints);
     if ("pack" in resolved2) return { source: resolved2 };
     return { result: failure7(resolved2.exitCode, resolved2.error, [], []) };
   }
-  const resolved = progress.source.kind === "blueprint" ? await resolveGuardsSource(options2.root, progress.source.id) : progress.source.kind === "manifest" ? await resolveGuardsSource(options2.root, void 0, void 0, progress.source.path) : await resolveGuardsSource(options2.root, void 0, progress.source.path);
+  const resolved = progress.source.kind === "blueprint" ? await resolveGuardsSource(options2.root, progress.source.id, void 0, void 0, options2.blueprints) : progress.source.kind === "manifest" ? await resolveGuardsSource(options2.root, void 0, void 0, progress.source.path, options2.blueprints) : await resolveGuardsSource(options2.root, void 0, progress.source.path, void 0, options2.blueprints);
   if ("error" in resolved || resolved.sourceHash !== progress.sourceHash) {
     const detail = progress.source.kind === "blueprint" ? `Saved blueprint ${progress.source.id} is no longer available.` : `Saved ${progress.source.kind} ${progress.source.path} is missing or changed.`;
     return { result: failure7(EXIT_CODES.userDecisionRequired, `${detail} Pass the architecture source again.`, [], []) };
@@ -27265,6 +27332,21 @@ var DEV_BUILD = { sha: "dev", version: "0.1.0" };
 var CLI_BUILD = typeof define_SHORE_GUARD_BUILD_default === "undefined" ? DEV_BUILD : define_SHORE_GUARD_BUILD_default;
 var CLI_VERSION = CLI_BUILD.sha === "dev" ? CLI_BUILD.version : `${CLI_BUILD.version} (${CLI_BUILD.sha})`;
 var API_BASE_URL = "https://www.shore-sight.com/api/v1";
+function catalogClient(argv, dependencies) {
+  const env = dependencies.env ?? process.env;
+  return createApiClient({
+    baseUrl: dependencies.baseUrl ?? env["SHORE_API_BASE_URL"] ?? API_BASE_URL,
+    getApiKey: async () => {
+      const direct = readValueFlag(argv, "--api-key") ?? env.SHORE_API_KEY;
+      if (direct !== void 0) return direct;
+      const selection = dependencies.storeSelection ?? await selectCredentialStore();
+      return (await resolveApiKey({ env, store: selection.store }))?.key;
+    },
+    fetch: dependencies.fetch,
+    timeoutMs: 1e4,
+    retryPolicy: { maxAttempts: 1, baseDelayMs: 0, maxDelayMs: 0, jitterRatio: 0 }
+  });
+}
 async function route(argv, cwd, dependencies = {}) {
   const json2 = argv.includes("--json");
   const args = stripOptions(argv);
@@ -27326,7 +27408,8 @@ async function route(argv, cwd, dependencies = {}) {
     const blueprint = readValueFlag(argv, "--blueprint");
     const source = readValueFlag(argv, "--source");
     const manifest = readValueFlag(argv, "--manifest");
-    if (args[1] === "plan") return { json: json2, result: await runGuardsPlan({ root: cwd, inventory, blueprint, source, manifest, cliVersion: CLI_BUILD.version }) };
+    const blueprints = dependencies.guards?.blueprints ?? createBlueprintLookup(catalogClient(argv, dependencies));
+    if (args[1] === "plan") return { json: json2, result: await runGuardsPlan({ root: cwd, inventory, blueprint, source, manifest, cliVersion: CLI_BUILD.version, blueprints }) };
     const choiceValue = readValueFlag(argv, "--choice");
     if (choiceValue !== void 0 && choiceValue !== "shore" && choiceValue !== "existing") return { json: json2, result: fail3(command, "--choice must be shore or existing.") };
     return { json: json2, result: await runGuardsApply({
@@ -27341,6 +27424,7 @@ async function route(argv, cwd, dependencies = {}) {
       accept: readValueFlag(argv, "--accept"),
       decline: readValueFlag(argv, "--decline"),
       cliVersion: CLI_BUILD.version,
+      blueprints,
       ...dependencies.guards
     }) };
   }

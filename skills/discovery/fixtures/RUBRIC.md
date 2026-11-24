@@ -6,7 +6,7 @@ Brownfield cases require a connected, scanned fixture before running `discover`.
 
 ## greenfield
 
-`greenfield/` contains only a manifest and README: zero source files. A good result classifies it greenfield, records the counts, offers all five presets with their catalog overview/avoid/layers metadata, and does not infer a policy before selection. A selected preset uses `source: "preset"`, `presetId`, greenfield evidence throughout, and empty baselines.
+`greenfield/` contains only a manifest and README: zero source files. A good result classifies it greenfield, records the counts, offers every catalog preset the candidates run returns with their catalog overview/avoid/layers metadata, and does not infer a policy before selection. A selected preset uses `source: "preset"`, `presetId`, greenfield evidence throughout, and empty baselines.
 
 ## Vite client greenfield interview
 
