@@ -18,7 +18,7 @@ Carry forward exactly one discovery option. Run `shore-guard guards plan --bluep
 
 ## 2. Present the plan
 
-Present every `data.plan.capabilities` entry in a table with Capability, Recommended, Existing, and Status columns, using `id`, `recommended`, `existing`, and `status`. List every `data.plan.impacts` line verbatim. List non-empty `data.plan.unsupported` under **Cannot be enforced**.
+Present every `data.plan.capabilities` entry in a table with Capability, Recommended, Existing, and Status columns, using `id`, `recommended`, `existing`, and `status`. List every `data.plan.impacts` line verbatim. List non-empty `data.plan.unsupported` under **Cannot be enforced** and stop setup. A hard graph rule requires a separate graph enforcement setup.
 
 Present one approval list containing every `data.plan.items` entry whose `status` is `needed`, grouped under these exact headings:
 
@@ -34,15 +34,15 @@ After the approval list, list every generated rule file and baseline in `data.pl
 
 ## 3. Ask for the choices
 
-When `data.plan.choiceRequired` is true, restate every impact and say (b) may leave some rules unenforced (reported as `unenforced`). Ask the tools question first with exactly these options:
+When `data.plan.choiceRequired` is true, restate every impact. Both choices use the resolved ESLint overlay for Shore rules and keep the repository’s lint scripts. Ask the tools question first with these options:
 
 (a) Use Shore's recommended tools (recommended): on-save single-file checks, boundary rules, and a baseline that grandfathers today's violations so you can clean up over time
 
-(b) Keep my existing tools where present and add only what is missing — Shore will use them in its hooks and gates as far as they allow
+(b) Keep my existing tools and add the Shore ESLint overlay for architecture checks
 
 (c) Stop — change nothing
 
-Do not proceed without an explicit tools choice. For (c), say `Nothing was changed.` and stop.
+Get an explicit yes before installing or writing anything. Do not proceed without an explicit tools choice. For (c), say `Nothing was changed.` and stop.
 
 Then ask exactly one approval question with exactly these options:
 
@@ -84,13 +84,11 @@ Hooks can be skipped by a developer; CI is the check that cannot be skipped loca
 
 ## 5. Set up on-save checking for this stack
 
-Boundary rules run in the pre-commit hook through `npx --no-install shore-guard guards enforce --staged` and in CI through `shore-guard guards enforce --all`; `shore-guard verify` includes the same all-files check. `shore-guard check` is the Shore health check. Enforcement needs no login, clean tree, or remote service. A staged check refuses a partially staged JavaScript or TypeScript file and explains why. The commit hook also runs typecheck on every commit; `.shore/guard.json` `commitChecks.typecheck: false` turns it off for commits only, while `--all` always typechecks.
+Boundary rules run in the pre-commit hook through `npx --no-install shore-guard guards enforce --staged` and in CI through `shore-guard guards enforce --all`; `shore-guard verify` includes the same all-files check. `shore-guard check` is the Shore health check. Local enforcement runs without a login or remote service. A staged check requires working-tree source and resolver inputs to match the index and explains which inputs must be staged or set aside. The commit hook also runs typecheck on every commit; `.shore/guard.json` `commitChecks.typecheck: false` turns it off for commits only, while `--all` always typechecks.
 
-If `on-save` was declined, do not install or configure on-save tooling; say on-save checking is not set up and continue. Otherwise, identify the languages, framework, and module system. Choose the standard per-file tool and configure resolved imports so path aliases, base-relative and absolute specifiers, relative paths, and extensionless imports resolve to the same file the boundary engine sees. Generated ESLint import patterns match import text only; do not call them boundary enforcement. In a monorepo, type checking still uses only the root `tsconfig.json`.
+If `on-save` was accepted, use `shore-guard guards edit <path>` as the editor’s save command. It runs the same uncached resolved ESLint rules as the hook and CI. The Claude Code edit hook uses that command automatically. If `on-save` was declined, report that decision under **Not set up**.
 
-Present what will be installed, changed, and covered on save. Get an explicit yes before installing or writing anything. The accepted approval-list decision supplies that yes. Reread `setupDecisions` immediately before changing it. Extend existing configuration; never replace or weaken it.
-
-Prove the setup with a planted violation. Use a temporary forbidden import written once as a relative import and once through an alias when aliases exist. Confirm the on-save command reports it, then delete the file. If either style is missed, name the rules enforced only at commit time. If no suitable tool exists, state that boundaries are commit-time only.
+Prove the setup with a temporary forbidden import written once as a relative import and once through an alias when aliases exist. Confirm both spellings report the same rule, then remove the temporary change. Resolve setup diagnostics and unknown imports before generating the baseline. In a monorepo, type checking uses the root `tsconfig.json`.
 
 ## 6. Finish
 

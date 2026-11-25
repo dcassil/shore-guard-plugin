@@ -1,7 +1,7 @@
 # Shore Guard
 
 Shore Guard provides a standalone repository-health CLI and a Claude Code plugin.
-This artifact was built from monorepo commit `1f70ffc755890105efc1ae93cc753ca0d1f2c5c1` (version `0.9.0`).
+This artifact was built from monorepo commit `a9733bf5ded41f3e6015439efc14e66783df99da` (version `0.10.0`).
 
 ## Getting started
 
@@ -59,10 +59,16 @@ The installed pre-commit hook runs:
 npx --no-install shore-guard guards enforce --staged
 ```
 
+Shore Guard runs resolved ESLint boundary rules with `eslint-plugin-boundaries` and
+the TypeScript import resolver. Relative, aliased, and type-only imports are
+checked after resolution. On-save checks use `shore-guard guards edit <path>`
+with the same uncached rules. Setup captures existing violations in an ESLint
+baseline after checking for missing or unsupported resolution inputs.
+
 The generated CI workflow runs `shore-guard guards enforce --all`. On pull requests it
 also passes `--baseline-ref <base-sha>` so baseline growth is rejected. Enforcement
-checks the generated ESLint and dependency-boundary rules and TypeScript configuration;
-staged mode checks staged JavaScript and TypeScript files, while all-files mode checks
+checks the generated ESLint boundary rules and TypeScript configuration.
+Staged mode checks staged JavaScript and TypeScript files, while all-files mode checks
 all tracked JavaScript and TypeScript files. It is local: it needs no Shore login,
 `SHORE_API_KEY`, clean working tree, or remote service. Exit 0 passes, exit 1 reports
 rule findings, and exit 2 reports configuration or internal errors.

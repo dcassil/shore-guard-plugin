@@ -25,3 +25,17 @@ The new `check` and `verify` flows trigger remote health evaluation, poll it to 
 state, compare the candidate with its base, and return a gate-specific exit code.
 `verify --json` additionally writes and returns the completion receipt. There is no
 separate v0 command surface; automation should use these commands.
+
+
+## Local architecture checks in 0.10.0 beta
+
+New installations use resolved ESLint checks for direct boundaries. The same
+uncached rules run through `shore-guard guards edit <path>`, pre-commit and CI.
+ShoreSight handles bundled graph observations. Setup reports any hard graph
+rule that requires separate enforcement before writing files.
+
+Existing installations keep their repository-owned guard files. To evaluate
+a migration, compare both setups on the same revision and review any new
+violations. Capture the ESLint baseline from ESLint diagnostics because
+dependency-cruiser edges and ESLint file and rule counts use different identities.
+Keep existing graph rules active through the migration.
